@@ -14,11 +14,11 @@
 
 ## Acceptance criteria
 
-- [ ] 支持总次数、response 次数、log 次数、按 MaskType 次数。
-- [ ] 支持失败次数、平均耗时、最大耗时。
-- [ ] 支持 response 接口维度统计和风险等级。
-- [ ] 接口统计容量超限归入 overflow。
-- [ ] 不保存敏感原文、完整 response 或完整日志。
+- [x] 支持总次数、response 次数、log 次数、按 MaskType 次数。
+- [x] 支持失败次数、平均耗时、最大耗时。
+- [x] 支持 response 接口维度统计和风险等级。
+- [x] 接口统计容量超限归入 overflow。
+- [x] 不保存敏感原文、完整 response 或完整日志。
 
 ## Test requirements
 

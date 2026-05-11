@@ -12,4 +12,17 @@
 
   <artifactId>safe-output-report</artifactId>
   <name>Safe Output 报告模块</name>
+
+  <dependencies>
+    <dependency>
+      <groupId>com.safeoutput</groupId>
+      <artifactId>safe-output-core</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
 </project>
