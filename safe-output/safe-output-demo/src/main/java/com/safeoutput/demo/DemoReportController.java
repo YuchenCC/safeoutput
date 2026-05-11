@@ -1,5 +1,7 @@
 package com.safeoutput.demo;
 
+import com.safeoutput.report.MaskMetricsCollector;
+import com.safeoutput.report.MaskReport;
 import com.safeoutput.report.MaskReportExporter;
 
 import java.nio.file.Path;
@@ -14,8 +16,16 @@ public class DemoReportController {
 
     private final MaskReportExporter exporter;
 
-    public DemoReportController(MaskReportExporter exporter) {
+    private final MaskMetricsCollector metricsCollector;
+
+    public DemoReportController(MaskReportExporter exporter, MaskMetricsCollector metricsCollector) {
         this.exporter = exporter;
+        this.metricsCollector = metricsCollector;
+    }
+
+    @GetMapping("/demo/report/snapshot")
+    public MaskReport snapshot() {
+        return metricsCollector.snapshot();
     }
 
     @GetMapping("/demo/report/export")

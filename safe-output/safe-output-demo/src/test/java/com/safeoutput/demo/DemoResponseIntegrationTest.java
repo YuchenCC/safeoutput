@@ -57,6 +57,17 @@ class DemoResponseIntegrationTest {
     }
 
     @Test
+    void reportSnapshotEndpointReturnsAggregatedJson() {
+        restTemplate.getForObject("/demo/bean", String.class);
+        String snapshot = restTemplate.getForObject("/demo/report/snapshot", String.class);
+
+        assertTrue(snapshot.contains("\"totalCount\""));
+        assertTrue(snapshot.contains("\"apiMetrics\""));
+        assertTrue(snapshot.contains("/demo/bean"));
+        assertFalse(snapshot.contains("13800138000"));
+    }
+
+    @Test
     void demoLog4j2AndReportScenarioExportsSanitizedSnapshot() throws Exception {
         String log4j2Xml = new String(Files.readAllBytes(Paths.get("src/main/resources/log4j2.xml")),
                 StandardCharsets.UTF_8);
