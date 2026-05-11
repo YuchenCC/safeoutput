@@ -1,21 +1,162 @@
-# Safe Output 源码入口
+# Safe Output
 
-本目录是 Safe Output 的 Maven 源码入口。仓库级规划、领域文档和本地 issue 继续保留在 `doc/`、`docs/` 和 `.scratch/` 下，避免和源码工程混放。
+Safe Output 是面向 Spring Boot 2.x 的 Java 8 starter，用于在不改 Controller 业务代码的前提下，对 response 和 Log4j2 日志做敏感信息脱敏，并输出聚合统计报告。
 
 ## 模块
 
-- `safe-output-core`: 内部模块，承载核心模型、策略和规则基础。
-- `safe-output-log4j2`: 内部模块，承载 Log4j2 输出侧脱敏适配。
-- `safe-output-report`: 内部模块，承载指标统计和报告快照能力。
-- `safe-output-spring-boot-starter`: 对外发布入口，供 Spring Boot 2.x 应用直接引用。
-- `safe-output-demo`: Demo 空骨架，预留给后续验收场景。
+- `safe-output-core`: 内部模块，核心模型、脱敏策略、规则匹配和对象递归脱敏。
+- `safe-output-log4j2`: 内部模块，Log4j2 `PatternConverter` 和日志 key-value/regex 脱敏。
+- `safe-output-report`: 内部模块，指标聚合和本地 JSON 报告快照。
+- `safe-output-spring-boot-starter`: 对外入口，业务系统只需要直接引用这个 starter。
+- `safe-output-demo`: Spring Boot 2.x demo，演示 response、Log4j2 和 report 场景。
 
-业务应用应引用 `com.safeoutput:safe-output-spring-boot-starter:0.1.0-SNAPSHOT`。
+## 引用方式
 
-## 构建
+Maven:
+
+```xml
+<dependency>
+  <groupId>com.safeoutput</groupId>
+  <artifactId>safe-output-spring-boot-starter</artifactId>
+  <version>0.1.0-SNAPSHOT</version>
+</dependency>
+```
+
+Gradle:
+
+```groovy
+implementation "com.safeoutput:safe-output-spring-boot-starter:0.1.0-SNAPSHOT"
+```
+
+本地验证安装:
+
+```sh
+mvn install
+```
+
+业务系统不需要手动声明 `safe-output-core`、`safe-output-log4j2` 或 `safe-output-report`；这些由 starter 聚合。
+
+## 最小接入
+
+Spring Boot 2.x 应用引入 starter 后，`spring.factories` 会自动装配 response 脱敏、规则匹配、日志适配和报告能力。Controller 不需要调用 Safe Output API:
+
+```java
+@RestController
+class CustomerController {
+    @GetMapping("/customers/current")
+    CustomerResponse current() {
+        return new CustomerResponse("张三", "13800138000");
+    }
+}
+```
+
+常见字段名如 `mobile`、`phone`、`email`、`idCard`、`bankCard`、`password` 会按默认规则脱敏。
+
+## 配置示例
+
+```yaml
+safe-output:
+  enabled: true
+  response:
+    enabled: true
+  rules:
+    - name: customerMobile
+      keys:
+        - customerMobile
+      paths:
+        - $.customer.mobile
+      type: MOBILE
+      enabled: true
+  ignore:
+    keys:
+      - plainNote
+    paths:
+      - $.items[*].title
+    apis:
+      - method: GET
+        path: /demo/ignored
+        reason: demo plaintext endpoint
+  report:
+    enabled: true
+    directory: target/safe-output-demo-reports
+    file-prefix: demo-report
+    interval-millis: 600000
+    retain-files: 10
+```
+
+## 注解和 Ignore
+
+字段注解用于覆盖默认规则:
+
+```java
+public class CustomerResponse {
+    @Desensitize(type = MaskType.CHINESE_NAME)
+    private String name;
+}
+```
+
+字段级 ignore 通过 `safe-output.ignore.keys` 或 `safe-output.ignore.paths` 配置。接口级 ignore 通过 `safe-output.ignore.apis` 配置；命中后 response 明文返回，但会记录 ignored 风险统计。
+
+## Log4j2
+
+业务系统使用 Log4j2 时，在 `log4j2.xml` 中使用 `%safeOutputMsg`:
+
+```xml
+<PatternLayout pattern="%d{HH:mm:ss.SSS} %-5level %logger{36} - %safeOutputMsg{maxMessageLength=5000,maxValueLength=300}%n"/>
+```
+
+日志脱敏支持 JSON-like 和 key-value 片段，例如 `"mobile":"13800138000"`、`email=foo@example.com`。整条 message fallback 会识别手机号、邮箱和严格合法的大陆身份证；普通 18 位流水号和无上下文银行卡号不会全局兜底脱敏。
+
+`%safeOutputMsg` 支持 `enabled`、`regexFallback`、`maxMessageLength`、`maxValueLength` 选项:
+
+```xml
+<PatternLayout pattern="%safeOutputMsg{regexFallback=false,maxMessageLength=5000,maxValueLength=300}%n"/>
+```
+
+关闭日志脱敏:
+
+```xml
+<PatternLayout pattern="%safeOutputMsg{enabled=false}%n"/>
+```
+
+## 报告
+
+启用 `safe-output.report.enabled=true` 后，starter 会创建 `MaskMetricsCollector` 和定时 `MaskReportExporter`。报告只包含聚合指标、接口风险等级、ignored 统计、失败次数和耗时，不保存敏感原文、完整 response 或完整日志。
+
+demo 也提供手动导出接口:
+
+```text
+GET /demo/report/export
+```
+
+## Demo 验证
+
+运行 demo 集成测试:
+
+```sh
+mvn -pl safe-output-demo -am test
+```
+
+完整验证和本地安装:
 
 ```sh
 mvn verify
+mvn install
 ```
 
-构建会校验 Java 8 编译约束、Java 8 API 使用边界、Checkstyle 规则和 starter 打包契约。
+## 验收清单
+
+- Response: Bean、Map、List、嵌套对象可脱敏；注解、字段 ignore、接口 ignore 生效。
+- Log: Log4j2 `%safeOutputMsg` 可发现；key-value、JSON-like、regex fallback 和误伤边界生效。
+- 策略: 默认规则、用户规则、规则优先级、自定义策略注册和 Java 8 兼容性生效。
+- 统计: mask 次数、MaskType、接口维度、ignored 风险、失败次数、平均/最大耗时可聚合。
+- 报告: 本地 JSON 快照、保留数量、失败 fail-open、不包含敏感原文。
+- Starter: `spring.factories` 自动装配、starter jar 可 `mvn install`、demo 只直接引用 starter。
+
+## 测试覆盖
+
+- `safe-output-core`: 核心契约、内置策略、规则匹配、注解解析、递归对象脱敏、策略注册。
+- `safe-output-log4j2`: PatternConverter 发现、开关、JSON-like/key-value、regex fallback 和边界。
+- `safe-output-report`: 聚合模型、风险等级、overflow、JSON 快照、保留数量、写入失败。
+- `safe-output-spring-boot-starter`: 属性绑定、自动装配、response advice、API ignore、Log4j2 starter 引用。
+- `safe-output-demo`: Spring Boot 2.x response、log、report 端到端场景。

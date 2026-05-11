@@ -14,10 +14,10 @@
 
 ## Acceptance criteria
 
-- [ ] 文档包含 Maven/Gradle 引用方式和 Spring Boot 2.x 最小接入示例。
-- [ ] 文档覆盖配置、注解、Ignore、Log4j2、统计报告和回退开关。
-- [ ] 验收清单覆盖 response、log、策略、统计、兼容性和 starter 打包。
-- [ ] 测试体系覆盖核心策略、规则、response、log、report、Demo 验证。
+- [x] 文档包含 Maven/Gradle 引用方式和 Spring Boot 2.x 最小接入示例。
+- [x] 文档覆盖配置、注解、Ignore、Log4j2、统计报告和回退开关。
+- [x] 验收清单覆盖 response、log、策略、统计、兼容性和 starter 打包。
+- [x] 测试体系覆盖核心策略、规则、response、log、report、Demo 验证。
 
 ## Test requirements
 
