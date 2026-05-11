@@ -14,11 +14,11 @@
 
 ## Acceptance criteria
 
-- [ ] starter 引入后自动注册 response 脱敏 Advice。
-- [ ] 全局开关和 response 场景开关生效。
-- [ ] Controller 不改代码即可对 Bean、Map、List 响应脱敏。
-- [ ] ResponseEntity body 可处理。
-- [ ] 异常 fail-open，不影响接口返回。
+- [x] starter 引入后自动注册 response 脱敏 Advice。
+- [x] 全局开关和 response 场景开关生效。
+- [x] Controller 不改代码即可对 Bean、Map、List 响应脱敏。
+- [x] ResponseEntity body 可处理。
+- [x] 异常 fail-open，不影响接口返回。
 
 ## Test requirements
 

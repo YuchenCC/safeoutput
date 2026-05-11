@@ -1,2 +1,3 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-com.safeoutput.spring.boot.autoconfigure.SafeOutputAutoConfiguration
+com.safeoutput.spring.boot.autoconfigure.SafeOutputAutoConfiguration,\
+com.safeoutput.spring.boot.autoconfigure.SafeOutputMvcAutoConfiguration

@@ -50,7 +50,8 @@ class ProjectSkeletonTest {
                 "safe-output-core",
                 "safe-output-log4j2",
                 "safe-output-report",
-                "spring-boot-autoconfigure")), productionDependencyArtifactIds(document));
+                "spring-boot-autoconfigure",
+                "spring-webmvc")), productionDependencyArtifactIds(document));
         assertFalse(hasDirectSpringBootDependencyVersion(document));
     }
 
