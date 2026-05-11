@@ -14,11 +14,11 @@
 
 ## Acceptance criteria
 
-- [ ] 支持 Bean 字段、Map key-value、Collection、Array 递归处理。
-- [ ] 支持最大递归深度和最大集合处理数量。
-- [ ] 支持循环引用保护。
-- [ ] 文件流、二进制、Servlet 原生对象、基础类型和日期类型默认跳过。
-- [ ] 脱敏异常 fail-open。
+- [x] 支持 Bean 字段、Map key-value、Collection、Array 递归处理。
+- [x] 支持最大递归深度和最大集合处理数量。
+- [x] 支持循环引用保护。
+- [x] 文件流、二进制、Servlet 原生对象、基础类型和日期类型默认跳过。
+- [x] 脱敏异常 fail-open。
 
 ## Test requirements
 
