@@ -14,10 +14,10 @@
 
 ## Acceptance criteria
 
-- [ ] `name`、`id`、`code`、`no` 默认不进入强脱敏规则。
-- [ ] 明确 key 或 path 配置可让歧义字段脱敏。
-- [ ] 固定优先级为接口级 ignore > 字段级 ignore > 注解规则 > path rule > key rule > default rule > regex fallback。
-- [ ] 规则裁决结果可被 response 和 log 场景复用。
+- [x] `name`、`id`、`code`、`no` 默认不进入强脱敏规则。
+- [x] 明确 key 或 path 配置可让歧义字段脱敏。
+- [x] 固定优先级为接口级 ignore > 字段级 ignore > 注解规则 > path rule > key rule > default rule > regex fallback。
+- [x] 规则裁决结果可被 response 和 log 场景复用。
 
 ## Test requirements
 

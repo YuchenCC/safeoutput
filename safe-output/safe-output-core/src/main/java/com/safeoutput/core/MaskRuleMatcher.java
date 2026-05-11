@@ -14,9 +14,22 @@ public final class MaskRuleMatcher {
 
     private final List<MaskRule> defaultRules;
 
+    private final List<String> ignoreKeys;
+
+    private final List<String> ignorePaths;
+
+    private MaskRuleMatcher(Builder builder) {
+        this.configuredRules = enabledRules(builder.configuredRules);
+        this.defaultRules = enabledRules(defaultRules());
+        this.ignoreKeys = normalizedKeys(builder.ignoreKeys);
+        this.ignorePaths = immutableStrings(builder.ignorePaths);
+    }
+
     private MaskRuleMatcher(Collection<MaskRule> configuredRules, Collection<MaskRule> defaultRules) {
         this.configuredRules = enabledRules(configuredRules);
         this.defaultRules = enabledRules(defaultRules);
+        this.ignoreKeys = Collections.emptyList();
+        this.ignorePaths = Collections.emptyList();
     }
 
     public static MaskRuleMatcher withDefaultRules() {
@@ -25,6 +38,10 @@ public final class MaskRuleMatcher {
 
     public static MaskRuleMatcher withConfiguredRules(Collection<MaskRule> configuredRules) {
         return new MaskRuleMatcher(configuredRules, defaultRules());
+    }
+
+    public static Builder builder() {
+        return new Builder();
     }
 
     public Optional<RuleMatch> match(String key, String path) {
@@ -41,6 +58,42 @@ public final class MaskRuleMatcher {
             return defaultPath;
         }
         return matchKey(defaultRules, key);
+    }
+
+    public Optional<RuleMatch> decide(MaskRuleRequest request) {
+        if (request == null) {
+            return Optional.empty();
+        }
+        if (request.isApiIgnored()) {
+            return Optional.of(ignore("api-ignore", RuleSource.API_IGNORE));
+        }
+        Optional<RuleMatch> fieldIgnore = matchFieldIgnore(request.getKey(), request.getPath());
+        if (fieldIgnore.isPresent()) {
+            return fieldIgnore;
+        }
+        if (isMaskType(request.getAnnotationType())) {
+            return Optional.of(new RuleMatch(request.getAnnotationType(), "annotation", RuleSource.ANNOTATION));
+        }
+        Optional<RuleMatch> ruleMatch = match(request.getKey(), request.getPath());
+        if (ruleMatch.isPresent()) {
+            return ruleMatch;
+        }
+        if (isMaskType(request.getRegexFallbackType())) {
+            return Optional.of(new RuleMatch(request.getRegexFallbackType(), "regex-fallback",
+                    RuleSource.REGEX_FALLBACK));
+        }
+        return Optional.empty();
+    }
+
+    private Optional<RuleMatch> matchFieldIgnore(String key, String path) {
+        String normalizedKey = normalizeKey(key);
+        if (normalizedKey != null && ignoreKeys.contains(normalizedKey)) {
+            return Optional.of(ignore("field-ignore-key", RuleSource.FIELD_IGNORE));
+        }
+        if (path != null && ignorePaths.contains(path)) {
+            return Optional.of(ignore("field-ignore-path", RuleSource.FIELD_IGNORE));
+        }
+        return Optional.empty();
     }
 
     private static List<MaskRule> defaultRules() {
@@ -118,10 +171,76 @@ public final class MaskRuleMatcher {
         return new RuleMatch(rule.getType(), rule.getName(), rule.getSource());
     }
 
+    private static RuleMatch ignore(String ruleName, RuleSource source) {
+        return new RuleMatch(MaskType.UNKNOWN, ruleName, source, RuleAction.IGNORE);
+    }
+
+    private static boolean isMaskType(MaskType type) {
+        return type != null && type != MaskType.UNKNOWN;
+    }
+
+    private static List<String> normalizedKeys(Collection<String> keys) {
+        if (keys == null) {
+            return Collections.emptyList();
+        }
+        List<String> normalized = new ArrayList<String>();
+        for (String key : keys) {
+            String normalizedKey = normalizeKey(key);
+            if (normalizedKey != null) {
+                normalized.add(normalizedKey);
+            }
+        }
+        return Collections.unmodifiableList(normalized);
+    }
+
+    private static List<String> immutableStrings(Collection<String> values) {
+        if (values == null) {
+            return Collections.emptyList();
+        }
+        return Collections.unmodifiableList(new ArrayList<String>(values));
+    }
+
     private static String normalizeKey(String key) {
         if (key == null || key.trim().isEmpty()) {
             return null;
         }
         return key.trim().toLowerCase(Locale.ENGLISH);
+    }
+
+    public static final class Builder {
+
+        private final List<MaskRule> configuredRules = new ArrayList<MaskRule>();
+
+        private final List<String> ignoreKeys = new ArrayList<String>();
+
+        private final List<String> ignorePaths = new ArrayList<String>();
+
+        private Builder() {
+        }
+
+        public Builder configuredRules(Collection<MaskRule> rules) {
+            if (rules != null) {
+                this.configuredRules.addAll(rules);
+            }
+            return this;
+        }
+
+        public Builder ignoreKeys(Collection<String> keys) {
+            if (keys != null) {
+                this.ignoreKeys.addAll(keys);
+            }
+            return this;
+        }
+
+        public Builder ignorePaths(Collection<String> paths) {
+            if (paths != null) {
+                this.ignorePaths.addAll(paths);
+            }
+            return this;
+        }
+
+        public MaskRuleMatcher build() {
+            return new MaskRuleMatcher(this);
+        }
     }
 }

@@ -61,7 +61,78 @@ class MaskRuleMatcherTest {
         assertMatch(matcher.match("email", "$.email"), MaskType.EMAIL, "default.email", RuleSource.DEFAULT);
     }
 
+    @Test
+    void decisionAppliesFixedPrecedenceAcrossIgnoreAnnotationRulesDefaultAndFallback() {
+        MaskRuleMatcher matcher = MaskRuleMatcher.builder()
+                .ignoreKeys(Arrays.asList("email"))
+                .ignorePaths(Arrays.asList("$.ignored.mobile"))
+                .configuredRules(Arrays.asList(
+                        MaskRule.configured("pathMobile")
+                                .paths(Arrays.asList("$.user.mobile"))
+                                .type(MaskType.MOBILE)
+                                .build(),
+                        MaskRule.configured("keyEmail")
+                                .keys(Arrays.asList("email"))
+                                .type(MaskType.EMAIL)
+                                .build()))
+                .build();
+
+        RuleMatch apiIgnored = matcher.decide(MaskRuleRequest.builder()
+                .apiIgnored(true)
+                .key("email")
+                .path("$.ignored.mobile")
+                .annotationType(MaskType.ID_CARD)
+                .regexFallbackType(MaskType.DEFAULT)
+                .build()).get();
+        assertEquals(RuleAction.IGNORE, apiIgnored.getAction());
+        assertEquals(RuleSource.API_IGNORE, apiIgnored.getSource());
+
+        RuleMatch fieldIgnored = matcher.decide(MaskRuleRequest.builder()
+                .key("email")
+                .path("$.ignored.mobile")
+                .annotationType(MaskType.ID_CARD)
+                .regexFallbackType(MaskType.DEFAULT)
+                .build()).get();
+        assertEquals(RuleAction.IGNORE, fieldIgnored.getAction());
+        assertEquals(RuleSource.FIELD_IGNORE, fieldIgnored.getSource());
+
+        RuleMatch annotated = matcher.decide(MaskRuleRequest.builder()
+                .key("plainName")
+                .path("$.plainName")
+                .annotationType(MaskType.CHINESE_NAME)
+                .regexFallbackType(MaskType.DEFAULT)
+                .build()).get();
+        assertMatch(Optional.of(annotated), MaskType.CHINESE_NAME, "annotation", RuleSource.ANNOTATION);
+
+        RuleMatch pathRule = matcher.decide(MaskRuleRequest.builder()
+                .key("mobile")
+                .path("$.user.mobile")
+                .build()).get();
+        assertMatch(Optional.of(pathRule), MaskType.MOBILE, "pathMobile", RuleSource.CONFIGURED);
+
+        RuleMatch keyRule = matcher.decide(MaskRuleRequest.builder()
+                .key("email")
+                .path("$.contact")
+                .build()).get();
+        assertEquals(RuleAction.IGNORE, keyRule.getAction());
+        assertEquals(RuleSource.FIELD_IGNORE, keyRule.getSource());
+
+        RuleMatch defaultRule = matcher.decide(MaskRuleRequest.builder()
+                .key("password")
+                .path("$.credential")
+                .build()).get();
+        assertMatch(Optional.of(defaultRule), MaskType.PASSWORD, "default.password", RuleSource.DEFAULT);
+
+        RuleMatch fallback = matcher.decide(MaskRuleRequest.builder()
+                .key("message")
+                .path("$.message")
+                .regexFallbackType(MaskType.MOBILE)
+                .build()).get();
+        assertMatch(Optional.of(fallback), MaskType.MOBILE, "regex-fallback", RuleSource.REGEX_FALLBACK);
+    }
+
     private static void assertMatch(Optional<RuleMatch> match, MaskType type, String ruleName, RuleSource source) {
+        assertEquals(RuleAction.MASK, match.get().getAction());
         assertEquals(type, match.get().getMaskType());
         assertEquals(ruleName, match.get().getRuleName());
         assertEquals(source, match.get().getSource());

@@ -40,6 +40,10 @@ public class SafeOutputAutoConfiguration {
                     .enabled(rule.isEnabled())
                     .build());
         }
-        return MaskRuleMatcher.withConfiguredRules(rules);
+        return MaskRuleMatcher.builder()
+                .configuredRules(rules)
+                .ignoreKeys(properties.getIgnore().getKeys())
+                .ignorePaths(properties.getIgnore().getPaths())
+                .build();
     }
 }
