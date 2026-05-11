@@ -148,6 +148,7 @@ class SafeOutputResponseBodyAdviceIntegrationTest {
             this.mobile = mobile;
         }
 
+        @SuppressWarnings("unused")
         public String getMobile() {
             return mobile;
         }
