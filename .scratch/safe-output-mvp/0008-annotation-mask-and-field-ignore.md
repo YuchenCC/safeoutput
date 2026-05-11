@@ -14,10 +14,10 @@
 
 ## Acceptance criteria
 
-- [ ] 提供 `@Desensitize` 注解并支持指定 type。
-- [ ] 注解规则优先于普通 key/path 配置。
-- [ ] 支持 `ignore.keys` 和 `ignore.paths`。
-- [ ] 字段注解和字段元信息可缓存。
+- [x] 提供 `@Desensitize` 注解并支持指定 type。
+- [x] 注解规则优先于普通 key/path 配置。
+- [x] 支持 `ignore.keys` 和 `ignore.paths`。
+- [x] 字段注解和字段元信息可缓存。
 
 ## Test requirements
 

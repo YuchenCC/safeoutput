@@ -4,6 +4,7 @@ import com.safeoutput.core.MaskRule;
 import com.safeoutput.core.MaskRuleMatcher;
 import com.safeoutput.core.MaskStrategy;
 import com.safeoutput.core.MaskStrategyRegistry;
+import com.safeoutput.core.SensitiveFieldResolver;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -45,5 +46,11 @@ public class SafeOutputAutoConfiguration {
                 .ignoreKeys(properties.getIgnore().getKeys())
                 .ignorePaths(properties.getIgnore().getPaths())
                 .build();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    public SensitiveFieldResolver sensitiveFieldResolver(MaskRuleMatcher maskRuleMatcher) {
+        return new SensitiveFieldResolver(maskRuleMatcher);
     }
 }
