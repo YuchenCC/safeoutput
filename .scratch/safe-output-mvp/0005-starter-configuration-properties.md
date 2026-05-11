@@ -14,10 +14,10 @@
 
 ## Acceptance criteria
 
-- [ ] 支持 `safe-output.enabled`、response/log 场景开关。
-- [ ] 支持 rules、ignore、report、maxDepth、maxCollectionSize。
-- [ ] 支持 log maxMessageLength、maxValueLength、regex fallback 配置。
-- [ ] 配置具备安全默认值，缺省配置可启动。
+- [x] 支持 `safe-output.enabled`、response/log 场景开关。
+- [x] 支持 rules、ignore、report、maxDepth、maxCollectionSize。
+- [x] 支持 log maxMessageLength、maxValueLength、regex fallback 配置。
+- [x] 配置具备安全默认值，缺省配置可启动。
 
 ## Test requirements
 

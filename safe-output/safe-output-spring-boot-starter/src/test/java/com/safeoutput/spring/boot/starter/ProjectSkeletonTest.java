@@ -50,8 +50,7 @@ class ProjectSkeletonTest {
                 "safe-output-core",
                 "safe-output-log4j2",
                 "safe-output-report",
-                "spring-boot-autoconfigure",
-                "junit-jupiter")), dependencyArtifactIds(document));
+                "spring-boot-autoconfigure")), productionDependencyArtifactIds(document));
         assertFalse(hasDirectSpringBootDependencyVersion(document));
     }
 
@@ -81,11 +80,14 @@ class ProjectSkeletonTest {
         return values;
     }
 
-    private static Set<String> dependencyArtifactIds(Document document) {
+    private static Set<String> productionDependencyArtifactIds(Document document) {
         NodeList dependencies = document.getElementsByTagName("dependency");
         Set<String> values = new HashSet<String>();
         for (int i = 0; i < dependencies.getLength(); i++) {
-            values.add(childText(dependencies.item(i), "artifactId"));
+            Node dependency = dependencies.item(i);
+            if (!"test".equals(childText(dependency, "scope"))) {
+                values.add(childText(dependency, "artifactId"));
+            }
         }
         return values;
     }
