@@ -15,8 +15,14 @@ class MaskContractTest {
         assertEquals(MaskType.UNKNOWN, MaskType.fromCode(null));
         assertEquals(MaskType.UNKNOWN, MaskType.fromCode(""));
         assertEquals(MaskType.UNKNOWN, MaskType.fromCode("session-token"));
-        assertEquals(MaskType.PHONE, MaskType.fromCode("phone"));
+        assertEquals(MaskType.MOBILE, MaskType.fromCode("mobile"));
+        assertEquals(MaskType.MOBILE, MaskType.fromCode("phone"));
         assertEquals(MaskType.ID_CARD, MaskType.fromCode("ID_CARD"));
+        assertEquals(MaskType.BANK_CARD, MaskType.fromCode("bank-card"));
+        assertEquals(MaskType.CHINESE_NAME, MaskType.fromCode("chinese_name"));
+        assertEquals(MaskType.ADDRESS, MaskType.fromCode("address"));
+        assertEquals(MaskType.PASSWORD, MaskType.fromCode("password"));
+        assertEquals(MaskType.DEFAULT, MaskType.fromCode("default"));
     }
 
     @Test
@@ -50,7 +56,7 @@ class MaskContractTest {
         assertFalse(nullResult.isMasked());
 
         MaskContext shortContext = MaskContext.builder()
-                .maskType(MaskType.PHONE)
+                .maskType(MaskType.MOBILE)
                 .scene(MaskScene.RESPONSE)
                 .rawValue("1")
                 .build();
@@ -108,7 +114,7 @@ class MaskContractTest {
         MaskStrategy strategy = new PrefixMaskStrategy();
 
         MaskResult result = strategy.apply(MaskContext.builder()
-                .maskType(MaskType.PHONE)
+                .maskType(MaskType.MOBILE)
                 .scene(MaskScene.RESPONSE)
                 .rawValue("13800138000")
                 .build());
