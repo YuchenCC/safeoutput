@@ -14,10 +14,10 @@
 
 ## Acceptance criteria
 
-- [ ] 默认规则覆盖 mobile、phone、idCard、certNo、bankCard、email、password、secret、token 等明确字段。
-- [ ] 用户配置可补充或覆盖默认规则。
-- [ ] 支持 rule enabled 开关。
-- [ ] 输出匹配结果包含命中的 MaskType 和规则来源。
+- [x] 默认规则覆盖 mobile、phone、idCard、certNo、bankCard、email、password、secret、token 等明确字段。
+- [x] 用户配置可补充或覆盖默认规则。
+- [x] 支持 rule enabled 开关。
+- [x] 输出匹配结果包含命中的 MaskType 和规则来源。
 
 ## Test requirements
 
