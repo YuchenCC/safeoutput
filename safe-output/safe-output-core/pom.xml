@@ -12,4 +12,12 @@
 
   <artifactId>safe-output-core</artifactId>
   <name>Safe Output 核心模块</name>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
 </project>
