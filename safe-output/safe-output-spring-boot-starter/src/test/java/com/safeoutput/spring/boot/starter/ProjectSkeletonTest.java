@@ -55,6 +55,16 @@ class ProjectSkeletonTest {
         assertFalse(hasDirectSpringBootDependencyVersion(document));
     }
 
+    @Test
+    void demoReferencesOnlyStarterFromSafeOutputModules() throws Exception {
+        Path demoPom = sourceRoot().resolve("safe-output-demo/pom.xml");
+        Document document = document(demoPom);
+
+        Set<String> safeOutputDependencies = productionDependencyArtifactIds(document, "com.safeoutput");
+        assertEquals(new HashSet<String>(Arrays.asList("safe-output-spring-boot-starter")),
+                safeOutputDependencies);
+    }
+
     private static boolean hasDirectSpringBootDependencyVersion(Document document) {
         NodeList dependencies = document.getElementsByTagName("dependency");
         for (int i = 0; i < dependencies.getLength(); i++) {
@@ -82,11 +92,16 @@ class ProjectSkeletonTest {
     }
 
     private static Set<String> productionDependencyArtifactIds(Document document) {
+        return productionDependencyArtifactIds(document, null);
+    }
+
+    private static Set<String> productionDependencyArtifactIds(Document document, String groupId) {
         NodeList dependencies = document.getElementsByTagName("dependency");
         Set<String> values = new HashSet<String>();
         for (int i = 0; i < dependencies.getLength(); i++) {
             Node dependency = dependencies.item(i);
-            if (!"test".equals(childText(dependency, "scope"))) {
+            if (!"test".equals(childText(dependency, "scope"))
+                    && (groupId == null || groupId.equals(childText(dependency, "groupId")))) {
                 values.add(childText(dependency, "artifactId"));
             }
         }

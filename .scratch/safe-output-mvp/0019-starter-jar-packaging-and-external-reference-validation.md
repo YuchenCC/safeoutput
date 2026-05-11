@@ -14,11 +14,11 @@
 
 ## Acceptance criteria
 
-- [ ] `mvn install` 可生成 `safe-output-spring-boot-starter` Jar。
-- [ ] Demo 只通过 starter 坐标引用即可启动。
-- [ ] `spring.factories` 自动装配生效。
-- [ ] 依赖树显示业务系统不需要手动声明 core、log4j2、report。
-- [ ] 不发布 Maven Central，不要求私服流程。
+- [x] `mvn install` 可生成 `safe-output-spring-boot-starter` Jar。
+- [x] Demo 只通过 starter 坐标引用即可启动。
+- [x] `spring.factories` 自动装配生效。
+- [x] 依赖树显示业务系统不需要手动声明 core、log4j2、report。
+- [x] 不发布 Maven Central，不要求私服流程。
 
 ## Test requirements
 
