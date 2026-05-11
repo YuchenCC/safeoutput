@@ -15,7 +15,8 @@ import java.util.regex.Pattern;
 final class SafeOutputLogMessageMasker {
 
     private static final Pattern KEY_VALUE = Pattern.compile(
-            "([A-Za-z][A-Za-z0-9_-]*)(\\s*[:=]\\s*)(\"[^\"]*\"|'[^']*'|[^\\s,}]+)");
+            "(\"([A-Za-z][A-Za-z0-9_-]*)\"|'([A-Za-z][A-Za-z0-9_-]*)'|([A-Za-z][A-Za-z0-9_-]*))"
+                    + "(\\s*[:=]\\s*)(\"[^\"]*\"|'[^']*'|[^\\s,}]+)");
 
     private final MaskRuleMatcher ruleMatcher;
 
@@ -37,10 +38,11 @@ final class SafeOutputLogMessageMasker {
         Matcher matcher = KEY_VALUE.matcher(message);
         StringBuffer masked = new StringBuffer();
         while (matcher.find()) {
-            String key = matcher.group(1);
-            String separator = matcher.group(2);
-            String value = matcher.group(3);
-            String replacement = key + separator + maskValue(key, value);
+            String key = firstPresent(matcher.group(2), matcher.group(3), matcher.group(4));
+            String keyToken = matcher.group(1);
+            String separator = matcher.group(5);
+            String value = matcher.group(6);
+            String replacement = keyToken + separator + maskValue(key, value);
             matcher.appendReplacement(masked, Matcher.quoteReplacement(replacement));
         }
         matcher.appendTail(masked);
@@ -84,5 +86,15 @@ final class SafeOutputLogMessageMasker {
         return value.length() >= 2
                 && ((value.startsWith("\"") && value.endsWith("\""))
                 || (value.startsWith("'") && value.endsWith("'")));
+    }
+
+    private static String firstPresent(String first, String second, String third) {
+        if (first != null) {
+            return first;
+        }
+        if (second != null) {
+            return second;
+        }
+        return third;
     }
 }

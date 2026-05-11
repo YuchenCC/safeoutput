@@ -14,10 +14,10 @@
 
 ## Acceptance criteria
 
-- [ ] 支持 `"mobile":"13812345678"` 这类 JSON-like 片段脱敏。
-- [ ] 支持 key 命中银行卡上下文时脱敏银行卡。
-- [ ] 不引入 fastjson、Jackson 或其他 JSON Parser 作为强依赖。
-- [ ] 日志脱敏异常不影响日志输出。
+- [x] 支持 `"mobile":"13812345678"` 这类 JSON-like 片段脱敏。
+- [x] 支持 key 命中银行卡上下文时脱敏银行卡。
+- [x] 不引入 fastjson、Jackson 或其他 JSON Parser 作为强依赖。
+- [x] 日志脱敏异常不影响日志输出。
 
 ## Test requirements
 
