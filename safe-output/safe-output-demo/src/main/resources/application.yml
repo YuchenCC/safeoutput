@@ -8,4 +8,6 @@ safe-output:
         reason: demo plaintext endpoint
   report:
     enabled: true
+    directory: target/safe-output-demo-reports
+    file-prefix: demo-report
     interval-millis: 600000
