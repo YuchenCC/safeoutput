@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Safe Output 演示</title>
+  <style>
+    :root {
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      line-height: 1.45;
+      color: #1a1a1a;
+      background: #f4f5f7;
+    }
+    body { margin: 0; padding: 1.25rem 1.5rem 2rem; max-width: 960px; margin-inline: auto; }
+    h1 { font-size: 1.35rem; margin: 0 0 0.5rem; }
+    p.hint { margin: 0 0 1rem; color: #555; font-size: 0.9rem; }
+    label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.35rem; }
+    input[type="url"] {
+      width: 100%; max-width: 36rem; padding: 0.5rem 0.65rem; border: 1px solid #ccc;
+      border-radius: 6px; box-sizing: border-box; font-size: 0.95rem;
+    }
+    section { margin-top: 1.5rem; background: #fff; border-radius: 8px; padding: 1rem 1.1rem;
+      box-shadow: 0 1px 2px rgba(0,0,0,.06); }
+    section h2 { font-size: 1.05rem; margin: 0 0 0.75rem; }
+    .btn-row { display: flex; flex-wrap: wrap; gap: 0.45rem; margin-bottom: 0.75rem; }
+    button {
+      cursor: pointer; border: 1px solid #c5cad3; background: #fff; padding: 0.4rem 0.65rem;
+      border-radius: 6px; font-size: 0.88rem;
+    }
+    button:hover { background: #f0f2f6; }
+    button:active { transform: scale(0.98); }
+    button.primary { background: #2563eb; color: #fff; border-color: #1d4ed8; }
+    button.primary:hover { background: #1d4ed8; }
+    .meta { font-size: 0.8rem; color: #666; margin-bottom: 0.5rem; }
+    pre {
+      margin: 0; padding: 0.75rem; background: #0f172a; color: #e2e8f0; border-radius: 6px;
+      overflow: auto; font-size: 0.78rem; max-height: 22rem;
+    }
+    .err { color: #b91c1c; font-size: 0.85rem; margin-top: 0.35rem; }
+  </style>
+</head>
+<body>
+  <h1>Safe Output 简易演示</h1>
+  <p class="hint">
+    请先启动 <code>safe-output-demo</code>（默认端口 8080），在本页同源打开
+    <code>/safe-output-playground.html</code>。先点击各类接口产生流量，再「刷新内存快照」查看聚合报告；
+    <code>/demo/logs</code> 的脱敏发生在 Log4j2，响应体仅为 <code>{"status":"logged"}</code>，但会计入报告中的日志侧统计。
+  </p>
+
+  <section>
+    <label for="baseUrl">Base URL</label>
+    <input id="baseUrl" type="url" value="http://localhost:8080" autocomplete="off" />
+  </section>
+
+  <section>
+    <h2>脱敏接口（GET）</h2>
+    <div class="btn-row">
+      <button type="button" data-path="/demo/bean">Bean</button>
+      <button type="button" data-path="/demo/map">Map</button>
+      <button type="button" data-path="/demo/list">List</button>
+      <button type="button" data-path="/demo/nested">Nested</button>
+      <button type="button" data-path="/demo/ignored">Ignored（明文）</button>
+      <button type="button" data-path="/demo/logs">Logs</button>
+    </div>
+    <div class="meta" id="apiMeta"></div>
+    <pre id="apiBody">（尚未请求）</pre>
+    <div class="err" id="apiErr"></div>
+  </section>
+
+  <section>
+    <h2>报告</h2>
+    <div class="btn-row">
+      <button type="button" class="primary" id="btnSnapshot">刷新内存快照</button>
+      <button type="button" id="btnExport">导出报告文件</button>
+    </div>
+    <div class="meta" id="reportMeta"></div>
+    <pre id="reportBody">（尚未请求）</pre>
+    <div class="err" id="reportErr"></div>
+  </section>
+
+  <script>
+    (function () {
+      var baseInput = document.getElementById("baseUrl");
+      var apiMeta = document.getElementById("apiMeta");
+      var apiBody = document.getElementById("apiBody");
+      var apiErr = document.getElementById("apiErr");
+      var reportMeta = document.getElementById("reportMeta");
+      var reportBody = document.getElementById("reportBody");
+      var reportErr = document.getElementById("reportErr");
+
+      function base() {
+        var u = (baseInput.value || "").trim().replace(/\/+$/, "");
+        return u || "http://localhost:8080";
+      }
+
+      function showJson(el, obj) {
+        el.textContent = typeof obj === "string" ? obj : JSON.stringify(obj, null, 2);
+      }
+
+      async function getJson(path, metaEl, bodyEl, errEl) {
+        errEl.textContent = "";
+        var url = base() + path;
+        try {
+          var res = await fetch(url, { method: "GET", credentials: "same-origin" });
+          var ct = res.headers.get("content-type") || "";
+          var text = await res.text();
+          var parsed;
+          try {
+            parsed = JSON.parse(text);
+          } catch (e) {
+            parsed = text;
+          }
+          metaEl.textContent = res.status + " " + res.statusText + " · " + ct;
+          showJson(bodyEl, parsed);
+          return { ok: res.ok, status: res.status, data: parsed };
+        } catch (e) {
+          metaEl.textContent = "";
+          bodyEl.textContent = "";
+          errEl.textContent = String(e.message || e);
+          return { ok: false, error: e };
+        }
+      }
+
+      document.querySelectorAll("button[data-path]").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          getJson(btn.getAttribute("data-path"), apiMeta, apiBody, apiErr);
+        });
+      });
+
+      document.getElementById("btnSnapshot").addEventListener("click", function () {
+        getJson("/demo/report/snapshot", reportMeta, reportBody, reportErr);
+      });
+
+      document.getElementById("btnExport").addEventListener("click", function () {
+        getJson("/demo/report/export", reportMeta, reportBody, reportErr);
+      });
+    })();
+  </script>
+</body>
+</html>

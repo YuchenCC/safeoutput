@@ -129,6 +129,8 @@ demo 也提供手动导出接口:
 GET /demo/report/export
 ```
 
+当前内存中的聚合指标可通过 `GET /demo/report/snapshot` 以 JSON 返回（与写入磁盘的快照字段一致，便于在浏览器中查看）。启动 demo 后可在浏览器打开 `http://localhost:8080/safe-output-playground.html`，一键调用各类脱敏示例接口并刷新或导出报告。
+
 ## Demo 验证
 
 运行 demo 集成测试:
