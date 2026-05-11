@@ -27,4 +27,25 @@ class SafeOutputLogMessageMaskerTest {
         assertEquals("{\"mobile\":", masker.mask("{\"mobile\":"));
         assertEquals("plain text without key values", masker.mask("plain text without key values"));
     }
+
+    @Test
+    void regexFallbackMasksMobileEmailAndStrictIdCardOnly() {
+        String masked = masker.mask("contact 13812345678 foo@example.com id 11010519491231002X"
+                + " invalid 110105194912310021 flow 123456789012345678 bank 6222021234567890123");
+
+        assertFalse(masked.contains("13812345678"));
+        assertFalse(masked.contains("foo@example.com"));
+        assertFalse(masked.contains("11010519491231002X"));
+        assertEquals("contact 138****5678 foo****@example.com id 110105********002X"
+                + " invalid 110105194912310021 flow 123456789012345678 bank 6222021234567890123", masked);
+    }
+
+    @Test
+    void skipsLongMessagesAndLongValues() {
+        SafeOutputLogMessageMasker shortMessageLimit = new SafeOutputLogMessageMasker(10, 100, true);
+        SafeOutputLogMessageMasker shortValueLimit = new SafeOutputLogMessageMasker(1000, 5, false);
+
+        assertEquals("mobile=13812345678", shortMessageLimit.mask("mobile=13812345678"));
+        assertEquals("mobile=13812345678", shortValueLimit.mask("mobile=13812345678"));
+    }
 }

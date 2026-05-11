@@ -22,7 +22,10 @@ public final class SafeOutputMessagePatternConverter extends LogEventPatternConv
 
     public static SafeOutputMessagePatternConverter newInstance(String[] options) {
         try {
-            return new SafeOutputMessagePatternConverter(isEnabled(options), new SafeOutputLogMessageMasker());
+            ConverterOptions parsedOptions = ConverterOptions.parse(options);
+            return new SafeOutputMessagePatternConverter(parsedOptions.enabled,
+                    new SafeOutputLogMessageMasker(parsedOptions.maxMessageLength, parsedOptions.maxValueLength,
+                            parsedOptions.regexFallback));
         } catch (RuntimeException ex) {
             return new SafeOutputMessagePatternConverter(false, null);
         }
@@ -44,15 +47,58 @@ public final class SafeOutputMessagePatternConverter extends LogEventPatternConv
         }
     }
 
-    private static boolean isEnabled(String[] options) {
-        if (options == null) {
-            return true;
+    private static final class ConverterOptions {
+
+        private boolean enabled = true;
+
+        private int maxMessageLength = 5000;
+
+        private int maxValueLength = 300;
+
+        private boolean regexFallback = true;
+
+        private static ConverterOptions parse(String[] options) {
+            ConverterOptions parsedOptions = new ConverterOptions();
+            if (options == null) {
+                return parsedOptions;
+            }
+            for (String option : options) {
+                if (option == null) {
+                    continue;
+                }
+                String[] entries = option.split(",");
+                for (String entry : entries) {
+                    parsedOptions.apply(entry);
+                }
+            }
+            return parsedOptions;
         }
-        for (String option : options) {
-            if (option != null && "enabled=false".equalsIgnoreCase(option.trim())) {
-                return false;
+
+        private void apply(String entry) {
+            String[] keyValue = entry.trim().split("=", 2);
+            if (keyValue.length != 2) {
+                return;
+            }
+            String key = keyValue[0].trim();
+            String value = keyValue[1].trim();
+            if ("enabled".equalsIgnoreCase(key)) {
+                enabled = Boolean.parseBoolean(value);
+            } else if ("regexFallback".equalsIgnoreCase(key)) {
+                regexFallback = Boolean.parseBoolean(value);
+            } else if ("maxMessageLength".equalsIgnoreCase(key)) {
+                maxMessageLength = parsePositiveInt(value, maxMessageLength);
+            } else if ("maxValueLength".equalsIgnoreCase(key)) {
+                maxValueLength = parsePositiveInt(value, maxValueLength);
             }
         }
-        return true;
+
+        private static int parsePositiveInt(String value, int fallback) {
+            try {
+                int parsed = Integer.parseInt(value);
+                return parsed > 0 ? parsed : fallback;
+            } catch (NumberFormatException ex) {
+                return fallback;
+            }
+        }
     }
 }

@@ -5,6 +5,7 @@ import com.safeoutput.core.MaskRuleMatcher;
 import com.safeoutput.core.MaskScene;
 import com.safeoutput.core.MaskStrategy;
 import com.safeoutput.core.MaskStrategyRegistry;
+import com.safeoutput.core.MaskType;
 import com.safeoutput.core.RuleAction;
 import com.safeoutput.core.RuleMatch;
 
@@ -14,25 +15,58 @@ import java.util.regex.Pattern;
 
 final class SafeOutputLogMessageMasker {
 
+    private static final int DEFAULT_MAX_MESSAGE_LENGTH = 5000;
+
+    private static final int DEFAULT_MAX_VALUE_LENGTH = 300;
+
     private static final Pattern KEY_VALUE = Pattern.compile(
             "(\"([A-Za-z][A-Za-z0-9_-]*)\"|'([A-Za-z][A-Za-z0-9_-]*)'|([A-Za-z][A-Za-z0-9_-]*))"
                     + "(\\s*[:=]\\s*)(\"[^\"]*\"|'[^']*'|[^\\s,}]+)");
+
+    private static final Pattern MOBILE_FALLBACK = Pattern.compile("(?<!\\d)1[3-9]\\d{9}(?!\\d)");
+
+    private static final Pattern EMAIL_FALLBACK = Pattern.compile(
+            "[A-Za-z0-9._%+-]{3,}@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}");
+
+    private static final Pattern ID_CARD_FALLBACK = Pattern.compile("(?<![0-9A-Za-z])\\d{17}[0-9Xx](?![0-9A-Za-z])");
 
     private final MaskRuleMatcher ruleMatcher;
 
     private final MaskStrategyRegistry strategyRegistry;
 
+    private final int maxMessageLength;
+
+    private final int maxValueLength;
+
+    private final boolean regexFallbackEnabled;
+
     SafeOutputLogMessageMasker() {
-        this(MaskRuleMatcher.withDefaultRules(), MaskStrategyRegistry.withBuiltIns());
+        this(DEFAULT_MAX_MESSAGE_LENGTH, DEFAULT_MAX_VALUE_LENGTH, true);
+    }
+
+    SafeOutputLogMessageMasker(int maxMessageLength, int maxValueLength, boolean regexFallbackEnabled) {
+        this(MaskRuleMatcher.withDefaultRules(), MaskStrategyRegistry.withBuiltIns(), maxMessageLength,
+                maxValueLength, regexFallbackEnabled);
     }
 
     SafeOutputLogMessageMasker(MaskRuleMatcher ruleMatcher, MaskStrategyRegistry strategyRegistry) {
+        this(ruleMatcher, strategyRegistry, DEFAULT_MAX_MESSAGE_LENGTH, DEFAULT_MAX_VALUE_LENGTH, true);
+    }
+
+    private SafeOutputLogMessageMasker(MaskRuleMatcher ruleMatcher, MaskStrategyRegistry strategyRegistry,
+            int maxMessageLength, int maxValueLength, boolean regexFallbackEnabled) {
         this.ruleMatcher = ruleMatcher;
         this.strategyRegistry = strategyRegistry;
+        this.maxMessageLength = Math.max(1, maxMessageLength);
+        this.maxValueLength = Math.max(1, maxValueLength);
+        this.regexFallbackEnabled = regexFallbackEnabled;
     }
 
     String mask(String message) {
         if (message == null || message.isEmpty()) {
+            return message;
+        }
+        if (message.length() > maxMessageLength) {
             return message;
         }
         Matcher matcher = KEY_VALUE.matcher(message);
@@ -46,7 +80,7 @@ final class SafeOutputLogMessageMasker {
             matcher.appendReplacement(masked, Matcher.quoteReplacement(replacement));
         }
         matcher.appendTail(masked);
-        return masked.toString();
+        return regexFallbackEnabled ? maskFallback(masked.toString()) : masked.toString();
     }
 
     private String maskValue(String key, String value) {
@@ -55,6 +89,9 @@ final class SafeOutputLogMessageMasker {
             return value;
         }
         String rawValue = unquote(value);
+        if (rawValue.length() > maxValueLength) {
+            return value;
+        }
         Optional<MaskStrategy> strategy = strategyRegistry.find(match.get().getMaskType());
         if (!strategy.isPresent()) {
             return value;
@@ -66,6 +103,37 @@ final class SafeOutputLogMessageMasker {
                 .rawValue(rawValue)
                 .build());
         return requote(value, masked);
+    }
+
+    private String maskFallback(String message) {
+        String masked = maskFallbackType(message, MOBILE_FALLBACK, MaskType.MOBILE);
+        masked = maskFallbackType(masked, EMAIL_FALLBACK, MaskType.EMAIL);
+        return maskFallbackType(masked, ID_CARD_FALLBACK, MaskType.ID_CARD);
+    }
+
+    private String maskFallbackType(String message, Pattern pattern, MaskType type) {
+        Optional<MaskStrategy> strategy = strategyRegistry.find(type);
+        if (!strategy.isPresent()) {
+            return message;
+        }
+        Matcher matcher = pattern.matcher(message);
+        StringBuffer masked = new StringBuffer();
+        while (matcher.find()) {
+            String rawValue = matcher.group();
+            if (rawValue.length() > maxValueLength) {
+                continue;
+            }
+            String replacement = strategy.get().mask(rawValue, MaskContext.builder()
+                    .maskType(type)
+                    .scene(MaskScene.LOG)
+                    .rawValue(rawValue)
+                    .build());
+            if (!rawValue.equals(replacement)) {
+                matcher.appendReplacement(masked, Matcher.quoteReplacement(replacement));
+            }
+        }
+        matcher.appendTail(masked);
+        return masked.toString();
     }
 
     private static String unquote(String value) {

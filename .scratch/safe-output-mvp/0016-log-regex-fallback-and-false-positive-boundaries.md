@@ -14,11 +14,11 @@
 
 ## Acceptance criteria
 
-- [ ] 手机号和邮箱可被整条 message 正则兜底识别。
-- [ ] 合法大陆身份证通过严格校验后脱敏。
-- [ ] 非法身份证和普通 18 位流水号不脱敏。
-- [ ] 无上下文银行卡号默认不做全局兜底脱敏。
-- [ ] 支持 maxMessageLength 和 maxValueLength 性能限制。
+- [x] 手机号和邮箱可被整条 message 正则兜底识别。
+- [x] 合法大陆身份证通过严格校验后脱敏。
+- [x] 非法身份证和普通 18 位流水号不脱敏。
+- [x] 无上下文银行卡号默认不做全局兜底脱敏。
+- [x] 支持 maxMessageLength 和 maxValueLength 性能限制。
 
 ## Test requirements
 

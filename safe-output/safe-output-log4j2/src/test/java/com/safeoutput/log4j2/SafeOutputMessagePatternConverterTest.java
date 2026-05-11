@@ -38,6 +38,18 @@ class SafeOutputMessagePatternConverterTest {
         assertTrue(formatted.contains("mobile=13800138000"));
     }
 
+    @Test
+    void converterOptionsApplyLengthLimits() {
+        PatternLayout layout = PatternLayout.newBuilder()
+                .withPattern("%safeOutputMsg{maxMessageLength=10,maxValueLength=100}")
+                .withAlwaysWriteExceptions(false)
+                .build();
+
+        String formatted = layout.toSerializable(event("mobile=13800138000"));
+
+        assertTrue(formatted.contains("mobile=13800138000"));
+    }
+
     private static LogEvent event(String message) {
         return Log4jLogEvent.newBuilder()
                 .setLoggerName("safe-output-test")
