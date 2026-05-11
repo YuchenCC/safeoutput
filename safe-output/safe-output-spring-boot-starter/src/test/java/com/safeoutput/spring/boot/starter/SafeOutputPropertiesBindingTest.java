@@ -60,6 +60,10 @@ class SafeOutputPropertiesBindingTest {
                         "safe-output.report.include-api-metrics=true",
                         "safe-output.report.include-field-path=true",
                         "safe-output.report.include-raw-value=true",
+                        "safe-output.report.directory=/tmp/safe-output",
+                        "safe-output.report.file-prefix=pilot-report",
+                        "safe-output.report.interval-millis=30000",
+                        "safe-output.report.retain-files=7",
                         "safe-output.log.framework=LOG4J2",
                         "safe-output.log.max-message-length=2000",
                         "safe-output.log.max-value-length=120",
@@ -92,6 +96,10 @@ class SafeOutputPropertiesBindingTest {
                     assertTrue(properties.getReport().isIncludeApiMetrics());
                     assertTrue(properties.getReport().isIncludeFieldPath());
                     assertTrue(properties.getReport().isIncludeRawValue());
+                    assertEquals("/tmp/safe-output", properties.getReport().getDirectory());
+                    assertEquals("pilot-report", properties.getReport().getFilePrefix());
+                    assertEquals(30000, properties.getReport().getIntervalMillis());
+                    assertEquals(7, properties.getReport().getRetainFiles());
 
                     assertEquals("LOG4J2", properties.getLog().getFramework());
                     assertEquals(2000, properties.getLog().getMaxMessageLength());

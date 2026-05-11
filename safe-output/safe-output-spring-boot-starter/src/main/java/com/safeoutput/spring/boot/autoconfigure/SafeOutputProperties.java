@@ -234,6 +234,14 @@ public class SafeOutputProperties {
 
         private boolean includeRawValue;
 
+        private String directory = "./safe-output-reports";
+
+        private String filePrefix = "safe-output-report";
+
+        private long intervalMillis = 60000;
+
+        private int retainFiles = 10;
+
         public boolean isEnabled() {
             return enabled;
         }
@@ -264,6 +272,38 @@ public class SafeOutputProperties {
 
         public void setIncludeRawValue(boolean includeRawValue) {
             this.includeRawValue = includeRawValue;
+        }
+
+        public String getDirectory() {
+            return directory;
+        }
+
+        public void setDirectory(String directory) {
+            this.directory = directory;
+        }
+
+        public String getFilePrefix() {
+            return filePrefix;
+        }
+
+        public void setFilePrefix(String filePrefix) {
+            this.filePrefix = filePrefix;
+        }
+
+        public long getIntervalMillis() {
+            return intervalMillis;
+        }
+
+        public void setIntervalMillis(long intervalMillis) {
+            this.intervalMillis = intervalMillis;
+        }
+
+        public int getRetainFiles() {
+            return retainFiles;
+        }
+
+        public void setRetainFiles(int retainFiles) {
+            this.retainFiles = retainFiles;
         }
     }
 
