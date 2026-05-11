@@ -14,10 +14,10 @@
 
 ## Acceptance criteria
 
-- [ ] Demo 只引用 `safe-output-spring-boot-starter`，不直接依赖内部模块。
-- [ ] 提供 Bean、Map、List、嵌套对象接口。
-- [ ] 演示注解脱敏、字段级 Ignore、接口级 Ignore。
-- [ ] 不修改 Controller 业务代码即可触发 response 脱敏。
+- [x] Demo 只引用 `safe-output-spring-boot-starter`，不直接依赖内部模块。
+- [x] 提供 Bean、Map、List、嵌套对象接口。
+- [x] 演示注解脱敏、字段级 Ignore、接口级 Ignore。
+- [x] 不修改 Controller 业务代码即可触发 response 脱敏。
 
 ## Test requirements
 

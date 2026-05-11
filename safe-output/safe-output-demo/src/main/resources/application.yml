@@ -1,0 +1,11 @@
+safe-output:
+  ignore:
+    keys:
+      - plainNote
+    apis:
+      - method: GET
+        path: /demo/ignored
+        reason: demo plaintext endpoint
+  report:
+    enabled: true
+    interval-millis: 600000
