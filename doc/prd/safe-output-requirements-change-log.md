@@ -51,6 +51,18 @@
 - 验收影响：后续 issue 拆分以主 PRD 的 WBS 和验收标准为准。
 - 后续工作：后续新增或调整需求时，先在本文档记录，再同步主 PRD 或澄清说明。
 
+### CR-20260511-02 明确最终交付物为 Spring Boot 2.x Starter Jar
+
+- 状态：Implemented
+- 来源：用户要求“最终的交付物应该是个 java 包，可以供 springboot2.x 系统直接引用接入，同时更新 WBS”
+- 关联文档：[Safe Output MVP 主需求文档](./safe-output-mvp-prd.md)
+- 关联 WBS：WBS-00、WBS-03、WBS-04、WBS-07、WBS-08、WBS-10、WBS-12、WBS-13
+- 变更摘要：将 MVP 对外交付物明确为 `safe-output-spring-boot-starter` Maven Jar，业务系统通过 Spring Boot 2.x starter 直接引用接入；新增 `WBS-13 Starter 打包与发布验证`。
+- 变更原因：原 PRD 虽然包含 starter 模块，但交付物章节仍以多模块源码为主，容易让后续 issue 偏向源码工程实现，而不是可被业务系统直接接入的 Java 包。
+- 范围影响：不新增脱敏能力范围，但新增 starter 打包、安装、依赖树、自动装配和 Demo 外部引用验证要求。
+- 验收影响：MVP 成功标准新增“能生成 `safe-output-spring-boot-starter` Jar”和“Spring Boot 2.x 业务系统只引用 starter 即可完成自动装配”。
+- 后续工作：从主 PRD 拆 issue 时，需要为 WBS-13 单独创建打包与引用验证 issue；Demo issue 必须禁止直接依赖内部模块绕过 starter。
+
 ## 5. 已纳入基线的版本沿革
 
 ### 5.1 v0.4 调整

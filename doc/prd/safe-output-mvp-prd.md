@@ -7,20 +7,21 @@
 
 ## 1. 项目定位
 
-Safe Output 是面向传统 Java 服务的低侵入式输出侧敏感数据脱敏组件。
+Safe Output 是面向传统 Java 服务的低侵入式输出侧敏感数据脱敏组件，MVP 最终对外交付物是可被 Spring Boot 2.x 系统直接引用接入的 Java Starter 包。
 
-MVP 基于 JDK8 + Spring Boot 2.x，支持传统老项目通过 starter 和配置文件实现即插即用的数据脱敏能力，优先覆盖接口 response 和 Log4j2 2.x 日志打印两个核心输出场景，并在日志适配层预留后续兼容 Logback 的扩展空间。
+MVP 基于 JDK8 + Spring Boot 2.x，业务系统通过 Maven/Gradle 引入 `safe-output-spring-boot-starter` 并增加少量配置即可接入，优先覆盖接口 response 和 Log4j2 2.x 日志打印两个核心输出场景，并在日志适配层预留后续兼容 Logback 的扩展空间。
 
 ## 2. MVP 核心价值
 
 1. 老项目即插即用。
-2. 配置优先，注解可选。
-3. 不要求大规模修改业务代码。
-4. 同时覆盖接口显示和日志打印两个高风险场景。
-5. 支持脱敏豁免机制，避免粗暴全局脱敏影响业务正确性。
-6. 支持接口风险统计，便于识别敏感数据暴露接口。
-7. 有基础统计报告，可支撑竞赛汇报和试点验证。
-8. 架构边界清晰，便于后续分模块实现和持续迭代。
+2. 对外提供一个可直接引用的 Spring Boot 2.x Starter Jar。
+3. 配置优先，注解可选。
+4. 不要求大规模修改业务代码。
+5. 同时覆盖接口显示和日志打印两个高风险场景。
+6. 支持脱敏豁免机制，避免粗暴全局脱敏影响业务正确性。
+7. 支持接口风险统计，便于识别敏感数据暴露接口。
+8. 有基础统计报告，可支撑竞赛汇报和试点验证。
+9. 架构边界清晰，便于后续分模块实现和持续迭代。
 
 ## 3. 业务目标
 
@@ -32,6 +33,7 @@ MVP 基于 JDK8 + Spring Boot 2.x，支持传统老项目通过 starter 和配�
 6. 支持对触发脱敏的接口进行统计，为接口安全风险分级提供基础数据。
 7. 为竞赛汇报提供可演示、可说明、可量化的成果。
 8. 为后续版本扩展权限动态脱敏、MyBatis 脱敏、配置中心热更新、治理平台等能力预留架构空间。
+9. 最终交付一个可安装、可引用、可验证的 Java Starter 包，而不是只交付源码模块。
 
 ## 4. 技术目标
 
@@ -51,6 +53,8 @@ MVP 基于 JDK8 + Spring Boot 2.x，支持传统老项目通过 starter 和配�
 14. 支持对象、Map、Collection、Array 等常见返回结构。
 15. 支持基础统计指标采集和报告输出。
 16. 支持 response 场景接口风险统计。
+17. 生成可供 Spring Boot 2.x 业务系统直接引用的 `safe-output-spring-boot-starter` Jar。
+18. starter 对外聚合 core、Log4j2、report 等内部模块能力，业务系统不需要手动引用内部模块。
 
 ## 5. 目标用户与场景
 
@@ -71,6 +75,28 @@ MVP 基于 JDK8 + Spring Boot 2.x，支持传统老项目通过 starter 和配�
 5. 商品名、角色名、机构名等误脱敏风险字段可以通过字段级 ignore 豁免。
 6. 查询完整手机号、实名信息确认、内部客服查询等接口可以通过接口级 ignore 豁免 response 脱敏。
 7. 竞赛演示可展示接入前后 response、log、ignore、统计报告的对比。
+
+### 5.3 Starter 接入形态
+
+MVP 的最终接入形态是 Maven/Gradle Java 包。业务系统只需要引用 starter 入口包：
+
+```xml
+<dependency>
+  <groupId>com.safeoutput</groupId>
+  <artifactId>safe-output-spring-boot-starter</artifactId>
+  <version>0.1.0-SNAPSHOT</version>
+</dependency>
+```
+
+接入约束：
+
+1. `safe-output-spring-boot-starter` 是唯一对外推荐引用入口。
+2. `safe-output-core`、`safe-output-log4j2`、`safe-output-report` 是 starter 的内部依赖模块，不要求业务系统直接引用。
+3. Spring Boot 2.x 自动装配必须通过 `META-INF/spring.factories` 生效。
+4. 业务系统不需要手动声明核心 Bean。
+5. 业务系统可以通过 `application.yml` 配置开关、规则、ignore 和统计报告。
+6. 业务系统可通过声明自定义 `MaskStrategy` Bean 扩展策略。
+7. Log4j2 日志脱敏能力随 starter 依赖可用，但业务系统仍需在 `log4j2.xml` 中配置组件提供的 PatternConverter。
 
 ## 6. 功能范围总览
 
@@ -533,12 +559,14 @@ safe-output
 │   ├── 02-mvp-scope.md
 │   ├── 03-architecture-design.md
 │   └── 04-ai-coding-guide.md
-├── safe-output-core
-├── safe-output-spring-boot-starter
-├── safe-output-log4j2
-├── safe-output-report
-└── safe-output-demo
+├── safe-output-core                 # starter 内部依赖：核心模型、策略、规则基础
+├── safe-output-spring-boot-starter  # 对外发布入口包：Spring Boot 2.x 系统直接引用
+├── safe-output-log4j2               # starter 内部依赖：Log4j2 日志脱敏适配
+├── safe-output-report               # starter 内部依赖：统计指标与报告
+└── safe-output-demo                 # 验收模块：模拟外部 Spring Boot 2.x 业务系统接入 starter
 ```
+
+对外推荐交付物只有 `safe-output-spring-boot-starter`。其他模块用于维护内部边界、测试和构建，不作为业务系统的必选手动依赖。
 
 ## 11. Issue 拆分用 WBS
 
@@ -559,6 +587,7 @@ safe-output
 | WBS-10 | Demo 示例项目 | demo | P0 | 演示即插即用、ignore、统计报告 |
 | WBS-11 | 测试体系 | all | P0 | 单元测试、集成测试、Demo 验证 |
 | WBS-12 | 接入文档与演示材料 | docs | P1 | 编写接入说明和竞赛演示说明 |
+| WBS-13 | Starter 打包与发布验证 | starter/root/demo | P0 | 验证最终 Java 包可安装、可引用、可自动装配 |
 
 ### 11.2 WBS 拆分规则
 
@@ -577,9 +606,9 @@ safe-output
 
 #### WBS-00 项目骨架与工程约束
 
-目标：建立 Maven 多模块工程骨架，明确 JDK8、Spring Boot 2.x、依赖边界和基础编码约束。
+目标：建立 Maven 多模块工程骨架，明确 JDK8、Spring Boot 2.x、依赖边界、starter 聚合依赖和基础编码约束。
 
-输出物：根 `pom.xml`、各子模块 `pom.xml`、基础目录结构、初始 README、`META-INF/spring.factories` 示例。
+输出物：根 `pom.xml`、各子模块 `pom.xml`、基础目录结构、初始 README、`META-INF/spring.factories` 示例、`safe-output-spring-boot-starter` Maven 坐标和版本约束。
 
 不做范围：不实现具体脱敏逻辑、response 拦截、日志脱敏。
 
@@ -601,15 +630,15 @@ safe-output
 
 #### WBS-03 策略注册与扩展机制
 
-目标：实现策略注册、查找和扩展机制，支持内置策略和用户自定义策略。
+目标：实现策略注册、查找和扩展机制，支持 starter 内置策略和业务系统自定义策略。
 
-输出物：`MaskStrategyRegistry`、Spring 集成注册逻辑、自定义策略示例、单元测试。
+输出物：`MaskStrategyRegistry`、Spring 集成注册逻辑、自定义策略示例、单元测试、业务系统通过 Spring Bean 注入自定义策略的验证。
 
 不做范围：不做权限动态策略、远程规则加载、配置中心热更新。
 
 #### WBS-04 配置属性模型
 
-目标：实现 `application.yml` 配置绑定，为即插即用、规则控制、ignore、统计报告提供配置基础。
+目标：实现 `application.yml` 配置绑定，为 starter 即插即用、规则控制、ignore、统计报告提供对外配置契约。
 
 输出物：`SafeOutputProperties`、规则配置类、ignore 配置类、report 配置类、配置绑定测试、YAML 示例。
 
@@ -633,17 +662,17 @@ safe-output
 
 #### WBS-07 Response 脱敏接入
 
-目标：通过 Spring MVC `ResponseBodyAdvice` 接入 response 脱敏能力，并实现接口级 ignore 和接口风险统计。
+目标：通过 starter 自动注册 Spring MVC `ResponseBodyAdvice` 接入 response 脱敏能力，并实现接口级 ignore 和接口风险统计。
 
-输出物：ResponseBodyAdvice 实现、自动装配配置、接口级 ignore 集成测试、接口统计集成测试、Demo Controller 示例。
+输出物：ResponseBodyAdvice 实现、自动装配配置、接口级 ignore 集成测试、接口统计集成测试、Demo Controller 示例、业务系统仅引用 starter 即可触发 response 脱敏的验证。
 
 不做范围：不实现 WebFlux、RPC/Dubbo Filter、Servlet Filter 全局响应包装、文件下载 response、log 接口归因。
 
 #### WBS-08 Log4j2 日志脱敏
 
-目标：实现 Log4j2 2.x 日志脱敏能力，覆盖 MVP 的脱敏打印场景，并为后续 Logback 适配预留边界。
+目标：实现随 starter 可用的 Log4j2 2.x 日志脱敏能力，覆盖 MVP 的脱敏打印场景，并为后续 Logback 适配预留边界。
 
-输出物：`DesensitizeMessagePatternConverter`、`LogMasker`、`JsonLikeLogMasker`、`RegexLogMasker`、`MainlandIdCardDetector`、`log4j2.xml` 示例、日志脱敏测试。
+输出物：`DesensitizeMessagePatternConverter`、`LogMasker`、`JsonLikeLogMasker`、`RegexLogMasker`、`MainlandIdCardDetector`、`log4j2.xml` 示例、日志脱敏测试、starter 引用后 PatternConverter 可被 Log4j2 发现的验证。
 
 不做范围：不实现 Logback、System.out 拦截、第三方 SDK 内部日志全覆盖、复杂自然语言敏感信息识别、log 与接口关联统计，不引入 JSON Parser 作为强依赖。
 
@@ -657,11 +686,11 @@ safe-output
 
 #### WBS-10 Demo 示例项目
 
-目标：提供可运行 Demo，展示 MVP 即插即用能力和核心场景。
+目标：提供可运行 Demo，模拟外部 Spring Boot 2.x 业务系统只通过 starter 依赖接入，展示 MVP 即插即用能力和核心场景。
 
-输出物：Demo 项目代码、Demo 配置文件、Demo 接口说明、Demo 演示步骤。
+输出物：Demo 项目代码、Demo 配置文件、Demo 接口说明、Demo 演示步骤、只引用 `safe-output-spring-boot-starter` 的依赖验证。
 
-不做范围：不接入真实数据库、真实业务系统、前端页面、复杂登录权限。
+不做范围：不接入真实数据库、真实业务系统、前端页面、复杂登录权限，不通过直接依赖内部模块绕过 starter。
 
 #### WBS-11 测试体系
 
@@ -675,9 +704,17 @@ safe-output
 
 目标：编写 MVP 接入说明和竞赛演示说明。
 
-输出物：README、快速接入文档、配置说明、ignore 使用说明、Log4j2 接入说明、统计报告说明、Demo 演示步骤、MVP 验收清单、竞赛演示脚本初稿。
+输出物：README、快速接入文档、Maven/Gradle 引用说明、Spring Boot 2.x 最小接入示例、配置说明、ignore 使用说明、Log4j2 接入说明、统计报告说明、Demo 演示步骤、MVP 验收清单、竞赛演示脚本初稿。
 
 不做范围：不写完整竞赛 PPT、详细设计文档、后续版本完整方案。
+
+#### WBS-13 Starter 打包与发布验证
+
+目标：确保最终 Java Starter 包可安装、可引用、可自动装配，并能被 Spring Boot 2.x Demo 作为外部依赖验证。
+
+输出物：`safe-output-spring-boot-starter` Jar、本地 Maven 仓库安装验证、依赖树检查、Spring Boot 2.x 最小 Demo 引用验证、`spring.factories` 自动装配验证。
+
+不做范围：不发布 Maven Central，不搭建私服发布流程，不做商业版本管理。
 
 ## 12. 阶段性目标与里程碑
 
@@ -689,17 +726,16 @@ safe-output
 | P3 Response 脱敏阶段 | WBS-06、WBS-07 | 完成对象递归脱敏和接口 response 接入 | 对象脱敏引擎、ResponseBodyAdvice、接口级 ignore | Demo 接口无需改 Controller 即可脱敏，接口级 ignore 生效 |
 | P4 Log4j2 日志阶段 | WBS-08 | 完成 Log4j2 2.x 日志输出脱敏 | PatternConverter、JSON-like 识别、正则兜底 | Demo 日志中手机号、邮箱、身份证可脱敏，不引入 fastjson |
 | P5 统计报告阶段 | WBS-09 | 完成基础统计、接口风险统计和本地文件快照 | 内存聚合指标、接口风险统计、JSON 报告文件 | 定时文件写入可配置，不保存敏感原文，不影响主流程 |
-| P6 演示验收阶段 | WBS-10、WBS-11、WBS-12 | 完成 Demo、测试体系和接入文档 | Demo 项目、测试报告、接入说明、验收清单 | 可完整演示即插即用、response、log、ignore、统计报告 |
+| P6 打包验证阶段 | WBS-13 | 完成 starter Jar 打包、安装和外部引用验证 | starter Jar、本地 Maven 安装记录、最小接入 Demo 验证 | Spring Boot 2.x Demo 只引用 starter 即可自动装配并运行 |
+| P7 演示验收阶段 | WBS-10、WBS-11、WBS-12 | 完成 Demo、测试体系和接入文档 | Demo 项目、测试报告、接入说明、验收清单 | 可完整演示即插即用、response、log、ignore、统计报告 |
 
 ## 13. MVP 交付物
 
-代码交付物：
+对外交付物：
 
-1. `safe-output-core`
-2. `safe-output-spring-boot-starter`
-3. `safe-output-log4j2`
-4. `safe-output-report`
-5. `safe-output-demo`
+1. `safe-output-spring-boot-starter` Maven Jar，作为 Spring Boot 2.x 业务系统直接引用的唯一推荐入口。
+2. starter 依赖的内部模块 Jar，包括 `safe-output-core`、`safe-output-log4j2`、`safe-output-report`，由 starter 聚合引用，不要求业务系统手动声明。
+3. `safe-output-demo`，作为接入验证和演示工程，不作为业务系统生产依赖。
 
 文档交付物：
 
@@ -729,18 +765,19 @@ safe-output
 ## 14. MVP 成功标准
 
 1. 能在 JDK8 + Spring Boot 2.x Demo 中运行。
-2. 能通过 starter 完成自动装配。
-3. 能通过 YAML 配置完成老项目字段脱敏。
-4. 能在不修改 Controller 的情况下实现 response 脱敏。
-5. 能通过 Log4j2 2.x 配置实现日志脱敏。
-6. 能支持常见敏感数据类型。
-7. 能处理模糊字段误脱敏风险。
-8. 能支持字段级 ignore。
-9. 能支持接口级 response ignore。
-10. 能区分 response 和 log 两个场景。
-11. 能输出基础统计报告。
-12. 能按配置定时写入本地 JSON 统计报告文件。
-13. 能输出 response 接口风险统计。
-14. 统计报告不保存敏感原文。
-15. 能演示即插即用价值。
-16. 代码结构适合后续分模块继续迭代。
+2. 能生成 `safe-output-spring-boot-starter` Jar。
+3. Spring Boot 2.x 业务系统只引用 starter 即可完成自动装配。
+4. 能通过 YAML 配置完成老项目字段脱敏。
+5. 能在不修改 Controller 的情况下实现 response 脱敏。
+6. 能通过 Log4j2 2.x 配置实现日志脱敏。
+7. 能支持常见敏感数据类型。
+8. 能处理模糊字段误脱敏风险。
+9. 能支持字段级 ignore。
+10. 能支持接口级 response ignore。
+11. 能区分 response 和 log 两个场景。
+12. 能输出基础统计报告。
+13. 能按配置定时写入本地 JSON 统计报告文件。
+14. 能输出 response 接口风险统计。
+15. 统计报告不保存敏感原文。
+16. 能演示即插即用价值。
+17. 代码结构适合后续分模块继续迭代。
