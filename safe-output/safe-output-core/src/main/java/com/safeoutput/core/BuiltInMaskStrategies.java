@@ -1,5 +1,6 @@
 package com.safeoutput.core;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.Map;
@@ -37,6 +38,10 @@ public final class BuiltInMaskStrategies {
         return STRATEGIES.get(type);
     }
 
+    public static Collection<MaskStrategy> strategies() {
+        return STRATEGIES.values();
+    }
+
     private static void register(Map<MaskType, MaskStrategy> strategies, MaskStrategy strategy) {
         strategies.put(strategy.supportType(), strategy);
     }
@@ -56,10 +61,13 @@ public final class BuiltInMaskStrategies {
     }
 
     private static String maskBankCard(String rawValue) {
-        if (rawValue.length() < 12 || rawValue.length() > 19 || !DIGITS_PATTERN.matcher(rawValue).matches()) {
+        if (rawValue.length() < 12 || rawValue.length() > 19
+                || !DIGITS_PATTERN.matcher(rawValue).matches()) {
             return rawValue;
         }
-        return rawValue.substring(0, 6) + repeat('*', rawValue.length() - 10) + rawValue.substring(rawValue.length() - 4);
+        return rawValue.substring(0, 6)
+                + repeat('*', rawValue.length() - 10)
+                + rawValue.substring(rawValue.length() - 4);
     }
 
     private static String maskEmail(String rawValue) {
