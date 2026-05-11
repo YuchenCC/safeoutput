@@ -14,10 +14,10 @@
 
 ## Acceptance criteria
 
-- [ ] 提供可配置的脱敏日志 PatternConverter。
-- [ ] log 场景开关生效。
-- [ ] converter 初始化失败不影响 response 脱敏能力。
-- [ ] 实现不依赖 Logback API。
+- [x] 提供可配置的脱敏日志 PatternConverter。
+- [x] log 场景开关生效。
+- [x] converter 初始化失败不影响 response 脱敏能力。
+- [x] 实现不依赖 Logback API。
 
 ## Test requirements
 

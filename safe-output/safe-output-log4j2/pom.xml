@@ -12,4 +12,22 @@
 
   <artifactId>safe-output-log4j2</artifactId>
   <name>Safe Output Log4j2 适配模块</name>
+
+  <dependencies>
+    <dependency>
+      <groupId>com.safeoutput</groupId>
+      <artifactId>safe-output-core</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-core</artifactId>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
 </project>
