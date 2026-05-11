@@ -14,10 +14,10 @@
 
 ## Acceptance criteria
 
-- [ ] 支持 `method + path` 和 Ant 风格 path pattern。
-- [ ] 接口级 Ignore 默认只作用于 response 场景。
-- [ ] response Ignore 不自动放开 log 脱敏。
-- [ ] 命中接口级 Ignore 的接口记录 `ignored=true` 和 `ignoreReason`。
+- [x] 支持 `method + path` 和 Ant 风格 path pattern。
+- [x] 接口级 Ignore 默认只作用于 response 场景。
+- [x] response Ignore 不自动放开 log 脱敏。
+- [x] 命中接口级 Ignore 的接口记录 `ignored=true` 和 `ignoreReason`。
 
 ## Test requirements
 

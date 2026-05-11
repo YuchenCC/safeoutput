@@ -1,6 +1,7 @@
 package com.safeoutput.spring.boot.autoconfigure;
 
 import com.safeoutput.core.MaskType;
+import com.safeoutput.core.MaskScene;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -178,7 +179,13 @@ public class SafeOutputProperties {
 
         private String pattern;
 
+        private String method;
+
+        private String path;
+
         private String reason;
+
+        private final List<MaskScene> scenes = new ArrayList<MaskScene>();
 
         public String getPattern() {
             return pattern;
@@ -188,12 +195,32 @@ public class SafeOutputProperties {
             this.pattern = pattern;
         }
 
+        public String getMethod() {
+            return method;
+        }
+
+        public void setMethod(String method) {
+            this.method = method;
+        }
+
+        public String getPath() {
+            return path;
+        }
+
+        public void setPath(String path) {
+            this.path = path;
+        }
+
         public String getReason() {
             return reason;
         }
 
         public void setReason(String reason) {
             this.reason = reason;
+        }
+
+        public List<MaskScene> getScenes() {
+            return scenes;
         }
     }
 

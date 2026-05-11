@@ -7,14 +7,19 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.safeoutput.spring.boot.autoconfigure.SafeOutputAutoConfiguration;
 import com.safeoutput.spring.boot.autoconfigure.SafeOutputMvcAutoConfiguration;
 import com.safeoutput.spring.boot.autoconfigure.SafeOutputResponseBodyAdvice;
+import com.safeoutput.core.ResponseRiskEvent;
+import com.safeoutput.core.ResponseRiskRecorder;
 
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.test.web.servlet.MockMvc;
@@ -63,6 +68,28 @@ class SafeOutputResponseBodyAdviceIntegrationTest {
     }
 
     @Test
+    void apiIgnoreSkipsResponseMaskingAndRecordsRiskEvent() {
+        contextRunner
+                .withUserConfiguration(RecordingConfiguration.class)
+                .withPropertyValues(
+                        "safe-output.ignore.apis[0].method=GET",
+                        "safe-output.ignore.apis[0].path=/api/raw/**",
+                        "safe-output.ignore.apis[0].reason=business plaintext lookup")
+                .run(context -> {
+                    mvc(context.getBean(SafeOutputResponseBodyAdvice.class))
+                            .perform(get("/api/raw/mobile"))
+                            .andExpect(status().isOk())
+                            .andExpect(content().string("{\"mobile\":\"13812345678\"}"));
+
+                    ResponseRiskEvent event = context.getBean(RecordingResponseRiskRecorder.class).lastEvent.get();
+                    org.junit.jupiter.api.Assertions.assertEquals("GET", event.getMethod());
+                    org.junit.jupiter.api.Assertions.assertEquals("/api/raw/mobile", event.getPath());
+                    org.junit.jupiter.api.Assertions.assertEquals(true, event.isIgnored());
+                    org.junit.jupiter.api.Assertions.assertEquals("business plaintext lookup", event.getIgnoreReason());
+                });
+    }
+
+    @Test
     void adviceFailsOpenWhenMaskingThrows() throws Exception {
         SafeOutputResponseBodyAdvice advice = new SafeOutputResponseBodyAdvice(null, null);
 
@@ -106,6 +133,11 @@ class SafeOutputResponseBodyAdviceIntegrationTest {
             value.put("password", "secret-value");
             return ResponseEntity.ok(value);
         }
+
+        @GetMapping("/api/raw/mobile")
+        CustomerResponse rawMobile() {
+            return new CustomerResponse("13812345678");
+        }
     }
 
     private static final class CustomerResponse {
@@ -118,6 +150,25 @@ class SafeOutputResponseBodyAdviceIntegrationTest {
 
         public String getMobile() {
             return mobile;
+        }
+    }
+
+    @Configuration
+    static class RecordingConfiguration {
+
+        @Bean
+        RecordingResponseRiskRecorder recordingResponseRiskRecorder() {
+            return new RecordingResponseRiskRecorder();
+        }
+    }
+
+    private static final class RecordingResponseRiskRecorder implements ResponseRiskRecorder {
+
+        private final AtomicReference<ResponseRiskEvent> lastEvent = new AtomicReference<ResponseRiskEvent>();
+
+        @Override
+        public void record(ResponseRiskEvent event) {
+            lastEvent.set(event);
         }
     }
 }
