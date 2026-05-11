@@ -14,10 +14,10 @@
 
 ## Acceptance criteria
 
-- [ ] 支持 MOBILE、ID_CARD、BANK_CARD、EMAIL、CHINESE_NAME、ADDRESS、PASSWORD、DEFAULT。
-- [ ] 空值、短值、异常格式不抛出业务异常。
-- [ ] 大陆身份证校验包含格式、出生日期、年份范围和校验位。
-- [ ] 银行卡策略只负责已确认类型的脱敏，不做无上下文全局兜底。
+- [x] 支持 MOBILE、ID_CARD、BANK_CARD、EMAIL、CHINESE_NAME、ADDRESS、PASSWORD、DEFAULT。
+- [x] 空值、短值、异常格式不抛出业务异常。
+- [x] 大陆身份证校验包含格式、出生日期、年份范围和校验位。
+- [x] 银行卡策略只负责已确认类型的脱敏，不做无上下文全局兜底。
 
 ## Test requirements
 
