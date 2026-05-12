@@ -81,4 +81,77 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
+
+  <profiles>
+    <profile>
+      <!--
+        single-jar 交付 profile：将三个内部模块合并进 starter，产出一个独立 jar。
+        第三方只需安装此 jar，无需 safe-output-core / log4j2 / report。
+        Spring Boot、Spring MVC、Log4j2 等外部依赖由第三方应用自身提供，不打入。
+
+        打包命令（在 safe-output/ 根目录执行）：
+          mvn package -pl safe-output-spring-boot-starter -am -Psingle-jar -DskipTests
+
+        产物：
+          safe-output-spring-boot-starter/target/safe-output-spring-boot-starter-0.1.0-SNAPSHOT-all.jar
+
+        第三方安装到本地 .m2：
+          mvn install:install-file \
+            -Dfile=safe-output-spring-boot-starter-0.1.0-SNAPSHOT-all.jar \
+            -DgroupId=com.safeoutput \
+            -DartifactId=safe-output-spring-boot-starter \
+            -Dversion=0.1.0-SNAPSHOT \
+            -Dpackaging=jar \
+            -Dclassifier=all
+        然后在业务侧 pom.xml 中声明 classifier=all：
+          <dependency>
+            <groupId>com.safeoutput</groupId>
+            <artifactId>safe-output-spring-boot-starter</artifactId>
+            <version>0.1.0-SNAPSHOT</version>
+            <classifier>all</classifier>
+          </dependency>
+      -->
+      <id>single-jar</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-shade-plugin</artifactId>
+            <version>3.5.2</version>
+            <executions>
+              <execution>
+                <phase>package</phase>
+                <goals>
+                  <goal>shade</goal>
+                </goals>
+                <configuration>
+                  <!-- 保留原始 jar 不替换，额外产出 -all.jar -->
+                  <shadedArtifactAttached>true</shadedArtifactAttached>
+                  <shadedClassifierName>all</shadedClassifierName>
+                  <!-- 只合并三个内部模块，不打入任何外部依赖 -->
+                  <artifactSet>
+                    <includes>
+                      <include>com.safeoutput:safe-output-core</include>
+                      <include>com.safeoutput:safe-output-log4j2</include>
+                      <include>com.safeoutput:safe-output-report</include>
+                      <include>com.safeoutput:safe-output-spring-boot-starter</include>
+                    </includes>
+                  </artifactSet>
+                  <transformers>
+                    <!-- spring.factories 多份时追加合并而非覆盖 -->
+                    <transformer
+                      implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                      <resource>META-INF/spring.factories</resource>
+                    </transformer>
+                  </transformers>
+                  <!-- 抑制 shade 在 .m2 里写入 dependency-reduced-pom.xml -->
+                  <createDependencyReducedPom>false</createDependencyReducedPom>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 </project>
