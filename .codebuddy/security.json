@@ -1,0 +1,15 @@
+{
+  "$schema": "https://raw.githubusercontent.com/olasunkanmi-SE/codebuddy/main/schemas/security-config-v1.json",
+  "version": 1,
+  "allowedPaths": [
+    {
+      "path": ".",
+      "allowReadWrite": true,
+      "description": "safeoutput-java"
+    }
+  ],
+  "commandDenyPatterns": [],
+  "networkAllowPatterns": [],
+  "networkDenyPatterns": [],
+  "blockedPathPatterns": []
+}
