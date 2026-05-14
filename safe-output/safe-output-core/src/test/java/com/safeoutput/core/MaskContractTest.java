@@ -84,7 +84,7 @@ class MaskContractTest {
     }
 
     @Test
-    void strategyApplySafelySkipsUnknownNullEmptyAndTooShortValues() {
+    void strategyApplySafelySkipsUnknownNullAndEmptyValues() {
         MaskStrategy strategy = new PrefixMaskStrategy();
 
         assertUnchanged(strategy.apply(MaskContext.builder()
@@ -101,11 +101,6 @@ class MaskContractTest {
                 .maskType(MaskType.EMAIL)
                 .scene(MaskScene.RESPONSE)
                 .rawValue("")
-                .build()));
-        assertUnchanged(strategy.apply(MaskContext.builder()
-                .maskType(MaskType.EMAIL)
-                .scene(MaskScene.RESPONSE)
-                .rawValue("a")
                 .build()));
     }
 

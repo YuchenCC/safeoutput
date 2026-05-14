@@ -12,7 +12,7 @@ public interface MaskStrategy {
         }
         String rawValue = context.getRawValue();
         if (context.getMaskType() == MaskType.UNKNOWN || context.getMaskType() != supportType()
-                || rawValue == null || rawValue.length() <= 1) {
+                || rawValue == null || rawValue.isEmpty()) {
             return MaskResult.unchanged(context);
         }
 

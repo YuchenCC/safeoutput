@@ -81,13 +81,16 @@ class BuiltInMaskStrategiesTest {
     }
 
     @Test
-    void masksChineseNameByKeepingOnlyTheFamilyName() {
+    void masksGeneralNamesByKeepingReadableEdges() {
         assertMasked(MaskType.CHINESE_NAME, "张三", "张*");
-        assertMasked(MaskType.CHINESE_NAME, "王小明", "王**");
+        assertMasked(MaskType.CHINESE_NAME, "王小明", "王*明");
+        assertMasked(MaskType.CHINESE_NAME, "迪丽热巴", "迪**巴");
+        assertMasked(MaskType.CHINESE_NAME, "Alice", "A***e");
+        assertMasked(MaskType.CHINESE_NAME, "Michael Zhang", "M***********g");
+        assertMasked(MaskType.CHINESE_NAME, "张 Michael", "张*******l");
+        assertMasked(MaskType.CHINESE_NAME, "A", "*");
         assertUnchanged(MaskType.CHINESE_NAME, null);
         assertUnchanged(MaskType.CHINESE_NAME, "");
-        assertUnchanged(MaskType.CHINESE_NAME, "张");
-        assertUnchanged(MaskType.CHINESE_NAME, "Alice");
     }
 
     @Test

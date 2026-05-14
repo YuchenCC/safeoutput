@@ -25,8 +25,6 @@ public final class BuiltInMaskStrategies {
 
     private static final Pattern MOBILE_PATTERN = Pattern.compile("1[3-9]\\d{9}");
     private static final Pattern DIGITS_PATTERN = Pattern.compile("\\d+");
-    private static final Pattern CHINESE_NAME_PATTERN = Pattern.compile("[\\u4e00-\\u9fa5]{2,4}");
-
     private BuiltInMaskStrategies() {
     }
 
@@ -84,10 +82,15 @@ public final class BuiltInMaskStrategies {
     }
 
     private static String maskChineseName(String rawValue) {
-        if (!CHINESE_NAME_PATTERN.matcher(rawValue).matches()) {
-            return rawValue;
+        // 姓名类型由规则、注解或调用方显式确认，这里只负责首尾保留的通用姓名脱敏。
+        if (rawValue.length() == 1) {
+            return "*";
         }
-        return rawValue.substring(0, 1) + repeat('*', rawValue.length() - 1);
+        if (rawValue.length() == 2) {
+            return rawValue.substring(0, 1) + "*";
+        }
+        return rawValue.substring(0, 1) + repeat('*', rawValue.length() - 2)
+                + rawValue.substring(rawValue.length() - 1);
     }
 
     private static String maskAddress(String rawValue) {
@@ -98,6 +101,9 @@ public final class BuiltInMaskStrategies {
     }
 
     private static String maskPassword(String rawValue) {
+        if (rawValue.length() <= 1) {
+            return rawValue;
+        }
         return "********";
     }
 
