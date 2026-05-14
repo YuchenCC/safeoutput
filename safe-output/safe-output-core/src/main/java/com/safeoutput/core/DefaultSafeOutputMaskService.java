@@ -9,8 +9,18 @@ public final class DefaultSafeOutputMaskService implements SafeOutputMaskService
 
     private final MaskStrategyRegistry strategyRegistry;
 
+    private final ObjectMasker objectMasker;
+
     public DefaultSafeOutputMaskService(MaskStrategyRegistry strategyRegistry) {
+        this(strategyRegistry, null);
+    }
+
+    public DefaultSafeOutputMaskService(MaskStrategyRegistry strategyRegistry, ObjectMasker objectMasker) {
         this.strategyRegistry = strategyRegistry == null ? MaskStrategyRegistry.withBuiltIns() : strategyRegistry;
+        this.objectMasker = objectMasker == null
+                ? new ObjectMasker(this.strategyRegistry, MaskRuleMatcher.withDefaultRules(),
+                        ObjectMaskerOptions.defaults())
+                : objectMasker;
     }
 
     @Override
@@ -31,6 +41,16 @@ public final class DefaultSafeOutputMaskService implements SafeOutputMaskService
                     .scene(MaskScene.UNKNOWN)
                     .rawValue(value)
                     .build());
+        } catch (RuntimeException ex) {
+            return value;
+        }
+    }
+
+    @Override
+    public Object maskObject(Object value) {
+        try {
+            // 对象主动脱敏复用响应对象递归能力，默认不对普通字符串做全局 regex 扫描。
+            return objectMasker.mask(value);
         } catch (RuntimeException ex) {
             return value;
         }
