@@ -36,6 +36,34 @@ public class DemoReportController {
         return metricsCollector.snapshot();
     }
 
+    @GetMapping("/demo/report/dashboard")
+    public Map<String, Object> dashboard() {
+        seedLogSuggestions();
+        MaskReport report = metricsCollector.snapshot();
+        ResponseRiskAnalysis riskAnalysis = report.getResponseRiskAnalysis();
+        LogRuleSuggestionReport suggestionReport = new LogRuleSuggestionAnalyzer().analyze(
+                metricsCollector.snapshotSuggestions(), Collections.<String>emptyList());
+
+        Map<String, Object> result = new LinkedHashMap<String, Object>();
+        result.put("totalCount", report.getTotalCount());
+        result.put("responseCount", report.getResponseCount());
+        result.put("logCount", report.getLogCount());
+        result.put("manualCount", report.getManualCount());
+        result.put("highRiskApiCount", riskAnalysis.getResponseRiskSummary().getHighRiskApiCount());
+        result.put("suggestionCount", suggestionReport.getLogRuleSuggestions().size());
+        result.put("averageElapsedNanos", report.getAverageElapsedNanos());
+        result.put("maskTypeCounts", report.getMaskTypeCounts());
+        result.put("topRiskApis", riskAnalysis.getTopRiskApis());
+
+        Map<String, Long> sceneTrend = new LinkedHashMap<String, Long>();
+        sceneTrend.put("response", report.getResponseCount());
+        sceneTrend.put("log", report.getLogCount());
+        sceneTrend.put("manual", report.getManualCount());
+        result.put("sceneTrend", sceneTrend);
+
+        return result;
+    }
+
     @GetMapping("/demo/report/export")
     public Map<String, String> export() {
         Path path = exporter.exportNow();

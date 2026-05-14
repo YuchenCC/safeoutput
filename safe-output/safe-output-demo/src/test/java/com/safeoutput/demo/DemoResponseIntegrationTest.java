@@ -93,6 +93,45 @@ class DemoResponseIntegrationTest {
     }
 
     @Test
+    void maskByTypeEndpointReturnsFirstSecondAndIdempotentFields() {
+        Map<String, String> req = new LinkedHashMap<String, String>();
+        req.put("value", "13800138000");
+        req.put("type", "MOBILE");
+        String result = restTemplate.postForObject("/demo/mask/by-type", req, String.class);
+
+        assertTrue(result.contains("\"first\""));
+        assertTrue(result.contains("\"second\""));
+        assertTrue(result.contains("\"idempotent\""));
+        assertTrue(result.contains("138****8000"));
+        assertFalse(result.contains("13800138000"));
+    }
+
+    @Test
+    void maskObjectEndpointReturnsStructuredResult() {
+        String result = restTemplate.postForObject(
+                "/demo/mask/object", new LinkedHashMap<String, String>(), String.class);
+
+        assertTrue(result.contains("\"first\""));
+        assertTrue(result.contains("\"second\""));
+        assertTrue(result.contains("\"idempotent\":true"));
+        assertTrue(result.contains("\"realName\""));
+        assertTrue(result.contains("\"mobile\""));
+    }
+
+    @Test
+    void maskStrongEndpointScansTextAndReturnsResult() {
+        Map<String, String> req = new LinkedHashMap<String, String>();
+        req.put("text", "手机号13800138000邮箱foo@example.com");
+        String result = restTemplate.postForObject("/demo/mask/strong", req, String.class);
+
+        assertTrue(result.contains("\"first\""));
+        assertTrue(result.contains("\"second\""));
+        assertTrue(result.contains("\"idempotent\":true"));
+        assertTrue(result.contains("138****8000"));
+        assertTrue(result.contains("foo****@example.com"));
+    }
+
+    @Test
     void manualMaskDemoEndpointsReturnFirstSecondAndIdempotentResults() {
         Map<String, String> byTypeRequest = new LinkedHashMap<String, String>();
         byTypeRequest.put("value", "13800138000");
@@ -119,6 +158,61 @@ class DemoResponseIntegrationTest {
         String snapshot = restTemplate.getForObject("/demo/report/snapshot", String.class);
         assertTrue(snapshot.contains("\"manualCount\""));
         assertFalse(snapshot.contains("13800138000"));
+    }
+
+    @Test
+    void dashboardEndpointReturnsAggregatedStatsAndChartData() {
+        restTemplate.getForObject("/demo/bean", String.class);
+        restTemplate.getForObject("/demo/logs", String.class);
+        Map<String, String> byTypeReq = new LinkedHashMap<String, String>();
+        byTypeReq.put("value", "13800138000");
+        byTypeReq.put("type", "mobileM");
+        restTemplate.postForObject("/demo/mask/by-type", byTypeReq, String.class);
+
+        String dashboard = restTemplate.getForObject("/demo/report/dashboard", String.class);
+
+        assertTrue(dashboard.contains("\"totalCount\""));
+        assertTrue(dashboard.contains("\"responseCount\""));
+        assertTrue(dashboard.contains("\"logCount\""));
+        assertTrue(dashboard.contains("\"manualCount\""));
+        assertTrue(dashboard.contains("\"highRiskApiCount\""));
+        assertTrue(dashboard.contains("\"suggestionCount\""));
+        assertTrue(dashboard.contains("\"averageElapsedNanos\""));
+        assertTrue(dashboard.contains("\"maskTypeCounts\""));
+        assertTrue(dashboard.contains("\"topRiskApis\""));
+        assertTrue(dashboard.contains("\"sceneTrend\""));
+        assertFalse(dashboard.contains("13800138000"));
+    }
+
+    @Test
+    void responseRiskEndpointReturnsDetailedProfileFields() {
+        restTemplate.getForObject("/demo/nested", String.class);
+        restTemplate.getForObject("/demo/ignored", String.class);
+
+        String risk = restTemplate.getForObject("/demo/report/response-risk", String.class);
+
+        assertTrue(risk.contains("\"riskLevel\""));
+        assertTrue(risk.contains("\"riskScore\""));
+        assertTrue(risk.contains("\"averageElapsedNanos\""));
+        assertTrue(risk.contains("\"slowMaskCount\""));
+        assertTrue(risk.contains("\"maskTypeCounts\""));
+        assertTrue(risk.contains("\"ignored\""));
+        assertFalse(risk.contains("13800138000"));
+    }
+
+    @Test
+    void logSuggestionsEndpointReturnsYamlSnippet() {
+        String logSuggestions = restTemplate.getForObject("/demo/report/log-suggestions", String.class);
+
+        assertTrue(logSuggestions.contains("\"configSnippet\""));
+        assertTrue(logSuggestions.contains("safe-output"));
+        assertTrue(logSuggestions.contains("keys"));
+        assertTrue(logSuggestions.contains("type"));
+        assertTrue(logSuggestions.contains("suggestedType"));
+        assertTrue(logSuggestions.contains("hitCount"));
+        assertTrue(logSuggestions.contains("confidence"));
+        assertTrue(logSuggestions.contains("effectScopes"));
+        assertFalse(logSuggestions.contains("13800138000"));
     }
 
     @Test
