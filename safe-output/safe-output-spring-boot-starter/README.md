@@ -12,6 +12,7 @@
 - `rules[].type` 使用 String 类型标签绑定，支持内置类型和业务自定义类型；策略查找会做 trim 和大小写归一化。
 - `safe-output.strategy.unknown-type-policy` 预留未知类型处理策略，当前默认且唯一行为为 `SKIP`。
 - 自定义 `MaskStrategy` 只需作为 Spring Bean 暴露，并返回业务自定义 `type()`，即可被配置 Rule、`@Desensitize` 和统计链路识别。
+- `safe-output.log.key-value-rule-enabled` 控制日志 key-value 规则脱敏，`safe-output.log.max-rule-keys` 控制参与日志匹配的字段名数量上限。
 
 ## 最小接入
 
@@ -32,6 +33,9 @@ safe-output:
   enabled: true
   response:
     enabled: true
+  log:
+    key-value-rule-enabled: true
+    max-rule-keys: 128
   strategy:
     unknown-type-policy: SKIP
   rules:

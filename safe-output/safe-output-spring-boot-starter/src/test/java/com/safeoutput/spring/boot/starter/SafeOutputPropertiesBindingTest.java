@@ -29,6 +29,8 @@ class SafeOutputPropertiesBindingTest {
             assertEquals(1000, properties.getMaxCollectionSize());
             assertEquals(5000, properties.getLog().getMaxMessageLength());
             assertEquals(300, properties.getLog().getMaxValueLength());
+            assertTrue(properties.getLog().isKeyValueRuleEnabled());
+            assertEquals(128, properties.getLog().getMaxRuleKeys());
             assertFalse(properties.getLog().getRegexFallback().isEnabled());
             assertTrue(properties.getLog().getRegexFallback().isIdCardCheckCodeEnabled());
             assertEquals(SafeOutputProperties.UnknownTypePolicy.SKIP,
@@ -71,6 +73,8 @@ class SafeOutputPropertiesBindingTest {
                         "safe-output.log.framework=LOG4J2",
                         "safe-output.log.max-message-length=2000",
                         "safe-output.log.max-value-length=120",
+                        "safe-output.log.key-value-rule-enabled=false",
+                        "safe-output.log.max-rule-keys=12",
                         "safe-output.log.regex-fallback.enabled=true",
                         "safe-output.log.regex-fallback.id-card-check-code-enabled=false",
                         "safe-output.log.regex-fallback.types[0]=MOBILE",
@@ -114,6 +118,8 @@ class SafeOutputPropertiesBindingTest {
                     assertEquals("LOG4J2", properties.getLog().getFramework());
                     assertEquals(2000, properties.getLog().getMaxMessageLength());
                     assertEquals(120, properties.getLog().getMaxValueLength());
+                    assertFalse(properties.getLog().isKeyValueRuleEnabled());
+                    assertEquals(12, properties.getLog().getMaxRuleKeys());
                     assertTrue(properties.getLog().getRegexFallback().isEnabled());
                     assertFalse(properties.getLog().getRegexFallback().isIdCardCheckCodeEnabled());
                     assertEquals("EMAIL", properties.getLog().getRegexFallback().getTypes().get(1));

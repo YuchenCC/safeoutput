@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import java.util.Arrays;
+import java.util.Map;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
@@ -129,6 +130,24 @@ class MaskRuleMatcherTest {
                 .regexFallbackType(MaskType.MOBILE)
                 .build()).get();
         assertMatch(Optional.of(fallback), MaskType.MOBILE, "regex-fallback", RuleSource.REGEX_FALLBACK);
+    }
+
+    @Test
+    void logKeyMatchesAreBuiltOnceWithIgnoreAndKeyLimit() {
+        MaskRuleMatcher matcher = MaskRuleMatcher.builder()
+                .ignoreKeys(Arrays.asList("email"))
+                .configuredRules(Arrays.asList(MaskRule.configured("realName")
+                        .keys(Arrays.asList("realName"))
+                        .type(MaskType.CHINESE_NAME)
+                        .build()))
+                .build();
+
+        Map<String, RuleMatch> matches = matcher.logKeyMatches(20);
+
+        assertMatch(Optional.of(matches.get("realname")), MaskType.CHINESE_NAME, "realName", RuleSource.CONFIGURED);
+        assertEquals(RuleAction.IGNORE, matches.get("email").getAction());
+        assertFalse(matcher.logKeyMatches(1).containsKey("realname"));
+        assertFalse(matches.containsKey("$.realName"));
     }
 
     private static void assertMatch(Optional<RuleMatch> match, MaskType type, String ruleName, RuleSource source) {

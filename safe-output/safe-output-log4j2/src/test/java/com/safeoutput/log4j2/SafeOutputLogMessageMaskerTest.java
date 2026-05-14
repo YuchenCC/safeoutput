@@ -143,4 +143,37 @@ class SafeOutputLogMessageMaskerTest {
         assertEquals("mobile=13812345678", shortMessageLimit.mask("mobile=13812345678"));
         assertEquals("mobile=13812345678", shortValueLimit.mask("mobile=13812345678"));
     }
+
+    @Test
+    void keyValueRuleSwitchAndRuleKeyLimitSkipKeyValueMasking() {
+        SafeOutputLogMessageMasker disabled = new SafeOutputLogMessageMasker(
+                MaskRuleMatcher.withDefaultRules(), MaskStrategyRegistry.withBuiltIns(), 1000, 100, false, false, 100);
+        SafeOutputLogMessageMasker limited = new SafeOutputLogMessageMasker(
+                MaskRuleMatcher.withDefaultRules(), MaskStrategyRegistry.withBuiltIns(), 1000, 100, false, true, 1);
+
+        assertEquals("mobile=13812345678", disabled.mask("mobile=13812345678"));
+        assertEquals("mobile=13812345678", limited.mask("mobile=13812345678"));
+    }
+
+    @Test
+    void strategyExceptionReturnsOriginalLogMessage() {
+        SafeOutputLogMessageMasker custom = new SafeOutputLogMessageMasker(
+                MaskRuleMatcher.withConfiguredRules(Arrays.asList(MaskRule.configured("broken")
+                        .keys(Arrays.asList("broken"))
+                        .type("broken")
+                        .build())),
+                MaskStrategyRegistry.withBuiltIns(Arrays.asList(new MaskStrategy() {
+                    @Override
+                    public String type() {
+                        return "broken";
+                    }
+
+                    @Override
+                    public String mask(String rawValue, MaskContext context) {
+                        throw new IllegalStateException("boom");
+                    }
+                })), 1000, 100, false, true, 100);
+
+        assertEquals("broken=secret", custom.mask("broken=secret"));
+    }
 }

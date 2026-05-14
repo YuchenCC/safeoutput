@@ -1,5 +1,8 @@
 package com.safeoutput.log4j2;
 
+import com.safeoutput.core.MaskRuleMatcher;
+import com.safeoutput.core.MaskStrategyRegistry;
+
 import org.apache.logging.log4j.core.LogEvent;
 import org.apache.logging.log4j.core.config.plugins.Plugin;
 import org.apache.logging.log4j.core.pattern.ConverterKeys;
@@ -24,8 +27,10 @@ public final class SafeOutputMessagePatternConverter extends LogEventPatternConv
         try {
             ConverterOptions parsedOptions = ConverterOptions.parse(options);
             return new SafeOutputMessagePatternConverter(parsedOptions.enabled,
-                    new SafeOutputLogMessageMasker(parsedOptions.maxMessageLength, parsedOptions.maxValueLength,
-                            parsedOptions.regexFallback, parsedOptions.idCardCheckCode));
+                    new SafeOutputLogMessageMasker(MaskRuleMatcher.withDefaultRules(),
+                            MaskStrategyRegistry.withBuiltIns(), parsedOptions.maxMessageLength,
+                            parsedOptions.maxValueLength, parsedOptions.regexFallback, parsedOptions.idCardCheckCode,
+                            parsedOptions.keyValueRuleEnabled, parsedOptions.maxRuleKeys));
         } catch (RuntimeException ex) {
             // converter 初始化失败时禁用脱敏，避免日志配置问题影响业务启动或日志输出。
             return new SafeOutputMessagePatternConverter(false, null);
@@ -60,6 +65,10 @@ public final class SafeOutputMessagePatternConverter extends LogEventPatternConv
 
         private boolean idCardCheckCode = true;
 
+        private boolean keyValueRuleEnabled = true;
+
+        private int maxRuleKeys = 128;
+
         private static ConverterOptions parse(String[] options) {
             ConverterOptions parsedOptions = new ConverterOptions();
             if (options == null) {
@@ -86,6 +95,8 @@ public final class SafeOutputMessagePatternConverter extends LogEventPatternConv
             String value = keyValue[1].trim();
             if ("enabled".equalsIgnoreCase(key)) {
                 enabled = Boolean.parseBoolean(value);
+            } else if ("keyValueRuleEnabled".equalsIgnoreCase(key)) {
+                keyValueRuleEnabled = Boolean.parseBoolean(value);
             } else if ("regexFallback".equalsIgnoreCase(key)) {
                 regexFallback = Boolean.parseBoolean(value);
             } else if ("idCardCheckCode".equalsIgnoreCase(key)) {
@@ -94,6 +105,8 @@ public final class SafeOutputMessagePatternConverter extends LogEventPatternConv
                 maxMessageLength = parsePositiveInt(value, maxMessageLength);
             } else if ("maxValueLength".equalsIgnoreCase(key)) {
                 maxValueLength = parsePositiveInt(value, maxValueLength);
+            } else if ("maxRuleKeys".equalsIgnoreCase(key)) {
+                maxRuleKeys = parsePositiveInt(value, maxRuleKeys);
             }
         }
 

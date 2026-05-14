@@ -1,7 +1,6 @@
 package com.safeoutput.log4j2;
 
 import com.safeoutput.core.MaskContext;
-import com.safeoutput.core.MaskRuleRequest;
 import com.safeoutput.core.MainlandIdCards;
 import com.safeoutput.core.MaskRuleMatcher;
 import com.safeoutput.core.MaskScene;
@@ -11,6 +10,8 @@ import com.safeoutput.core.MaskTypes;
 import com.safeoutput.core.RuleAction;
 import com.safeoutput.core.RuleMatch;
 
+import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -24,6 +25,8 @@ final class SafeOutputLogMessageMasker {
 
     private static final int DEFAULT_MAX_VALUE_LENGTH = 300;
 
+    private static final int DEFAULT_MAX_RULE_KEYS = 128;
+
     private static final Pattern KEY_VALUE = Pattern.compile(
             "(\"([A-Za-z][A-Za-z0-9_-]*)\"|'([A-Za-z][A-Za-z0-9_-]*)'|([A-Za-z][A-Za-z0-9_-]*))"
                     + "(\\s*[:=]\\s*)(\"[^\"]*\"|'[^']*'|[^\\s,}]+)");
@@ -35,8 +38,6 @@ final class SafeOutputLogMessageMasker {
 
     private static final Pattern ID_CARD_FALLBACK = Pattern.compile("(?<![0-9A-Za-z])\\d{17}[0-9Xx](?![0-9A-Za-z])");
 
-    private final MaskRuleMatcher ruleMatcher;
-
     private final MaskStrategyRegistry strategyRegistry;
 
     private final int maxMessageLength;
@@ -46,6 +47,10 @@ final class SafeOutputLogMessageMasker {
     private final boolean regexFallbackEnabled;
 
     private final boolean idCardCheckCodeEnabled;
+
+    private final boolean keyValueRuleEnabled;
+
+    private final Map<String, RuleMatch> keyValueMatches;
 
     SafeOutputLogMessageMasker() {
         this(DEFAULT_MAX_MESSAGE_LENGTH, DEFAULT_MAX_VALUE_LENGTH, true);
@@ -65,24 +70,55 @@ final class SafeOutputLogMessageMasker {
         this(ruleMatcher, strategyRegistry, DEFAULT_MAX_MESSAGE_LENGTH, DEFAULT_MAX_VALUE_LENGTH, true, true);
     }
 
+    SafeOutputLogMessageMasker(MaskRuleMatcher ruleMatcher, MaskStrategyRegistry strategyRegistry,
+            int maxMessageLength, int maxValueLength, boolean regexFallbackEnabled, boolean keyValueRuleEnabled,
+            int maxRuleKeys) {
+        this(ruleMatcher, strategyRegistry, maxMessageLength, maxValueLength, regexFallbackEnabled, true,
+                keyValueRuleEnabled, maxRuleKeys);
+    }
+
+    SafeOutputLogMessageMasker(MaskRuleMatcher ruleMatcher, MaskStrategyRegistry strategyRegistry,
+            int maxMessageLength, int maxValueLength, boolean regexFallbackEnabled, boolean idCardCheckCodeEnabled,
+            boolean keyValueRuleEnabled, int maxRuleKeys) {
+        this(strategyRegistry, maxMessageLength, maxValueLength, regexFallbackEnabled, idCardCheckCodeEnabled,
+                keyValueRuleEnabled, ruleMatcher.logKeyMatches(Math.max(1, maxRuleKeys)));
+    }
+
     private SafeOutputLogMessageMasker(MaskRuleMatcher ruleMatcher, MaskStrategyRegistry strategyRegistry,
             int maxMessageLength, int maxValueLength, boolean regexFallbackEnabled, boolean idCardCheckCodeEnabled) {
-        this.ruleMatcher = ruleMatcher;
+        this(ruleMatcher, strategyRegistry, maxMessageLength, maxValueLength, regexFallbackEnabled,
+                idCardCheckCodeEnabled, true, DEFAULT_MAX_RULE_KEYS);
+    }
+
+    private SafeOutputLogMessageMasker(MaskStrategyRegistry strategyRegistry, int maxMessageLength, int maxValueLength,
+            boolean regexFallbackEnabled, boolean idCardCheckCodeEnabled, boolean keyValueRuleEnabled,
+            Map<String, RuleMatch> keyValueMatches) {
         this.strategyRegistry = strategyRegistry;
         this.maxMessageLength = Math.max(1, maxMessageLength);
         this.maxValueLength = Math.max(1, maxValueLength);
         this.regexFallbackEnabled = regexFallbackEnabled;
         this.idCardCheckCodeEnabled = idCardCheckCodeEnabled;
+        this.keyValueRuleEnabled = keyValueRuleEnabled;
+        this.keyValueMatches = keyValueRuleEnabled ? keyValueMatches
+                : java.util.Collections.<String, RuleMatch>emptyMap();
     }
 
     String mask(String message) {
-        if (message == null || message.isEmpty()) {
+        try {
+            return maskSafely(message);
+        } catch (RuntimeException ex) {
             return message;
         }
-        if (message.length() > maxMessageLength) {
+    }
+
+    private String maskSafely(String message) {
+        if (message == null || message.isEmpty() || message.length() > maxMessageLength) {
             return message;
         }
         // 第一阶段只处理带字段名上下文的片段，例如 mobile=... 或 "email":"..."。
+        if (!keyValueRuleEnabled || keyValueMatches.isEmpty()) {
+            return regexFallbackEnabled ? maskFallback(message) : message;
+        }
         Matcher matcher = KEY_VALUE.matcher(message);
         StringBuffer masked = new StringBuffer();
         while (matcher.find()) {
@@ -98,26 +134,23 @@ final class SafeOutputLogMessageMasker {
     }
 
     private String maskValue(String key, String value) {
-        // 日志 key-value 只有字段名上下文，仍复用 core 的统一决策，确保 ignore.keys 优先级一致。
-        Optional<RuleMatch> match = ruleMatcher.decide(MaskRuleRequest.builder()
-                .key(key)
-                .build());
-        if (!match.isPresent() || match.get().getAction() != RuleAction.MASK) {
+        RuleMatch match = keyValueMatches.get(normalizeKey(key));
+        if (match == null || match.getAction() != RuleAction.MASK) {
             return value;
         }
         String rawValue = unquote(value);
         if (rawValue.length() > maxValueLength) {
             return value;
         }
-        Optional<MaskStrategy> strategy = strategyRegistry.find(match.get().getMaskType());
+        Optional<MaskStrategy> strategy = strategyRegistry.find(match.getMaskType());
         if (!strategy.isPresent()) {
             // 日志输出链路必须 fail-open；未知 type 只告警并跳过当前值。
             LOGGER.warning("Skip log masking because no strategy registered for type "
-                    + MaskTypes.normalize(match.get().getMaskType()));
+                    + MaskTypes.normalize(match.getMaskType()));
             return value;
         }
         String masked = strategy.get().mask(rawValue, MaskContext.builder()
-                .maskType(match.get().getMaskType())
+                .maskType(match.getMaskType())
                 .scene(MaskScene.LOG)
                 .fieldName(key)
                 .rawValue(rawValue)
@@ -192,5 +225,12 @@ final class SafeOutputLogMessageMasker {
             return second;
         }
         return third;
+    }
+
+    private static String normalizeKey(String key) {
+        if (key == null || key.trim().isEmpty()) {
+            return null;
+        }
+        return key.trim().toLowerCase(Locale.ENGLISH);
     }
 }

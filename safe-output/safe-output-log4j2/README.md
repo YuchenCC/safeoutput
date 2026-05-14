@@ -21,16 +21,19 @@
 可用选项：
 
 - `enabled`: 是否启用日志脱敏，默认 `true`。
+- `keyValueRuleEnabled`: 是否启用 key-value 规则脱敏，默认 `true`。
 - `regexFallback`: 是否启用无字段名上下文的兜底正则，默认 `true`。
 - `idCardCheckCode`: regex fallback 识别孤立身份证号时是否校验末位校验码，默认 `true`；日期格式和年份范围始终校验。
 - `maxMessageLength`: 超过该长度的整条日志不处理，默认 `5000`。
 - `maxValueLength`: 超过该长度的单个值不处理，默认 `300`。
+- `maxRuleKeys`: 参与日志 key-value 匹配的字段名上限，默认 `128`；超限时跳过 key-value 规则。
 
 ## 边界
 
 - key-value 规则依赖字段名，例如 `mobile=13800138000` 或 `"email":"foo@example.com"`。
 - key-value 支持 `key=value`、`key: value`、`key = value`、`key : value`，key 和 value 可使用单引号、双引号或不带引号。
 - `ignore.keys` 命中时优先跳过日志 key-value 脱敏；`rules.paths` 不作为日志文本匹配依据。
+- key-value 规则在 `SafeOutputLogMessageMasker` 初始化时构建字段名缓存；单条日志处理不动态拼接或编译规则集合。
 - regex fallback 只覆盖手机号、邮箱和通过轻量格式、日期、年份及可选校验位检查的大陆身份证号。
 - 无上下文银行卡号不做全局兜底，避免误伤普通流水号。
 - converter 或脱敏过程异常时返回原日志消息，保持 fail-open。

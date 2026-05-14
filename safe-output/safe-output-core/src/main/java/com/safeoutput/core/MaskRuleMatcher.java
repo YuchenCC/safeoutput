@@ -4,8 +4,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 
 public final class MaskRuleMatcher {
@@ -84,6 +86,20 @@ public final class MaskRuleMatcher {
                     RuleSource.REGEX_FALLBACK));
         }
         return Optional.empty();
+    }
+
+    public Map<String, RuleMatch> logKeyMatches(int maxKeys) {
+        if (maxKeys <= 0) {
+            return Collections.emptyMap();
+        }
+        Map<String, RuleMatch> matches = new LinkedHashMap<String, RuleMatch>();
+        if (!appendLogRuleKeys(matches, configuredRules, maxKeys) || !appendLogRuleKeys(matches, defaultRules, maxKeys)) {
+            return Collections.emptyMap();
+        }
+        for (String ignoredKey : ignoreKeys) {
+            matches.put(ignoredKey, ignore("field-ignore-key", RuleSource.FIELD_IGNORE));
+        }
+        return Collections.unmodifiableMap(matches);
     }
 
     private Optional<RuleMatch> matchFieldIgnore(String key, String path) {
@@ -171,6 +187,21 @@ public final class MaskRuleMatcher {
 
     private static RuleMatch toMatch(MaskRule rule) {
         return new RuleMatch(rule.getType(), rule.getName(), rule.getSource());
+    }
+
+    private static boolean appendLogRuleKeys(Map<String, RuleMatch> matches, List<MaskRule> rules, int maxKeys) {
+        for (MaskRule rule : rules) {
+            for (String candidate : rule.getKeys()) {
+                String normalizedKey = normalizeKey(candidate);
+                if (normalizedKey != null && !matches.containsKey(normalizedKey)) {
+                    if (matches.size() >= maxKeys) {
+                        return false;
+                    }
+                    matches.put(normalizedKey, toMatch(rule));
+                }
+            }
+        }
+        return true;
     }
 
     private static RuleMatch ignore(String ruleName, RuleSource source) {

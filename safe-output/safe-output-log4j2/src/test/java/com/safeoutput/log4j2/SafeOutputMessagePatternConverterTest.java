@@ -50,6 +50,21 @@ class SafeOutputMessagePatternConverterTest {
         assertTrue(formatted.contains("mobile=13800138000"));
     }
 
+    @Test
+    void converterOptionsCanDisableKeyValueRulesAndLimitRuleKeys() {
+        PatternLayout disabled = PatternLayout.newBuilder()
+                .withPattern("%safeOutputMsg{keyValueRuleEnabled=false,regexFallback=false}")
+                .withAlwaysWriteExceptions(false)
+                .build();
+        PatternLayout limited = PatternLayout.newBuilder()
+                .withPattern("%safeOutputMsg{maxRuleKeys=1,regexFallback=false}")
+                .withAlwaysWriteExceptions(false)
+                .build();
+
+        assertTrue(disabled.toSerializable(event("mobile=13800138000")).contains("mobile=13800138000"));
+        assertTrue(limited.toSerializable(event("mobile=13800138000")).contains("mobile=13800138000"));
+    }
+
     private static LogEvent event(String message) {
         return Log4jLogEvent.newBuilder()
                 .setLoggerName("safe-output-test")

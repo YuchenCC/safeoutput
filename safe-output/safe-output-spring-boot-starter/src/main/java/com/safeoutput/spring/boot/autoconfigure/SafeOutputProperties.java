@@ -338,6 +338,10 @@ public class SafeOutputProperties {
 
         private int maxValueLength = 300;
 
+        private boolean keyValueRuleEnabled = true;
+
+        private int maxRuleKeys = 128;
+
         private final RegexFallbackProperties regexFallback = new RegexFallbackProperties();
 
         public String getFramework() {
@@ -362,6 +366,22 @@ public class SafeOutputProperties {
 
         public void setMaxValueLength(int maxValueLength) {
             this.maxValueLength = maxValueLength;
+        }
+
+        public boolean isKeyValueRuleEnabled() {
+            return keyValueRuleEnabled;
+        }
+
+        public void setKeyValueRuleEnabled(boolean keyValueRuleEnabled) {
+            this.keyValueRuleEnabled = keyValueRuleEnabled;
+        }
+
+        public int getMaxRuleKeys() {
+            return maxRuleKeys;
+        }
+
+        public void setMaxRuleKeys(int maxRuleKeys) {
+            this.maxRuleKeys = maxRuleKeys;
         }
 
         public RegexFallbackProperties getRegexFallback() {
