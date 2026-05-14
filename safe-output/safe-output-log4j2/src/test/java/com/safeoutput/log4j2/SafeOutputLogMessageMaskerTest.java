@@ -6,12 +6,15 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import com.safeoutput.core.MaskRule;
 import com.safeoutput.core.MaskRuleMatcher;
 import com.safeoutput.core.MaskContext;
+import com.safeoutput.core.InMemoryLogRuleSuggestionCollector;
+import com.safeoutput.core.LogRuleSuggestionMetric;
 import com.safeoutput.core.MaskStrategy;
 import com.safeoutput.core.MaskStrategyRegistry;
 import com.safeoutput.core.MaskTypes;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
@@ -48,6 +51,42 @@ class SafeOutputLogMessageMaskerTest {
         assertFalse(masked.contains("11010519491231002X"));
         assertEquals("contact 138****5678 foo****@example.com id 110105********002X"
                 + " invalid 110105194912310021 flow 123456789012345678 bank 6222021234567890123", masked);
+    }
+
+    @Test
+    void regexFallbackCollectsNearbyKeySuggestionsWithoutRawValues() {
+        InMemoryLogRuleSuggestionCollector collector = new InMemoryLogRuleSuggestionCollector();
+        SafeOutputLogMessageMasker custom = new SafeOutputLogMessageMasker(MaskRuleMatcher.withDefaultRules(),
+                MaskStrategyRegistry.withBuiltIns(), collector);
+
+        custom.mask("phoneNo=13812345678 certNum: 11010519491231002X mailAddr=foo@example.com");
+        custom.mask("phoneNo=13912345678");
+
+        List<LogRuleSuggestionMetric> metrics = collector.snapshot();
+        assertEquals(3, metrics.size());
+        assertMetric(metrics, "phoneno", MaskTypes.MOBILE, 2);
+        assertMetric(metrics, "certnum", MaskTypes.ID_CARD, 1);
+        assertMetric(metrics, "mailaddr", MaskTypes.EMAIL, 1);
+        assertFalse(metrics.toString().contains("13812345678"));
+        assertFalse(metrics.toString().contains("foo@example.com"));
+        assertFalse(metrics.toString().contains("11010519491231002X"));
+    }
+
+    @Test
+    void regexFallbackSkipsConfiguredNearbyKeysForSuggestions() {
+        InMemoryLogRuleSuggestionCollector collector = new InMemoryLogRuleSuggestionCollector();
+        SafeOutputLogMessageMasker custom = new SafeOutputLogMessageMasker(
+                MaskRuleMatcher.withConfiguredRules(Arrays.asList(MaskRule.configured("phone")
+                        .keys(Arrays.asList("phoneNo"))
+                        .type(MaskTypes.MOBILE)
+                        .build())),
+                MaskStrategyRegistry.withBuiltIns(), collector);
+
+        custom.mask("phoneNo=13812345678 mailAddr=foo@example.com");
+
+        List<LogRuleSuggestionMetric> metrics = collector.snapshot();
+        assertEquals(1, metrics.size());
+        assertEquals("mailaddr", metrics.get(0).getKey());
     }
 
     @Test
@@ -175,5 +214,16 @@ class SafeOutputLogMessageMaskerTest {
                 })), 1000, 100, false, true, 100);
 
         assertEquals("broken=secret", custom.mask("broken=secret"));
+    }
+
+    private static void assertMetric(List<LogRuleSuggestionMetric> metrics, String key, String type, long hitCount) {
+        for (LogRuleSuggestionMetric metric : metrics) {
+            if (key.equals(metric.getKey()) && type.equals(metric.getType())) {
+                assertEquals(hitCount, metric.getHitCount());
+                assertEquals(key + "=<" + type + ">", metric.getEvidence());
+                return;
+            }
+        }
+        throw new AssertionError("Missing metric " + key + " " + type);
     }
 }

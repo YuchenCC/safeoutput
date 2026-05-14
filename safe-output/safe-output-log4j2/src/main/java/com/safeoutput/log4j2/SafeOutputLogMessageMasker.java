@@ -2,6 +2,8 @@ package com.safeoutput.log4j2;
 
 import com.safeoutput.core.MaskContext;
 import com.safeoutput.core.MainlandIdCards;
+import com.safeoutput.core.LogRuleSuggestionCollector;
+import com.safeoutput.core.LogRuleSuggestionEvent;
 import com.safeoutput.core.MaskRuleMatcher;
 import com.safeoutput.core.MaskScene;
 import com.safeoutput.core.MaskStrategy;
@@ -38,6 +40,8 @@ final class SafeOutputLogMessageMasker {
 
     private static final Pattern ID_CARD_FALLBACK = Pattern.compile("(?<![0-9A-Za-z])\\d{17}[0-9Xx](?![0-9A-Za-z])");
 
+    private static final Pattern NEARBY_KEY = Pattern.compile("([A-Za-z][A-Za-z0-9_-]*)\\s*[:=]\\s*$");
+
     private final MaskStrategyRegistry strategyRegistry;
 
     private final int maxMessageLength;
@@ -51,6 +55,8 @@ final class SafeOutputLogMessageMasker {
     private final boolean keyValueRuleEnabled;
 
     private final Map<String, RuleMatch> keyValueMatches;
+
+    private final LogRuleSuggestionCollector suggestionCollector;
 
     SafeOutputLogMessageMasker() {
         this(DEFAULT_MAX_MESSAGE_LENGTH, DEFAULT_MAX_VALUE_LENGTH, true);
@@ -71,6 +77,12 @@ final class SafeOutputLogMessageMasker {
     }
 
     SafeOutputLogMessageMasker(MaskRuleMatcher ruleMatcher, MaskStrategyRegistry strategyRegistry,
+            LogRuleSuggestionCollector suggestionCollector) {
+        this(ruleMatcher, strategyRegistry, DEFAULT_MAX_MESSAGE_LENGTH, DEFAULT_MAX_VALUE_LENGTH, true, true,
+                true, DEFAULT_MAX_RULE_KEYS, suggestionCollector);
+    }
+
+    SafeOutputLogMessageMasker(MaskRuleMatcher ruleMatcher, MaskStrategyRegistry strategyRegistry,
             int maxMessageLength, int maxValueLength, boolean regexFallbackEnabled, boolean keyValueRuleEnabled,
             int maxRuleKeys) {
         this(ruleMatcher, strategyRegistry, maxMessageLength, maxValueLength, regexFallbackEnabled, true,
@@ -80,8 +92,15 @@ final class SafeOutputLogMessageMasker {
     SafeOutputLogMessageMasker(MaskRuleMatcher ruleMatcher, MaskStrategyRegistry strategyRegistry,
             int maxMessageLength, int maxValueLength, boolean regexFallbackEnabled, boolean idCardCheckCodeEnabled,
             boolean keyValueRuleEnabled, int maxRuleKeys) {
+        this(ruleMatcher, strategyRegistry, maxMessageLength, maxValueLength, regexFallbackEnabled,
+                idCardCheckCodeEnabled, keyValueRuleEnabled, maxRuleKeys, null);
+    }
+
+    SafeOutputLogMessageMasker(MaskRuleMatcher ruleMatcher, MaskStrategyRegistry strategyRegistry,
+            int maxMessageLength, int maxValueLength, boolean regexFallbackEnabled, boolean idCardCheckCodeEnabled,
+            boolean keyValueRuleEnabled, int maxRuleKeys, LogRuleSuggestionCollector suggestionCollector) {
         this(strategyRegistry, maxMessageLength, maxValueLength, regexFallbackEnabled, idCardCheckCodeEnabled,
-                keyValueRuleEnabled, ruleMatcher.logKeyMatches(Math.max(1, maxRuleKeys)));
+                keyValueRuleEnabled, ruleMatcher.logKeyMatches(Math.max(1, maxRuleKeys)), suggestionCollector);
     }
 
     private SafeOutputLogMessageMasker(MaskRuleMatcher ruleMatcher, MaskStrategyRegistry strategyRegistry,
@@ -92,7 +111,7 @@ final class SafeOutputLogMessageMasker {
 
     private SafeOutputLogMessageMasker(MaskStrategyRegistry strategyRegistry, int maxMessageLength, int maxValueLength,
             boolean regexFallbackEnabled, boolean idCardCheckCodeEnabled, boolean keyValueRuleEnabled,
-            Map<String, RuleMatch> keyValueMatches) {
+            Map<String, RuleMatch> keyValueMatches, LogRuleSuggestionCollector suggestionCollector) {
         this.strategyRegistry = strategyRegistry;
         this.maxMessageLength = Math.max(1, maxMessageLength);
         this.maxValueLength = Math.max(1, maxValueLength);
@@ -101,6 +120,7 @@ final class SafeOutputLogMessageMasker {
         this.keyValueRuleEnabled = keyValueRuleEnabled;
         this.keyValueMatches = keyValueRuleEnabled ? keyValueMatches
                 : java.util.Collections.<String, RuleMatch>emptyMap();
+        this.suggestionCollector = suggestionCollector;
     }
 
     String mask(String message) {
@@ -190,6 +210,7 @@ final class SafeOutputLogMessageMasker {
             }
             String replacement = strategy.get().mask(rawValue, contextBuilder.build());
             if (!rawValue.equals(replacement)) {
+                recordSuggestion(message, matcher.start(), type);
                 matcher.appendReplacement(masked, Matcher.quoteReplacement(replacement));
             }
         }
@@ -232,5 +253,33 @@ final class SafeOutputLogMessageMasker {
             return null;
         }
         return key.trim().toLowerCase(Locale.ENGLISH);
+    }
+
+    private void recordSuggestion(String message, int valueStart, String type) {
+        if (suggestionCollector == null) {
+            return;
+        }
+        try {
+            String nearbyKey = nearbyKey(message, valueStart);
+            if (nearbyKey == null || keyValueMatches.containsKey(normalizeKey(nearbyKey))) {
+                return;
+            }
+            String normalizedKey = normalizeKey(nearbyKey);
+            String normalizedType = MaskTypes.normalize(type);
+            // evidence 只保留 key 与 type 形态，不保存命中值或完整日志。
+            suggestionCollector.record(new LogRuleSuggestionEvent(normalizedKey, normalizedType,
+                    normalizedKey + "=<" + normalizedType + ">", System.currentTimeMillis()));
+        } catch (RuntimeException ex) {
+            // 日志线索采集失败不能影响日志输出。
+        }
+    }
+
+    private static String nearbyKey(String message, int valueStart) {
+        int from = Math.max(0, valueStart - 80);
+        Matcher matcher = NEARBY_KEY.matcher(message.substring(from, valueStart));
+        if (matcher.find()) {
+            return matcher.group(1);
+        }
+        return null;
     }
 }

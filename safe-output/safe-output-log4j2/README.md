@@ -8,6 +8,7 @@
 - 通过 `SafeOutputLogMessageMasker` 处理 JSON-like 和 key-value 日志片段。
 - key-value 脱敏复用 `rules.keys` 到类型标签的映射，支持内置和自定义策略。
 - 对没有字段名上下文的手机号、邮箱、合法大陆身份证号执行可选 regex fallback。
+- regex fallback 命中后可采集 nearbyKey 规则线索，只保存 key、type、次数、时间和脱敏后的 evidence。
 - 通过 `maxMessageLength` 和 `maxValueLength` 控制日志脱敏成本和误伤范围。
 
 ## 使用方式
@@ -35,6 +36,7 @@
 - `ignore.keys` 命中时优先跳过日志 key-value 脱敏；`rules.paths` 不作为日志文本匹配依据。
 - key-value 规则在 `SafeOutputLogMessageMasker` 初始化时构建字段名缓存；单条日志处理不动态拼接或编译规则集合。
 - regex fallback 只覆盖手机号、邮箱和通过轻量格式、日期、年份及可选校验位检查的大陆身份证号。
+- fallback 规则线索不会保存命中值或完整日志；已配置 `rules.keys` 的 key 不重复生成线索。
 - 无上下文银行卡号不做全局兜底，避免误伤普通流水号。
 - converter 或脱敏过程异常时返回原日志消息，保持 fail-open。
 

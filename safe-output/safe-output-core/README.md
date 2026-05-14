@@ -5,6 +5,7 @@
 ## 职责
 
 - 定义 `MaskTypes`、`MaskType`、`MaskScene`、`MaskRule`、`RuleMatch` 等核心模型。
+- 定义 Log fallback 规则线索采集模型，供日志适配和报告模块复用。
 - 通过 `MaskRuleMatcher` 执行固定优先级的规则决策。
 - 通过 `ObjectMasker` 遍历 Bean、Map、Collection 和数组，并在命中规则时改写字符串值。
 - 通过 `ObjectMasker.maskWithResult(...)` 为响应链路返回本次脱敏的字段数量和类型分布摘要。
