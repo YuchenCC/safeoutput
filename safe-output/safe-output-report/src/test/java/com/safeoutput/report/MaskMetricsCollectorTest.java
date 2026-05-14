@@ -103,6 +103,35 @@ class MaskMetricsCollectorTest {
     }
 
     @Test
+    void responseRiskAnalysisReportsRiskReasonsAdviceAndPerformanceSeparately() {
+        MaskMetricsCollector collector = new MaskMetricsCollector(10);
+        Map<String, Integer> riskyCounts = new LinkedHashMap<String, Integer>();
+        riskyCounts.put(MaskTypes.ID_CARD, 1);
+        riskyCounts.put(MaskTypes.BANK_CARD, 1);
+        riskyCounts.put(MaskTypes.PASSWORD, 1);
+        collector.recordApi(new ResponseRiskEvent("GET", "/risky", "/risky", false, null, false, 6,
+                riskyCounts, 60000000L));
+        collector.recordApi(new ResponseRiskEvent("GET", "/ignored", "/ignored", true, "business plaintext", false,
+                0, new LinkedHashMap<String, Integer>(), 0));
+
+        ResponseRiskAnalysis analysis = collector.snapshot().getResponseRiskAnalysis();
+        ResponseRiskApiProfile top = analysis.getTopRiskApis().get(0);
+
+        assertEquals(2, analysis.getResponseRiskSummary().getApiCount());
+        assertEquals(2, analysis.getResponseRiskSummary().getHighRiskApiCount());
+        assertEquals(1, analysis.getResponseRiskSummary().getIgnoredApiCount());
+        assertEquals(1, analysis.getResponseRiskSummary().getSlowApiCount());
+        assertEquals(ApiRiskLevel.CRITICAL, top.getRiskLevel());
+        assertEquals(true, top.getRiskReasons().contains("ID_CARD"));
+        assertEquals(true, top.getRiskReasons().contains("BANK_CARD"));
+        assertEquals(true, top.getRiskReasons().contains("PASSWORD"));
+        assertEquals(true, top.getRiskReasons().contains("HIGH_FIELD_COUNT"));
+        assertEquals(1, top.getPerformanceProfile().getSlowMaskCount());
+        assertEquals(true, top.getPerformanceProfile().getWarnings().contains("SLOW_MASKING"));
+        assertEquals("business plaintext", analysis.getIgnoredRiskApis().get(0).getIgnoreReason());
+    }
+
+    @Test
     void collectorSwallowsRecorderExceptions() {
         MaskMetricsCollector collector = new MaskMetricsCollector(1);
 

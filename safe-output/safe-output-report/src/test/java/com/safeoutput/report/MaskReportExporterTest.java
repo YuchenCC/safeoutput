@@ -49,6 +49,12 @@ class MaskReportExporterTest {
         assertTrue(json.contains("\"unknownTypeCounts\":{\"mobilem\":1}"));
         assertTrue(json.contains("\"method\":\"GET\""));
         assertTrue(json.contains("\"path\":\"/customers\""));
+        assertTrue(json.contains("\"responseRiskSummary\""));
+        assertTrue(json.contains("\"topRiskApis\""));
+        assertTrue(json.contains("\"riskScore\""));
+        assertTrue(json.contains("\"riskReasons\""));
+        assertTrue(json.contains("\"governanceAdvice\""));
+        assertTrue(json.contains("\"performanceProfile\""));
         assertFalse(json.contains("13800138000"));
         assertFalse(json.contains("responseBody"));
         assertFalse(json.contains("logMessage"));

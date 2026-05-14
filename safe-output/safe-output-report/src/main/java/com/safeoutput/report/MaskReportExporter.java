@@ -127,9 +127,69 @@ public final class MaskReportExporter {
         json.append("\"unknownTypeCounts\":");
         maskTypeCounts(json, report.getUnknownTypeCounts()).append(',');
         json.append("\"apiMetrics\":");
-        apiMetrics(json, report.getApiMetrics());
+        apiMetrics(json, report.getApiMetrics()).append(',');
+        ResponseRiskAnalysis analysis = report.getResponseRiskAnalysis();
+        json.append("\"responseRiskSummary\":");
+        responseRiskSummary(json, analysis.getResponseRiskSummary()).append(',');
+        json.append("\"topRiskApis\":");
+        riskApis(json, analysis.getTopRiskApis()).append(',');
+        json.append("\"ignoredRiskApis\":");
+        riskApis(json, analysis.getIgnoredRiskApis());
         json.append('}');
         return json.toString();
+    }
+
+    private static StringBuilder responseRiskSummary(StringBuilder json, ResponseRiskSummary summary) {
+        json.append('{');
+        field(json, "apiCount", summary.getApiCount()).append(',');
+        field(json, "highRiskApiCount", summary.getHighRiskApiCount()).append(',');
+        field(json, "ignoredApiCount", summary.getIgnoredApiCount()).append(',');
+        field(json, "slowApiCount", summary.getSlowApiCount());
+        json.append('}');
+        return json;
+    }
+
+    private static StringBuilder riskApis(StringBuilder json, List<ResponseRiskApiProfile> apis) {
+        json.append('[');
+        for (int i = 0; i < apis.size(); i++) {
+            if (i > 0) {
+                json.append(',');
+            }
+            riskApi(json, apis.get(i));
+        }
+        json.append(']');
+        return json;
+    }
+
+    private static StringBuilder riskApi(StringBuilder json, ResponseRiskApiProfile api) {
+        json.append('{');
+        stringField(json, "method", api.getMethod()).append(',');
+        stringField(json, "path", api.getPath()).append(',');
+        booleanField(json, "ignored", api.isIgnored()).append(',');
+        stringField(json, "ignoreReason", api.getIgnoreReason()).append(',');
+        field(json, "riskScore", api.getRiskScore()).append(',');
+        stringField(json, "riskLevel", api.getRiskLevel().name()).append(',');
+        json.append("\"riskReasons\":");
+        strings(json, api.getRiskReasons()).append(',');
+        json.append("\"governanceAdvice\":");
+        strings(json, api.getGovernanceAdvice()).append(',');
+        json.append("\"performanceProfile\":");
+        performanceProfile(json, api.getPerformanceProfile()).append(',');
+        json.append("\"maskTypeCounts\":");
+        maskTypeCounts(json, api.getMaskTypeCounts());
+        json.append('}');
+        return json;
+    }
+
+    private static StringBuilder performanceProfile(StringBuilder json, PerformanceProfile profile) {
+        json.append('{');
+        field(json, "averageElapsedNanos", profile.getAverageElapsedNanos()).append(',');
+        field(json, "maxElapsedNanos", profile.getMaxElapsedNanos()).append(',');
+        field(json, "slowMaskCount", profile.getSlowMaskCount()).append(',');
+        json.append("\"warnings\":");
+        strings(json, profile.getWarnings());
+        json.append('}');
+        return json;
     }
 
     private static StringBuilder apiMetrics(StringBuilder json, List<ApiMaskMetrics> metrics) {
@@ -170,6 +230,18 @@ public final class MaskReportExporter {
             index++;
         }
         json.append('}');
+        return json;
+    }
+
+    private static StringBuilder strings(StringBuilder json, List<String> values) {
+        json.append('[');
+        for (int i = 0; i < values.size(); i++) {
+            if (i > 0) {
+                json.append(',');
+            }
+            string(json, values.get(i));
+        }
+        json.append(']');
         return json;
     }
 

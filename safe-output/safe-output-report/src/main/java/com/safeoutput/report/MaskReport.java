@@ -81,4 +81,9 @@ public final class MaskReport {
         }
         return null;
     }
+
+    public ResponseRiskAnalysis getResponseRiskAnalysis() {
+        // 风险画像在快照读取阶段基于聚合指标生成，不参与在线脱敏决策。
+        return new ResponseRiskAnalyzer().analyze(this);
+    }
 }
