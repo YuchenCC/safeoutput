@@ -2,6 +2,7 @@ package com.safeoutput.spring.boot.autoconfigure;
 
 import com.safeoutput.core.MaskRule;
 import com.safeoutput.core.MaskRuleMatcher;
+import com.safeoutput.core.MaskEventRecorder;
 import com.safeoutput.core.MaskStrategy;
 import com.safeoutput.core.MaskStrategyRegistry;
 import com.safeoutput.core.ObjectMasker;
@@ -67,13 +68,14 @@ public class SafeOutputAutoConfiguration {
     @ConditionalOnMissingBean
     public ObjectMasker objectMasker(MaskStrategyRegistry maskStrategyRegistry, MaskRuleMatcher maskRuleMatcher,
             SensitiveFieldResolver sensitiveFieldResolver, SafeOutputProperties properties,
-            ObjectProvider<UnknownTypeRecorder> unknownTypeRecorders) {
+            ObjectProvider<UnknownTypeRecorder> unknownTypeRecorders,
+            ObjectProvider<MaskEventRecorder> maskEventRecorders) {
         ObjectMaskerOptions options = ObjectMaskerOptions.builder()
                 .maxDepth(properties.getMaxDepth())
                 .maxCollectionSize(properties.getMaxCollectionSize())
                 .build();
         return new ObjectMasker(maskStrategyRegistry, maskRuleMatcher, sensitiveFieldResolver, options,
-                unknownTypeRecorders.getIfAvailable());
+                unknownTypeRecorders.getIfAvailable(), maskEventRecorders.getIfAvailable());
     }
 
     @Bean

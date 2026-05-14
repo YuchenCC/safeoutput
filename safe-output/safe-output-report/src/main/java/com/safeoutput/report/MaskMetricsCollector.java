@@ -1,6 +1,7 @@
 package com.safeoutput.report;
 
 import com.safeoutput.core.MaskScene;
+import com.safeoutput.core.MaskEventRecorder;
 import com.safeoutput.core.MaskType;
 import com.safeoutput.core.MaskTypes;
 import com.safeoutput.core.ResponseRiskEvent;
@@ -11,7 +12,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-public final class MaskMetricsCollector implements ResponseRiskRecorder, UnknownTypeRecorder {
+public final class MaskMetricsCollector implements ResponseRiskRecorder, UnknownTypeRecorder, MaskEventRecorder {
 
     private static final String OVERFLOW_METHOD = "OVERFLOW";
     private static final String OVERFLOW_PATH = "__overflow__";

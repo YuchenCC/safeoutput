@@ -7,8 +7,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.safeoutput.spring.boot.autoconfigure.SafeOutputAutoConfiguration;
 import com.safeoutput.spring.boot.autoconfigure.SafeOutputMvcAutoConfiguration;
 import com.safeoutput.spring.boot.autoconfigure.SafeOutputResponseBodyAdvice;
+import com.safeoutput.core.Desensitize;
+import com.safeoutput.core.MaskContext;
 import com.safeoutput.core.ResponseRiskEvent;
 import com.safeoutput.core.ResponseRiskRecorder;
+import com.safeoutput.core.MaskStrategy;
+import com.safeoutput.report.MaskMetricsCollector;
 
 import java.util.Arrays;
 import java.util.LinkedHashMap;
@@ -100,6 +104,34 @@ class SafeOutputResponseBodyAdviceIntegrationTest {
     }
 
     @Test
+    void customStringStrategyWorksForConfiguredRulesAnnotationsAndMetrics() {
+        contextRunner
+                .withUserConfiguration(CustomMobileStrategyConfiguration.class)
+                .withPropertyValues(
+                        "safe-output.report.enabled=true",
+                        "safe-output.rules[0].name=customMobile",
+                        "safe-output.rules[0].keys[0]=mobileM",
+                        "safe-output.rules[0].type=mobileM")
+                .run(context -> {
+                    MockMvc mvc = mvc(context.getBean(SafeOutputResponseBodyAdvice.class));
+
+                    mvc.perform(get("/custom-rule"))
+                            .andExpect(status().isOk())
+                            .andExpect(content().string("{\"mobileM\":\"m-5678\"}"));
+                    mvc.perform(get("/custom-annotation"))
+                            .andExpect(status().isOk())
+                            .andExpect(content().string("{\"phone\":\"m-5678\"}"));
+                    mvc.perform(get("/bean"))
+                            .andExpect(status().isOk())
+                            .andExpect(content().string("{\"mobile\":\"138****5678\"}"));
+
+                    MaskMetricsCollector collector = context.getBean(MaskMetricsCollector.class);
+                    org.junit.jupiter.api.Assertions.assertEquals(2,
+                            collector.snapshot().getMaskTypeCounts().get("mobilem").longValue());
+                });
+    }
+
+    @Test
     void adviceFailsOpenWhenMaskingThrows() throws Exception {
         SafeOutputResponseBodyAdvice advice = new SafeOutputResponseBodyAdvice(null, null);
 
@@ -148,6 +180,18 @@ class SafeOutputResponseBodyAdviceIntegrationTest {
         CustomerResponse rawMobile() {
             return new CustomerResponse("13812345678");
         }
+
+        @GetMapping("/custom-rule")
+        Map<String, Object> customRule() {
+            Map<String, Object> value = new LinkedHashMap<String, Object>();
+            value.put("mobileM", "13812345678");
+            return value;
+        }
+
+        @GetMapping("/custom-annotation")
+        CustomAnnotatedResponse customAnnotation() {
+            return new CustomAnnotatedResponse("13812345678");
+        }
     }
 
     private static final class CustomerResponse {
@@ -161,6 +205,40 @@ class SafeOutputResponseBodyAdviceIntegrationTest {
         @SuppressWarnings("unused")
         public String getMobile() {
             return mobile;
+        }
+    }
+
+    private static final class CustomAnnotatedResponse {
+
+        @Desensitize(type = "mobileM")
+        private final String phone;
+
+        private CustomAnnotatedResponse(String phone) {
+            this.phone = phone;
+        }
+
+        @SuppressWarnings("unused")
+        public String getPhone() {
+            return phone;
+        }
+    }
+
+    @Configuration
+    static class CustomMobileStrategyConfiguration {
+
+        @Bean
+        MaskStrategy customMobileStrategy() {
+            return new MaskStrategy() {
+                @Override
+                public String type() {
+                    return "mobileM";
+                }
+
+                @Override
+                public String mask(String rawValue, MaskContext context) {
+                    return "m-" + rawValue.substring(rawValue.length() - 4);
+                }
+            };
         }
     }
 

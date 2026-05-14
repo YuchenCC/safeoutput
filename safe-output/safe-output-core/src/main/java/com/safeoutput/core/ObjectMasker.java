@@ -31,6 +31,8 @@ public final class ObjectMasker {
 
     private final UnknownTypeRecorder unknownTypeRecorder;
 
+    private final MaskEventRecorder maskEventRecorder;
+
     public ObjectMasker(MaskStrategyRegistry strategyRegistry, MaskRuleMatcher ruleMatcher,
             ObjectMaskerOptions options) {
         this(strategyRegistry, ruleMatcher, null, options);
@@ -43,11 +45,18 @@ public final class ObjectMasker {
 
     public ObjectMasker(MaskStrategyRegistry strategyRegistry, MaskRuleMatcher ruleMatcher,
             SensitiveFieldResolver fieldResolver, ObjectMaskerOptions options, UnknownTypeRecorder unknownTypeRecorder) {
+        this(strategyRegistry, ruleMatcher, fieldResolver, options, unknownTypeRecorder, null);
+    }
+
+    public ObjectMasker(MaskStrategyRegistry strategyRegistry, MaskRuleMatcher ruleMatcher,
+            SensitiveFieldResolver fieldResolver, ObjectMaskerOptions options, UnknownTypeRecorder unknownTypeRecorder,
+            MaskEventRecorder maskEventRecorder) {
         this.strategyRegistry = strategyRegistry == null ? MaskStrategyRegistry.withBuiltIns() : strategyRegistry;
         this.ruleMatcher = ruleMatcher == null ? MaskRuleMatcher.withDefaultRules() : ruleMatcher;
         this.fieldResolver = fieldResolver == null ? new SensitiveFieldResolver(this.ruleMatcher) : fieldResolver;
         this.options = options == null ? ObjectMaskerOptions.defaults() : options;
         this.unknownTypeRecorder = unknownTypeRecorder;
+        this.maskEventRecorder = maskEventRecorder;
     }
 
     public Object mask(Object value) {
@@ -176,6 +185,7 @@ public final class ObjectMasker {
                 recordUnknownType(match.getMaskType());
                 return value;
             }
+            long startedAt = System.nanoTime();
             MaskResult result = strategy.get().apply(MaskContext.builder()
                     .maskType(match.getMaskType())
                     .scene(MaskScene.RESPONSE)
@@ -183,9 +193,18 @@ public final class ObjectMasker {
                     .fieldName(key)
                     .rawValue(value)
                     .build());
+            if (result.isMasked()) {
+                recordMask(result.getContext().getMaskType(), System.nanoTime() - startedAt);
+            }
             return result.getValue();
         } catch (RuntimeException ex) {
             return value;
+        }
+    }
+
+    private void recordMask(String type, long elapsedNanos) {
+        if (maskEventRecorder != null) {
+            maskEventRecorder.recordMask(MaskScene.RESPONSE, type, elapsedNanos);
         }
     }
 
