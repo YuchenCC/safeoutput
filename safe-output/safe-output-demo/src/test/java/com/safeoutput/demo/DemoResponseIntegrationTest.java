@@ -121,6 +121,36 @@ class DemoResponseIntegrationTest {
         assertFalse(snapshot.contains("13800138000"));
     }
 
+    @Test
+    void r2ReportDemoEndpointsReturnRiskAndLogSuggestionsWithoutSensitiveSamples() {
+        restTemplate.getForObject("/demo/nested", String.class);
+        restTemplate.getForObject("/demo/ignored", String.class);
+
+        String responseRisk = restTemplate.getForObject("/demo/report/response-risk", String.class);
+        String logSuggestions = restTemplate.getForObject("/demo/report/log-suggestions", String.class);
+
+        assertTrue(responseRisk.contains("\"responseRiskSummary\""));
+        assertTrue(responseRisk.contains("\"topRiskApis\""));
+        assertTrue(responseRisk.contains("\"riskReasons\""));
+        assertTrue(responseRisk.contains("\"governanceAdvice\""));
+        assertTrue(responseRisk.contains("\"performanceProfile\""));
+        assertTrue(responseRisk.contains("\"ignoredRiskApis\""));
+        assertTrue(logSuggestions.contains("\"logRuleSuggestions\""));
+        assertTrue(logSuggestions.contains("\"suggestedType\""));
+        assertTrue(logSuggestions.contains("\"confidence\""));
+        assertTrue(logSuggestions.contains("\"evidence\""));
+        assertTrue(logSuggestions.contains("\"effectScopes\""));
+        assertTrue(logSuggestions.contains("\"configSnippet\""));
+        assertTrue(logSuggestions.contains("phoneno"));
+        assertTrue(logSuggestions.contains("certnum"));
+        assertTrue(logSuggestions.contains("mailaddr"));
+        assertFalse(responseRisk.contains("13800138000"));
+        assertFalse(responseRisk.contains("6222021234567890123"));
+        assertFalse(logSuggestions.contains("13800138000"));
+        assertFalse(logSuggestions.contains("11010519491231002X"));
+        assertFalse(logSuggestions.contains("foo@example.com"));
+    }
+
     private static Path latestReport() throws Exception {
         try (Stream<Path> stream = Files.list(Paths.get("target/safe-output-demo-reports"))) {
             return stream
