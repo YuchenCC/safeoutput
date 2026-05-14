@@ -14,9 +14,11 @@ public final class BuiltInMaskStrategies {
         Map<String, MaskStrategy> strategies = new LinkedHashMap<String, MaskStrategy>();
         register(strategies, new SimpleMaskStrategy(MaskTypes.MOBILE, (rawValue, context) -> maskMobile(rawValue)));
         register(strategies, new SimpleMaskStrategy(MaskTypes.ID_CARD, BuiltInMaskStrategies::maskIdCard));
-        register(strategies, new SimpleMaskStrategy(MaskTypes.BANK_CARD, (rawValue, context) -> maskBankCard(rawValue)));
+        register(strategies, new SimpleMaskStrategy(MaskTypes.BANK_CARD,
+                (rawValue, context) -> maskBankCard(rawValue)));
         register(strategies, new SimpleMaskStrategy(MaskTypes.EMAIL, (rawValue, context) -> maskEmail(rawValue)));
-        register(strategies, new SimpleMaskStrategy(MaskTypes.CHINESE_NAME, (rawValue, context) -> maskChineseName(rawValue)));
+        register(strategies, new SimpleMaskStrategy(MaskTypes.CHINESE_NAME,
+                (rawValue, context) -> maskChineseName(rawValue)));
         register(strategies, new SimpleMaskStrategy(MaskTypes.ADDRESS, (rawValue, context) -> maskAddress(rawValue)));
         register(strategies, new SimpleMaskStrategy(MaskTypes.PASSWORD, (rawValue, context) -> maskPassword(rawValue)));
         register(strategies, new SimpleMaskStrategy(MaskTypes.DEFAULT, (rawValue, context) -> maskDefault(rawValue)));

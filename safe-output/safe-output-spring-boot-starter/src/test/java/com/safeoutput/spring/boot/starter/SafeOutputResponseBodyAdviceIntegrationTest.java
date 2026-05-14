@@ -102,7 +102,8 @@ class SafeOutputResponseBodyAdviceIntegrationTest {
                     mvc(context.getBean(SafeOutputResponseBodyAdvice.class))
                             .perform(get("/customers/123"))
                             .andExpect(status().isOk())
-                            .andExpect(content().string("{\"mobile\":\"138****5678\",\"email\":\"ali****@example.com\"}"));
+                            .andExpect(content().string("{\"mobile\":\"138****5678\","
+                                    + "\"email\":\"ali****@example.com\"}"));
 
                     ResponseRiskEvent event = context.getBean(RecordingResponseRiskRecorder.class).lastEvent.get();
                     org.junit.jupiter.api.Assertions.assertEquals("GET", event.getMethod());

@@ -66,8 +66,8 @@ public class SafeOutputResponseBodyAdvice implements ResponseBodyAdvice<Object> 
             Optional<ApiIgnoreMatch> apiIgnore = matchApiIgnore(request);
             if (apiIgnore.isPresent()) {
                 // API Ignore 返回明文，但仍记录风险事件，便于报告里看见显式豁免接口。
-                recordRisk(request, true, apiIgnore.get().getReason(), false, 0, Collections.<String, Integer>emptyMap(),
-                        0);
+                recordRisk(request, true, apiIgnore.get().getReason(), false, 0,
+                        Collections.<String, Integer>emptyMap(), 0);
                 return body;
             }
             long startedAt = System.nanoTime();

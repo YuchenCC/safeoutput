@@ -93,7 +93,8 @@ public final class MaskRuleMatcher {
             return Collections.emptyMap();
         }
         Map<String, RuleMatch> matches = new LinkedHashMap<String, RuleMatch>();
-        if (!appendLogRuleKeys(matches, configuredRules, maxKeys) || !appendLogRuleKeys(matches, defaultRules, maxKeys)) {
+        if (!appendLogRuleKeys(matches, configuredRules, maxKeys)
+                || !appendLogRuleKeys(matches, defaultRules, maxKeys)) {
             return Collections.emptyMap();
         }
         for (String ignoredKey : ignoreKeys) {

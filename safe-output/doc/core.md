@@ -3,6 +3,8 @@
 
 整个方案分两层：**Spring MVC 拦截层**（`safe-output-spring-boot-starter`）负责"在哪里拦截"，**Core 引擎**（`safe-output-core`）负责"如何脱敏"。
 
+R2 起，脱敏类型使用 String 类型标签贯穿规则、策略、上下文和统计链路。`MaskType` 仍保留为内置清单和兼容入口；业务自定义类型通过 `MaskStrategy.type()` 与配置中的 `rules[].type` 对齐。未知 type 的默认处理是 `warn + skip`，不会回退到 `DEFAULT`。
+
 ---
 
 ### 一、Response 拦截方式：`ResponseBodyAdvice`
@@ -24,11 +26,12 @@ public class SafeOutputResponseBodyAdvice implements ResponseBodyAdvice<Object> 
         try {
             Optional<ApiIgnoreMatch> apiIgnore = matchApiIgnore(request);
             if (apiIgnore.isPresent()) {
-                recordRisk(request, true, apiIgnore.get().getReason());
-                return body;   // 命中 API 白名单 → 原样放行
+                recordRisk(... ignored=true ...);
+                return body;   // 命中 API Ignore → 原样放行，但保留风险画像基础数据
             }
-            recordRisk(request, false, null);
-            return objectMasker.mask(body);   // 否则 → 进脱敏引擎
+            MaskingResult result = objectMasker.maskWithResult(body, MaskScene.RESPONSE);
+            recordRisk(... result.getMaskTypeCounts() ...);
+            return result.getValue();   // 否则 → 进脱敏引擎并记录轻量聚合摘要
         } catch (RuntimeException ex) {
             return body;   // fail-open：异常时原样输出
         }
@@ -58,7 +61,7 @@ public class SafeOutputMvcAutoConfiguration {
 
 #### 第一层：对象图遍历 `ObjectMasker`
 
-`ObjectMasker.mask(body)` 从根节点出发，递归遍历整个对象图：
+`ObjectMasker.mask(body)` 从根节点出发，递归遍历整个对象图。Response 链路使用 `maskWithResult(...)`，额外返回本次调用的脱敏字段数量和类型分布摘要；摘要不包含字段路径、敏感原文或脱敏后的完整 response。
 
 ```41:72:safe-output/safe-output-core/src/main/java/com/safeoutput/core/ObjectMasker.java
 private Object maskValue(Object value, String path, String key, int depth, Set<Object> visiting) {
@@ -170,8 +173,8 @@ HTTP 请求
   └→ Spring MVC DispatcherServlet
        └→ Controller 方法执行，返回 body 对象
             └→ SafeOutputResponseBodyAdvice.beforeBodyWrite()
-                 ├─ [命中 API 白名单] → 原样返回
-                 └─ [正常] → ObjectMasker.mask(body)
+                 ├─ [命中 API Ignore] → 原样返回，并记录 ignored 风险事件
+                 └─ [正常] → ObjectMasker.maskWithResult(body)
                               └→ maskValue() 递归遍历对象图
                                    ├─ Bean 字段 → SensitiveFieldResolver
                                    │              └→ @Desensitize 注解 or MaskRuleMatcher.decide()
@@ -185,7 +188,14 @@ HTTP 请求
 
 ---
 
-### 四、设计要点总结
+### 四、R2 统计和报告边界
+
+- `MANUAL` 场景来自 `SafeOutputMaskService` 的主动脱敏调用，用于统计显式调用量和类型分布；它不默认进入 Response 接口风险统计。
+- Response 风险统计只记录稳定接口标识、耗时、失败状态、ignore 状态、脱敏字段数量和类型分布，不记录原始 response、脱敏后 response、敏感原文或单次字段明细。
+- Log regex fallback 可采集 nearbyKey 线索；线索只包含 key、type、hitCount、时间和脱敏后的 evidence，不保存完整日志或命中值。
+- 报告中的风险原因、性能告警和规则建议均为治理辅助信息，不自动修改运行配置。
+
+### 五、设计要点总结
 
 | 特性 | 实现 |
 |------|------|
@@ -194,5 +204,6 @@ HTTP 请求
 | **注解支持** | `@Desensitize(type = MaskType.XXX)` 标注在字段上，优先级高于规则 |
 | **循环引用** | `IdentityHashMap` 访问集防止死循环 |
 | **安全降级** | 全链路 fail-open，任何异常均返回原值，不影响业务 |
-| **可扩展性** | `MaskStrategy` SPI，注入自定义策略即可覆盖或新增脱敏类型 |
-| **API 豁免** | 配置白名单路径/方法，整个接口不脱敏，并通过 `ResponseRiskRecorder` 记录风险事件 |
+| **可扩展性** | `MaskStrategy` SPI，注入自定义 String 类型标签策略即可覆盖或新增脱敏类型 |
+| **API Ignore** | 配置路径/方法，整个接口不脱敏，并通过 `ResponseRiskRecorder` 记录 ignored 风险事件 |
+| **报告安全边界** | 只保存聚合指标和治理建议，不保存敏感原文、完整 response 或完整日志 |

@@ -2,6 +2,8 @@
 
 Safe Output 是面向 Spring Boot 2.x 的 Java 8 starter，用于在不改 Controller 业务代码的前提下，对 response 和 Log4j2 日志做敏感信息脱敏，并输出聚合统计报告。
 
+R2 扩展了 String 类型标签、自定义策略、主动脱敏、Response 风险画像、性能画像和 Log 规则建议。R3 竞赛展示看板不属于本轮实现范围。
+
 ## 模块
 
 - `safe-output-core`: 内部模块，核心模型、脱敏策略、规则匹配和对象递归脱敏。
@@ -51,6 +53,8 @@ class CustomerController {
 ```
 
 常见字段名如 `mobile`、`phone`、`email`、`idCard`、`bankCard`、`password` 会按默认规则脱敏。
+
+类型识别使用 String 类型标签贯穿规则、策略和统计链路。内置类型可使用 `MaskTypes` 常量；业务自定义类型只需要提供同名 `MaskStrategy` Bean，并在 `rules[].type` 或 `@Desensitize(type = "...")` 中引用。未知 type 当前默认行为是 `warn + skip`：记录 warning 和未知类型聚合统计，不回退到 `DEFAULT`。
 
 ## 配置示例
 
@@ -107,6 +111,8 @@ public class CustomerResponse {
 
 日志脱敏支持 JSON-like 和 key-value 片段，例如 `"mobile":"13800138000"`、`email=foo@example.com`。整条 message fallback 会识别手机号、邮箱和严格合法的大陆身份证；普通 18 位流水号和无上下文银行卡号不会全局兜底脱敏。
 
+regex fallback 命中后可提取 nearbyKey 规则线索。线索和报告只保存 key、type、次数、时间和脱敏后的 evidence，不保存敏感原文或完整日志。生成的规则建议默认 `autoApply=false`，需要接入方人工确认。
+
 `%safeOutputMsg` 支持 `enabled`、`regexFallback`、`maxMessageLength`、`maxValueLength` 选项:
 
 ```xml
@@ -121,7 +127,9 @@ public class CustomerResponse {
 
 ## 报告
 
-启用 `safe-output.report.enabled=true` 后，starter 会创建 `MaskMetricsCollector` 和定时 `MaskReportExporter`。报告只包含聚合指标、接口风险等级、ignored 统计、失败次数和耗时，不保存敏感原文、完整 response 或完整日志。
+启用 `safe-output.report.enabled=true` 后，starter 会创建 `MaskMetricsCollector` 和定时 `MaskReportExporter`。报告只包含聚合指标、接口风险等级、ignored 统计、失败次数、耗时、Response 风险画像、性能画像和 Log 规则建议，不保存敏感原文、完整 response 或完整日志。
+
+主动脱敏调用计入 `MANUAL` 场景统计，用于评估显式调用量和类型分布；它不默认进入 Response 接口风险统计。Response 风险统计只聚合响应场景的稳定接口标识、脱敏字段数量、类型分布、耗时、ignore 和失败状态。
 
 demo 也提供手动导出接口:
 
@@ -130,6 +138,8 @@ GET /demo/report/export
 ```
 
 当前内存中的聚合指标可通过 `GET /demo/report/snapshot` 以 JSON 返回（与写入磁盘的快照字段一致，便于在浏览器中查看）。启动 demo 后可在浏览器打开 `http://localhost:8080/safe-output-playground.html`，一键调用各类脱敏示例接口并刷新或导出报告。
+
+R2 新增 Demo 验证路径包括 `POST /demo/mask/by-type`、`POST /demo/mask/object`、`POST /demo/mask/strong`、`GET /demo/report/response-risk` 和 `GET /demo/report/log-suggestions`。
 
 ## Demo 验证
 
@@ -150,9 +160,10 @@ mvn install
 
 - Response: Bean、Map、List、嵌套对象可脱敏；注解、字段 ignore、接口 ignore 生效。
 - Log: Log4j2 `%safeOutputMsg` 可发现；key-value、JSON-like、regex fallback 和误伤边界生效。
-- 策略: 默认规则、用户规则、规则优先级、自定义策略注册和 Java 8 兼容性生效。
-- 统计: mask 次数、MaskType、接口维度、ignored 风险、失败次数、平均/最大耗时可聚合。
-- 报告: 本地 JSON 快照、保留数量、失败 fail-open、不包含敏感原文。
+- 策略: 默认规则、用户规则、规则优先级、String type、自定义策略注册和 Java 8 兼容性生效。
+- 主动脱敏: 指定 type、对象规则和强扫描可通过服务与 Demo 接口验证，MANUAL 场景统计生效。
+- 统计: mask 次数、类型标签、接口维度、ignored 风险、失败次数、字段数、平均/最大耗时可聚合。
+- 报告: 本地 JSON 快照、Response 风险画像、性能画像、Log 规则建议、保留数量、失败 fail-open、不包含敏感原文。
 - Starter: `spring.factories` 自动装配、starter jar 可 `mvn install`、demo 只直接引用 starter。
 
 ## 测试覆盖

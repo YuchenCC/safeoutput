@@ -44,7 +44,8 @@ public final class ObjectMasker {
     }
 
     public ObjectMasker(MaskStrategyRegistry strategyRegistry, MaskRuleMatcher ruleMatcher,
-            SensitiveFieldResolver fieldResolver, ObjectMaskerOptions options, UnknownTypeRecorder unknownTypeRecorder) {
+            SensitiveFieldResolver fieldResolver, ObjectMaskerOptions options,
+            UnknownTypeRecorder unknownTypeRecorder) {
         this(strategyRegistry, ruleMatcher, fieldResolver, options, unknownTypeRecorder, null);
     }
 
