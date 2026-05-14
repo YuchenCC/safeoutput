@@ -14,11 +14,11 @@
 
 ## Acceptance criteria
 
-- [ ] 根工程和子模块结构符合 PRD 推荐项目结构。
-- [ ] 所有模块使用 JDK8 编译约束，不使用 Java 9+ API。
-- [ ] `safe-output-spring-boot-starter` 具备明确 Maven 坐标和版本。
-- [ ] starter 能声明并聚合 core、log4j2、report 内部模块依赖。
-- [ ] 预留 Spring Boot 2.x `META-INF/spring.factories` 自动装配入口。
+- [x] 根工程和子模块结构符合 PRD 推荐项目结构。
+- [x] 所有模块使用 JDK8 编译约束，不使用 Java 9+ API。
+- [x] `safe-output-spring-boot-starter` 具备明确 Maven 坐标和版本。
+- [x] starter 能声明并聚合 core、log4j2、report 内部模块依赖。
+- [x] 预留 Spring Boot 2.x `META-INF/spring.factories` 自动装配入口。
 
 ## Test requirements
 
