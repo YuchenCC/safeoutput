@@ -1,7 +1,7 @@
 package com.safeoutput.demo;
 
 import com.safeoutput.core.Desensitize;
-import com.safeoutput.core.MaskType;
+import com.safeoutput.core.MaskTypes;
 
 import java.util.Arrays;
 import java.util.LinkedHashMap;
@@ -49,7 +49,7 @@ public class DemoResponseController {
     public static final class CustomerResponse {
 
         // name 是歧义字段，demo 用注解显式声明为中文姓名脱敏。
-        @Desensitize(type = MaskType.CHINESE_NAME)
+        @Desensitize(type = MaskTypes.CHINESE_NAME)
         private String name;
 
         private String mobile;
