@@ -5,9 +5,13 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import com.safeoutput.core.MaskRule;
 import com.safeoutput.core.MaskRuleMatcher;
+import com.safeoutput.core.MaskContext;
+import com.safeoutput.core.MaskStrategy;
 import com.safeoutput.core.MaskStrategyRegistry;
+import com.safeoutput.core.MaskTypes;
 
 import java.util.Arrays;
+import java.util.Collections;
 
 import org.junit.jupiter.api.Test;
 
@@ -63,6 +67,63 @@ class SafeOutputLogMessageMaskerTest {
                 MaskStrategyRegistry.withBuiltIns());
 
         assertEquals("customToken=abcdef123456", custom.mask("customToken=abcdef123456"));
+    }
+
+    @Test
+    void configuredKeyValueRulesMaskSupportedFormatsAndNames() {
+        SafeOutputLogMessageMasker custom = new SafeOutputLogMessageMasker(
+                MaskRuleMatcher.withConfiguredRules(Arrays.asList(MaskRule.configured("name")
+                        .keys(Arrays.asList("chineseName"))
+                        .type(MaskTypes.CHINESE_NAME)
+                        .build())),
+                MaskStrategyRegistry.withBuiltIns());
+
+        assertEquals("chineseName: 张*", custom.mask("chineseName: 张三"));
+        assertEquals("\"chineseName\":\"王*明\"", custom.mask("\"chineseName\":\"王小明\""));
+        assertEquals("chineseName = '李*'", custom.mask("chineseName = '李雷'"));
+        assertEquals("'chineseName' : 赵*", custom.mask("'chineseName' : 赵六"));
+    }
+
+    @Test
+    void customTypeMasksWhenStrategyIsRegistered() {
+        SafeOutputLogMessageMasker custom = new SafeOutputLogMessageMasker(
+                MaskRuleMatcher.withConfiguredRules(Arrays.asList(MaskRule.configured("customMobile")
+                        .keys(Arrays.asList("mobileM"))
+                        .type("mobileM")
+                        .build())),
+                MaskStrategyRegistry.withBuiltIns(Arrays.asList(new MaskStrategy() {
+                    @Override
+                    public String type() {
+                        return "mobileM";
+                    }
+
+                    @Override
+                    public String mask(String rawValue, MaskContext context) {
+                        return rawValue.substring(0, 3) + "****" + rawValue.substring(7);
+                    }
+                })));
+
+        assertEquals("mobileM=138****5678", custom.mask("mobileM=13812345678"));
+    }
+
+    @Test
+    void ignoreKeysWinOverConfiguredLogRulesAndPathsAreNotUsed() {
+        SafeOutputLogMessageMasker custom = new SafeOutputLogMessageMasker(
+                MaskRuleMatcher.builder()
+                        .configuredRules(Arrays.asList(
+                                MaskRule.configured("ignoredName")
+                                        .keys(Arrays.asList("chineseName"))
+                                        .type(MaskTypes.CHINESE_NAME)
+                                        .build(),
+                                MaskRule.configured("pathOnly")
+                                        .paths(Arrays.asList("$.chineseName"))
+                                        .type(MaskTypes.CHINESE_NAME)
+                                        .build()))
+                        .ignoreKeys(Collections.singletonList("chineseName"))
+                        .build(),
+                MaskStrategyRegistry.withBuiltIns());
+
+        assertEquals("chineseName=张三 other=王五", custom.mask("chineseName=张三 other=王五"));
     }
 
     @Test

@@ -6,6 +6,7 @@
 
 - 通过 `SafeOutputMessagePatternConverter` 接入 Log4j2 `PatternLayout`。
 - 通过 `SafeOutputLogMessageMasker` 处理 JSON-like 和 key-value 日志片段。
+- key-value 脱敏复用 `rules.keys` 到类型标签的映射，支持内置和自定义策略。
 - 对没有字段名上下文的手机号、邮箱、合法大陆身份证号执行可选 regex fallback。
 - 通过 `maxMessageLength` 和 `maxValueLength` 控制日志脱敏成本和误伤范围。
 
@@ -28,6 +29,8 @@
 ## 边界
 
 - key-value 规则依赖字段名，例如 `mobile=13800138000` 或 `"email":"foo@example.com"`。
+- key-value 支持 `key=value`、`key: value`、`key = value`、`key : value`，key 和 value 可使用单引号、双引号或不带引号。
+- `ignore.keys` 命中时优先跳过日志 key-value 脱敏；`rules.paths` 不作为日志文本匹配依据。
 - regex fallback 只覆盖手机号、邮箱和通过轻量格式、日期、年份及可选校验位检查的大陆身份证号。
 - 无上下文银行卡号不做全局兜底，避免误伤普通流水号。
 - converter 或脱敏过程异常时返回原日志消息，保持 fail-open。

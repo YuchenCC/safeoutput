@@ -1,6 +1,7 @@
 package com.safeoutput.log4j2;
 
 import com.safeoutput.core.MaskContext;
+import com.safeoutput.core.MaskRuleRequest;
 import com.safeoutput.core.MainlandIdCards;
 import com.safeoutput.core.MaskRuleMatcher;
 import com.safeoutput.core.MaskScene;
@@ -97,7 +98,10 @@ final class SafeOutputLogMessageMasker {
     }
 
     private String maskValue(String key, String value) {
-        Optional<RuleMatch> match = ruleMatcher.match(key, null);
+        // 日志 key-value 只有字段名上下文，仍复用 core 的统一决策，确保 ignore.keys 优先级一致。
+        Optional<RuleMatch> match = ruleMatcher.decide(MaskRuleRequest.builder()
+                .key(key)
+                .build());
         if (!match.isPresent() || match.get().getAction() != RuleAction.MASK) {
             return value;
         }
