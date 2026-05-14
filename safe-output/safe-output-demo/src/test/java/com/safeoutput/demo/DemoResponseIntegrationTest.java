@@ -12,6 +12,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
@@ -88,6 +90,35 @@ class DemoResponseIntegrationTest {
         assertFalse(json.contains("foo@example.com"));
         assertFalse(json.contains("11010519491231002X"));
         assertFalse(json.contains("6222021234567890123"));
+    }
+
+    @Test
+    void manualMaskDemoEndpointsReturnFirstSecondAndIdempotentResults() {
+        Map<String, String> byTypeRequest = new LinkedHashMap<String, String>();
+        byTypeRequest.put("value", "13800138000");
+        byTypeRequest.put("type", "mobileM");
+        String byType = restTemplate.postForObject("/demo/mask/by-type", byTypeRequest, String.class);
+
+        String object = restTemplate.postForObject("/demo/mask/object", new LinkedHashMap<String, String>(),
+                String.class);
+
+        Map<String, String> strongRequest = new LinkedHashMap<String, String>();
+        strongRequest.put("text", "联系 13800138000 foo@example.com");
+        String strong = restTemplate.postForObject("/demo/mask/strong", strongRequest, String.class);
+
+        assertTrue(byType.contains("m-138****8000"));
+        assertTrue(byType.contains("\"idempotent\":true"));
+        assertTrue(object.contains("\"realName\":\"张*\""));
+        assertTrue(object.contains("\"mobile\":\"138****8000\""));
+        assertTrue(object.contains("\"name\":\"演示商品\""));
+        assertTrue(object.contains("\"idempotent\":true"));
+        assertTrue(strong.contains("138****8000"));
+        assertTrue(strong.contains("foo****@example.com"));
+        assertTrue(strong.contains("\"idempotent\":true"));
+
+        String snapshot = restTemplate.getForObject("/demo/report/snapshot", String.class);
+        assertTrue(snapshot.contains("\"manualCount\""));
+        assertFalse(snapshot.contains("13800138000"));
     }
 
     private static Path latestReport() throws Exception {

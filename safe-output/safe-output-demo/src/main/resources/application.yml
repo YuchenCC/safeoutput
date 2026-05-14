@@ -1,4 +1,9 @@
 safe-output:
+  rules:
+    - name: demoRealName
+      keys:
+        - realName
+      type: CHINESE_NAME
   ignore:
     keys:
       - plainNote

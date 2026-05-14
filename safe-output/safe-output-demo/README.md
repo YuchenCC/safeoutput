@@ -7,6 +7,7 @@
 - 演示业务侧只引用 `safe-output-spring-boot-starter` 的接入方式。
 - 提供 Bean、Map、List、嵌套对象和 API Ignore 响应脱敏样例。
 - 通过 Log4j2 `%safeOutputMsg` 演示日志 key-value 与 regex fallback 脱敏。
+- 提供主动脱敏验证接口，覆盖指定 type、对象规则和强扫描。
 - 启用报告模块，并提供快照查看和手动导出接口。
 - 提供静态页面 `safe-output-playground.html`，方便浏览器手动验证。
 
@@ -34,6 +35,9 @@ http://localhost:8080/safe-output-playground.html
 - `GET /demo/logs`: 输出一条带敏感值的日志。
 - `GET /demo/report/snapshot`: 查看内存聚合快照。
 - `GET /demo/report/export`: 手动导出本地 JSON 报告。
+- `POST /demo/mask/by-type`: 指定类型标签主动脱敏，Demo 包含自定义 `mobileM` 策略。
+- `POST /demo/mask/object`: 按对象规则主动脱敏，演示 `realName`、`mobile` 命中且商品 `name` 不误脱敏。
+- `POST /demo/mask/strong`: 对文本执行主动强扫描脱敏。
 
 ## 配置
 
