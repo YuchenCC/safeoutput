@@ -9,6 +9,8 @@ import java.util.Map;
 
 public final class ApiMaskMetrics {
 
+    private static final long SLOW_MASK_NANOS = 50000000L;
+
     private final String method;
 
     private final String path;
@@ -19,9 +21,15 @@ public final class ApiMaskMetrics {
 
     private String ignoreReason;
 
+    private long failureCount;
+
+    private long maskedFieldCount;
+
     private long totalElapsedNanos;
 
     private long maxElapsedNanos;
+
+    private long slowMaskCount;
 
     private final Map<String, Long> maskTypeCounts = new LinkedHashMap<String, Long>();
 
@@ -36,8 +44,15 @@ public final class ApiMaskMetrics {
         if (event.getIgnoreReason() != null) {
             ignoreReason = event.getIgnoreReason();
         }
+        if (event.isFailed()) {
+            failureCount++;
+        }
+        maskedFieldCount += event.getMaskedFieldCount();
         totalElapsedNanos += Math.max(0, event.getElapsedNanos());
         maxElapsedNanos = Math.max(maxElapsedNanos, event.getElapsedNanos());
+        if (event.getElapsedNanos() >= SLOW_MASK_NANOS) {
+            slowMaskCount++;
+        }
         for (Map.Entry<String, Integer> entry : event.getMaskTypeCounts().entrySet()) {
             String type = MaskTypes.normalize(entry.getKey());
             long previous = maskTypeCounts.containsKey(type) ? maskTypeCounts.get(type) : 0L;
@@ -65,12 +80,24 @@ public final class ApiMaskMetrics {
         return ignoreReason;
     }
 
+    public long getFailureCount() {
+        return failureCount;
+    }
+
+    public long getMaskedFieldCount() {
+        return maskedFieldCount;
+    }
+
     public long getAverageElapsedNanos() {
         return hitCount == 0 ? 0 : totalElapsedNanos / hitCount;
     }
 
     public long getMaxElapsedNanos() {
         return maxElapsedNanos;
+    }
+
+    public long getSlowMaskCount() {
+        return slowMaskCount;
     }
 
     public Map<String, Long> getMaskTypeCounts() {

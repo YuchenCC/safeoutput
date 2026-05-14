@@ -10,24 +10,38 @@ public final class ResponseRiskEvent {
 
     private final String path;
 
+    private final String apiKey;
+
     private final boolean ignored;
 
     private final String ignoreReason;
+
+    private final boolean failed;
+
+    private final int maskedFieldCount;
 
     private final Map<String, Integer> maskTypeCounts;
 
     private final long elapsedNanos;
 
     public ResponseRiskEvent(String method, String path, boolean ignored, String ignoreReason) {
-        this(method, path, ignored, ignoreReason, Collections.<String, Integer>emptyMap(), 0);
+        this(method, path, null, ignored, ignoreReason, false, 0, Collections.<String, Integer>emptyMap(), 0);
     }
 
     public ResponseRiskEvent(String method, String path, boolean ignored, String ignoreReason,
             Map<String, Integer> maskTypeCounts, long elapsedNanos) {
+        this(method, path, null, ignored, ignoreReason, false, count(maskTypeCounts), maskTypeCounts, elapsedNanos);
+    }
+
+    public ResponseRiskEvent(String method, String path, String apiKey, boolean ignored, String ignoreReason,
+            boolean failed, int maskedFieldCount, Map<String, Integer> maskTypeCounts, long elapsedNanos) {
         this.method = method;
         this.path = path;
+        this.apiKey = apiKey;
         this.ignored = ignored;
         this.ignoreReason = ignoreReason;
+        this.failed = failed;
+        this.maskedFieldCount = Math.max(0, maskedFieldCount);
         this.maskTypeCounts = immutableCounts(maskTypeCounts);
         this.elapsedNanos = elapsedNanos;
     }
@@ -40,12 +54,24 @@ public final class ResponseRiskEvent {
         return path;
     }
 
+    public String getApiKey() {
+        return apiKey;
+    }
+
     public boolean isIgnored() {
         return ignored;
     }
 
     public String getIgnoreReason() {
         return ignoreReason;
+    }
+
+    public boolean isFailed() {
+        return failed;
+    }
+
+    public int getMaskedFieldCount() {
+        return maskedFieldCount;
     }
 
     public Map<String, Integer> getMaskTypeCounts() {
@@ -61,5 +87,17 @@ public final class ResponseRiskEvent {
             return Collections.emptyMap();
         }
         return Collections.unmodifiableMap(new LinkedHashMap<String, Integer>(counts));
+    }
+
+    private static int count(Map<String, Integer> counts) {
+        int total = 0;
+        if (counts != null) {
+            for (Integer value : counts.values()) {
+                if (value != null && value > 0) {
+                    total += value;
+                }
+            }
+        }
+        return total;
     }
 }

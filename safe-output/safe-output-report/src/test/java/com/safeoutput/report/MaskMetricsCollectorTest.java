@@ -65,6 +65,44 @@ class MaskMetricsCollectorTest {
     }
 
     @Test
+    void aggregatesResponseApiLatencyFieldCountsSlowMasksAndStableKey() {
+        MaskMetricsCollector collector = new MaskMetricsCollector(10);
+        Map<String, Integer> counts = new LinkedHashMap<String, Integer>();
+        counts.put(MaskTypes.MOBILE, 2);
+        counts.put(MaskTypes.ID_CARD, 1);
+
+        collector.recordApi(new ResponseRiskEvent("GET", "/customers/123", "/customers/{id}", false, null, false,
+                3, counts, 60000000L));
+        collector.recordApi(new ResponseRiskEvent("GET", "/customers/456", "/customers/{id}", false, null, true,
+                0, new LinkedHashMap<String, Integer>(), 10L));
+
+        ApiMaskMetrics metric = collector.snapshot().getApiMetric("GET", "/customers/{id}");
+
+        assertEquals(2, metric.getHitCount());
+        assertEquals(30000005L, metric.getAverageElapsedNanos());
+        assertEquals(60000000L, metric.getMaxElapsedNanos());
+        assertEquals(1, metric.getSlowMaskCount());
+        assertEquals(1, metric.getFailureCount());
+        assertEquals(3, metric.getMaskedFieldCount());
+        assertEquals(2, metric.getMaskTypeCounts().get(MaskTypes.MOBILE).longValue());
+        assertEquals(1, metric.getMaskTypeCounts().get(MaskTypes.ID_CARD).longValue());
+        assertEquals(null, collector.snapshot().getApiMetric("GET", "/customers/123"));
+    }
+
+    @Test
+    void ignoredApiStillRecordsRiskBaseData() {
+        MaskMetricsCollector collector = new MaskMetricsCollector(10);
+
+        collector.recordApi(new ResponseRiskEvent("GET", "/demo/ignored", "/demo/ignored", true,
+                "demo plaintext endpoint", false, 0, new LinkedHashMap<String, Integer>(), 0));
+
+        ApiMaskMetrics metric = collector.snapshot().getApiMetric("GET", "/demo/ignored");
+        assertEquals(true, metric.isIgnored());
+        assertEquals("demo plaintext endpoint", metric.getIgnoreReason());
+        assertEquals(0, metric.getMaskedFieldCount());
+    }
+
+    @Test
     void collectorSwallowsRecorderExceptions() {
         MaskMetricsCollector collector = new MaskMetricsCollector(1);
 

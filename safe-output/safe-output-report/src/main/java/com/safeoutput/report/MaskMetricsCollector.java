@@ -100,7 +100,7 @@ public final class MaskMetricsCollector implements ResponseRiskRecorder, Unknown
     }
 
     private ApiMaskMetrics apiMetric(ResponseRiskEvent event) {
-        String key = key(event.getMethod(), event.getPath());
+        String key = key(event.getMethod(), apiPath(event));
         if (!apiMetrics.containsKey(key) && apiMetrics.size() >= maxApiMetrics) {
             // 接口维度有上限，超过后聚合到 overflow，避免高基数路径占满内存。
             key = key(OVERFLOW_METHOD, OVERFLOW_PATH);
@@ -111,6 +111,12 @@ public final class MaskMetricsCollector implements ResponseRiskRecorder, Unknown
             apiMetrics.put(key, metric);
         }
         return metric;
+    }
+
+    private static String apiPath(ResponseRiskEvent event) {
+        return event.getApiKey() == null || event.getApiKey().trim().isEmpty()
+                ? event.getPath()
+                : event.getApiKey();
     }
 
     private static String key(String method, String path) {

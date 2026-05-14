@@ -88,8 +88,36 @@ class SafeOutputResponseBodyAdviceIntegrationTest {
                     ResponseRiskEvent event = context.getBean(RecordingResponseRiskRecorder.class).lastEvent.get();
                     org.junit.jupiter.api.Assertions.assertEquals("GET", event.getMethod());
                     org.junit.jupiter.api.Assertions.assertEquals("/api/raw/mobile", event.getPath());
+                    org.junit.jupiter.api.Assertions.assertEquals("/api/raw/mobile", event.getApiKey());
                     org.junit.jupiter.api.Assertions.assertEquals(true, event.isIgnored());
                     org.junit.jupiter.api.Assertions.assertEquals("business plaintext lookup", event.getIgnoreReason());
+                });
+    }
+
+    @Test
+    void responseRiskEventIsRecordedAfterMaskingWithStableApiSummary() {
+        contextRunner
+                .withUserConfiguration(RecordingConfiguration.class)
+                .run(context -> {
+                    mvc(context.getBean(SafeOutputResponseBodyAdvice.class))
+                            .perform(get("/customers/123"))
+                            .andExpect(status().isOk())
+                            .andExpect(content().string("{\"mobile\":\"138****5678\",\"email\":\"ali****@example.com\"}"));
+
+                    ResponseRiskEvent event = context.getBean(RecordingResponseRiskRecorder.class).lastEvent.get();
+                    org.junit.jupiter.api.Assertions.assertEquals("GET", event.getMethod());
+                    org.junit.jupiter.api.Assertions.assertEquals("/customers/123", event.getPath());
+                    org.junit.jupiter.api.Assertions.assertEquals("/customers/{id}", event.getApiKey());
+                    org.junit.jupiter.api.Assertions.assertEquals(false, event.isIgnored());
+                    org.junit.jupiter.api.Assertions.assertEquals(false, event.isFailed());
+                    org.junit.jupiter.api.Assertions.assertEquals(2, event.getMaskedFieldCount());
+                    org.junit.jupiter.api.Assertions.assertEquals(1,
+                            event.getMaskTypeCounts().get("mobile").intValue());
+                    org.junit.jupiter.api.Assertions.assertEquals(1,
+                            event.getMaskTypeCounts().get("email").intValue());
+                    org.junit.jupiter.api.Assertions.assertEquals(false,
+                            event.getMaskTypeCounts().toString().contains("13812345678"));
+                    org.junit.jupiter.api.Assertions.assertEquals(true, event.getElapsedNanos() > 0);
                 });
     }
 
@@ -179,6 +207,14 @@ class SafeOutputResponseBodyAdviceIntegrationTest {
         @GetMapping("/api/raw/mobile")
         CustomerResponse rawMobile() {
             return new CustomerResponse("13812345678");
+        }
+
+        @GetMapping("/customers/{id}")
+        Map<String, Object> customerById() {
+            Map<String, Object> value = new LinkedHashMap<String, Object>();
+            value.put("mobile", "13812345678");
+            value.put("email", "alice@example.com");
+            return value;
         }
 
         @GetMapping("/custom-rule")

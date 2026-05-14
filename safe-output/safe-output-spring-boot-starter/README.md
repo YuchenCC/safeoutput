@@ -7,6 +7,7 @@
 - 通过 `spring.factories` 注册 Spring Boot 2.x 自动装配。
 - 创建核心 Bean：`MaskRuleMatcher`、`MaskStrategyRegistry`、`SensitiveFieldResolver`、`ObjectMasker`、`SafeOutputMaskService`。
 - 在 Spring MVC 环境中注册 `SafeOutputResponseBodyAdvice`，于 JSON 序列化前处理响应体。
+- Response 脱敏完成后记录轻量风险事件，使用 MVC pattern 或归一化路径作为稳定接口标识。
 - 根据配置启用 `MaskMetricsCollector` 和 `MaskReportExporter`。
 - 将配置 Rule、字段 Ignore、API Ignore 和报告配置绑定到 `SafeOutputProperties`。
 - `rules[].type` 使用 String 类型标签绑定，支持内置类型和业务自定义类型；策略查找会做 trim 和大小写归一化。

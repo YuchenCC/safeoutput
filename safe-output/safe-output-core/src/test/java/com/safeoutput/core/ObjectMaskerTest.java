@@ -42,6 +42,24 @@ class ObjectMaskerTest {
     }
 
     @Test
+    void maskWithResultReturnsOnlyPerCallAggregateSummary() {
+        ObjectMasker masker = defaultMasker();
+        Map<String, Object> payload = new LinkedHashMap<String, Object>();
+        payload.put("mobile", "13812345678");
+        payload.put("email", "alice@example.com");
+
+        MaskingResult result = masker.maskWithResult(payload, MaskScene.RESPONSE);
+
+        Map<?, ?> masked = (Map<?, ?>) result.getValue();
+        assertEquals("138****5678", masked.get("mobile"));
+        assertEquals("ali****@example.com", masked.get("email"));
+        assertEquals(2, result.getMaskedFieldCount());
+        assertEquals(1, result.getMaskTypeCounts().get(MaskTypes.MOBILE).intValue());
+        assertEquals(1, result.getMaskTypeCounts().get(MaskTypes.EMAIL).intValue());
+        assertEquals(false, result.getMaskTypeCounts().toString().contains("13812345678"));
+    }
+
+    @Test
     void honorsDepthCycleProtectionAndUnsupportedTypes() {
         ObjectMasker masker = new ObjectMasker(MaskStrategyRegistry.withBuiltIns(),
                 MaskRuleMatcher.withDefaultRules(), ObjectMaskerOptions.builder()

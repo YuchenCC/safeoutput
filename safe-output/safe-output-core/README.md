@@ -7,6 +7,7 @@
 - 定义 `MaskTypes`、`MaskType`、`MaskScene`、`MaskRule`、`RuleMatch` 等核心模型。
 - 通过 `MaskRuleMatcher` 执行固定优先级的规则决策。
 - 通过 `ObjectMasker` 遍历 Bean、Map、Collection 和数组，并在命中规则时改写字符串值。
+- 通过 `ObjectMasker.maskWithResult(...)` 为响应链路返回本次脱敏的字段数量和类型分布摘要。
 - 通过 `SafeOutputMaskService.mask(value, type)` 提供指定类型的主动脱敏入口。
 - 通过 `MaskStrategyRegistry` 注册内置策略和调用方自定义策略。
 - 通过 `SensitiveFieldResolver` 缓存字段元数据，并解析 `@Desensitize` 注解。
@@ -35,6 +36,7 @@
 ## 关键入口
 
 - `ObjectMasker.mask(Object)`: 响应对象脱敏入口。
+- `ObjectMasker.maskWithResult(Object, MaskScene)`: 响应对象脱敏并返回本次调用的聚合摘要，不包含字段路径或敏感原文。
 - `SafeOutputMaskService.mask(String, String)`: 主动按类型标签脱敏单个字符串。
 - `SafeOutputMaskService.maskObject(Object)`: 主动按响应对象规则递归脱敏 Bean、Map、Collection 和数组。
 - `SafeOutputMaskService.maskStrong(String)`: 主动强扫描文本，默认扫描手机号、邮箱和身份证。

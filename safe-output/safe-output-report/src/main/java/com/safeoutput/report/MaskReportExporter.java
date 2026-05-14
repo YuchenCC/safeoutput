@@ -145,8 +145,11 @@ public final class MaskReportExporter {
             field(json, "hitCount", metric.getHitCount()).append(',');
             booleanField(json, "ignored", metric.isIgnored()).append(',');
             stringField(json, "ignoreReason", metric.getIgnoreReason()).append(',');
+            field(json, "failureCount", metric.getFailureCount()).append(',');
+            field(json, "maskedFieldCount", metric.getMaskedFieldCount()).append(',');
             field(json, "averageElapsedNanos", metric.getAverageElapsedNanos()).append(',');
             field(json, "maxElapsedNanos", metric.getMaxElapsedNanos()).append(',');
+            field(json, "slowMaskCount", metric.getSlowMaskCount()).append(',');
             stringField(json, "riskLevel", metric.getRiskLevel().name()).append(',');
             json.append("\"maskTypeCounts\":");
             maskTypeCounts(json, metric.getMaskTypeCounts());
