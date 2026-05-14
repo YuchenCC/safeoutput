@@ -80,6 +80,7 @@ public final class MaskMetricsCollector implements ResponseRiskRecorder {
     private ApiMaskMetrics apiMetric(ResponseRiskEvent event) {
         String key = key(event.getMethod(), event.getPath());
         if (!apiMetrics.containsKey(key) && apiMetrics.size() >= maxApiMetrics) {
+            // 接口维度有上限，超过后聚合到 overflow，避免高基数路径占满内存。
             key = key(OVERFLOW_METHOD, OVERFLOW_PATH);
         }
         ApiMaskMetrics metric = apiMetrics.get(key);

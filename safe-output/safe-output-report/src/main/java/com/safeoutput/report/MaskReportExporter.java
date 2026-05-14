@@ -69,6 +69,7 @@ public final class MaskReportExporter {
         try {
             Files.createDirectories(options.getDirectory());
             Path target = nextFile();
+            // 报告只写聚合快照，不写原始响应、原始日志或敏感字段值。
             Files.write(target, toJson(collector.snapshot()).getBytes(StandardCharsets.UTF_8));
             retainNewestFiles();
             return target;
@@ -94,6 +95,7 @@ public final class MaskReportExporter {
     private void retainNewestFiles() throws IOException {
         List<Path> files = reportFiles();
         int deleteCount = files.size() - options.getRetainFiles();
+        // 文件名包含递增时间戳，字典序排序后前面的就是最旧快照。
         for (int i = 0; i < deleteCount; i++) {
             Files.deleteIfExists(files.get(i));
         }
