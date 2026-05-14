@@ -5,18 +5,20 @@ import com.safeoutput.core.MaskType;
 import com.safeoutput.core.MaskTypes;
 import com.safeoutput.core.ResponseRiskEvent;
 import com.safeoutput.core.ResponseRiskRecorder;
+import com.safeoutput.core.UnknownTypeRecorder;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-public final class MaskMetricsCollector implements ResponseRiskRecorder {
+public final class MaskMetricsCollector implements ResponseRiskRecorder, UnknownTypeRecorder {
 
     private static final String OVERFLOW_METHOD = "OVERFLOW";
     private static final String OVERFLOW_PATH = "__overflow__";
 
     private final int maxApiMetrics;
     private final Map<String, Long> maskTypeCounts = new LinkedHashMap<String, Long>();
+    private final Map<String, Long> unknownTypeCounts = new LinkedHashMap<String, Long>();
     private final Map<String, ApiMaskMetrics> apiMetrics = new LinkedHashMap<String, ApiMaskMetrics>();
 
     private long totalCount;
@@ -61,6 +63,17 @@ public final class MaskMetricsCollector implements ResponseRiskRecorder {
     }
 
     @Override
+    public synchronized void recordUnknownType(String type, MaskScene scene) {
+        try {
+            String normalizedType = MaskTypes.normalize(type);
+            long previous = unknownTypeCounts.containsKey(normalizedType) ? unknownTypeCounts.get(normalizedType) : 0L;
+            unknownTypeCounts.put(normalizedType, previous + 1);
+        } catch (RuntimeException ex) {
+            // Metrics must never affect masking flow.
+        }
+    }
+
+    @Override
     public void record(ResponseRiskEvent event) {
         recordApi(event);
     }
@@ -79,7 +92,7 @@ public final class MaskMetricsCollector implements ResponseRiskRecorder {
     public synchronized MaskReport snapshot() {
         long average = totalCount == 0 ? 0 : totalElapsedNanos / totalCount;
         return new MaskReport(totalCount, responseCount, logCount, failureCount, average, maxElapsedNanos,
-                maskTypeCounts, new ArrayList<ApiMaskMetrics>(apiMetrics.values()));
+                maskTypeCounts, unknownTypeCounts, new ArrayList<ApiMaskMetrics>(apiMetrics.values()));
     }
 
     private ApiMaskMetrics apiMetric(ResponseRiskEvent event) {

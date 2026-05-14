@@ -15,8 +15,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.logging.Logger;
 
 public final class ObjectMasker {
+
+    private static final Logger LOGGER = Logger.getLogger(ObjectMasker.class.getName());
 
     private final MaskStrategyRegistry strategyRegistry;
 
@@ -26,6 +29,8 @@ public final class ObjectMasker {
 
     private final ObjectMaskerOptions options;
 
+    private final UnknownTypeRecorder unknownTypeRecorder;
+
     public ObjectMasker(MaskStrategyRegistry strategyRegistry, MaskRuleMatcher ruleMatcher,
             ObjectMaskerOptions options) {
         this(strategyRegistry, ruleMatcher, null, options);
@@ -33,10 +38,16 @@ public final class ObjectMasker {
 
     public ObjectMasker(MaskStrategyRegistry strategyRegistry, MaskRuleMatcher ruleMatcher,
             SensitiveFieldResolver fieldResolver, ObjectMaskerOptions options) {
+        this(strategyRegistry, ruleMatcher, fieldResolver, options, null);
+    }
+
+    public ObjectMasker(MaskStrategyRegistry strategyRegistry, MaskRuleMatcher ruleMatcher,
+            SensitiveFieldResolver fieldResolver, ObjectMaskerOptions options, UnknownTypeRecorder unknownTypeRecorder) {
         this.strategyRegistry = strategyRegistry == null ? MaskStrategyRegistry.withBuiltIns() : strategyRegistry;
         this.ruleMatcher = ruleMatcher == null ? MaskRuleMatcher.withDefaultRules() : ruleMatcher;
         this.fieldResolver = fieldResolver == null ? new SensitiveFieldResolver(this.ruleMatcher) : fieldResolver;
         this.options = options == null ? ObjectMaskerOptions.defaults() : options;
+        this.unknownTypeRecorder = unknownTypeRecorder;
     }
 
     public Object mask(Object value) {
@@ -162,6 +173,7 @@ public final class ObjectMasker {
         try {
             Optional<MaskStrategy> strategy = strategyRegistry.find(match.getMaskType());
             if (!strategy.isPresent()) {
+                recordUnknownType(match.getMaskType());
                 return value;
             }
             MaskResult result = strategy.get().apply(MaskContext.builder()
@@ -174,6 +186,14 @@ public final class ObjectMasker {
             return result.getValue();
         } catch (RuntimeException ex) {
             return value;
+        }
+    }
+
+    private void recordUnknownType(String type) {
+        // 未知类型默认 skip，但保留告警和聚合统计，帮助定位配置里拼错或未注册的策略。
+        LOGGER.warning("Skip masking because no strategy registered for type " + MaskTypes.normalize(type));
+        if (unknownTypeRecorder != null) {
+            unknownTypeRecorder.recordUnknownType(type, MaskScene.RESPONSE);
         }
     }
 

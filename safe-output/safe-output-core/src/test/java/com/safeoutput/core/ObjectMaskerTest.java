@@ -10,6 +10,7 @@ import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.jupiter.api.Test;
 
@@ -100,6 +101,33 @@ class ObjectMaskerTest {
         assertArrayEquals(new byte[] {1, 2}, (byte[]) masker.mask(new byte[] {1, 2}));
         assertSame(contact, masker.mask(contact));
         assertEquals("13812345678", contact.mobile);
+    }
+
+    @Test
+    void skipsUnknownRuleTypeWithoutFallingBackToDefaultAndRecordsIt() {
+        AtomicInteger unknownCount = new AtomicInteger();
+        ObjectMasker masker = new ObjectMasker(MaskStrategyRegistry.withBuiltIns(),
+                MaskRuleMatcher.withConfiguredRules(Arrays.asList(MaskRule.configured("custom")
+                        .keys(Arrays.asList("customToken"))
+                        .type("mobileM")
+                        .build())),
+                null,
+                ObjectMaskerOptions.defaults(),
+                new UnknownTypeRecorder() {
+                    @Override
+                    public void recordUnknownType(String type, MaskScene scene) {
+                        if ("mobilem".equals(type) && scene == MaskScene.RESPONSE) {
+                            unknownCount.incrementAndGet();
+                        }
+                    }
+                });
+        Map<String, Object> payload = new LinkedHashMap<String, Object>();
+        payload.put("customToken", "abcdef123456");
+
+        Map<?, ?> masked = (Map<?, ?>) masker.mask(payload);
+
+        assertEquals("abcdef123456", masked.get("customToken"));
+        assertEquals(1, unknownCount.get());
     }
 
     private static ObjectMasker defaultMasker() {

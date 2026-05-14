@@ -21,6 +21,7 @@ class MaskMetricsCollectorTest {
 
         collector.recordMask(MaskScene.RESPONSE, MaskType.MOBILE, 10);
         collector.recordMask(MaskScene.LOG, MaskType.EMAIL, 20);
+        collector.recordUnknownType("mobileM", MaskScene.RESPONSE);
         collector.recordFailure();
 
         MaskReport report = collector.snapshot();
@@ -33,6 +34,7 @@ class MaskMetricsCollectorTest {
         assertEquals(20, report.getMaxElapsedNanos());
         assertEquals(1, report.getMaskTypeCounts().get(MaskTypes.MOBILE).longValue());
         assertEquals(1, report.getMaskTypeCounts().get(MaskTypes.EMAIL).longValue());
+        assertEquals(1, report.getUnknownTypeCounts().get("mobilem").longValue());
     }
 
     @Test

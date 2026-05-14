@@ -123,6 +123,8 @@ public final class MaskReportExporter {
         field(json, "maxElapsedNanos", report.getMaxElapsedNanos()).append(',');
         json.append("\"maskTypeCounts\":");
         maskTypeCounts(json, report.getMaskTypeCounts()).append(',');
+        json.append("\"unknownTypeCounts\":");
+        maskTypeCounts(json, report.getUnknownTypeCounts()).append(',');
         json.append("\"apiMetrics\":");
         apiMetrics(json, report.getApiMetrics());
         json.append('}');

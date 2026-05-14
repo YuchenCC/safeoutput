@@ -3,6 +3,12 @@ package com.safeoutput.log4j2;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
+import com.safeoutput.core.MaskRule;
+import com.safeoutput.core.MaskRuleMatcher;
+import com.safeoutput.core.MaskStrategyRegistry;
+
+import java.util.Arrays;
+
 import org.junit.jupiter.api.Test;
 
 class SafeOutputLogMessageMaskerTest {
@@ -45,6 +51,18 @@ class SafeOutputLogMessageMaskerTest {
         String masked = masker.mask("idCard=350102199001011234 invalid=110105199902300029");
 
         assertEquals("idCard=350102********1234 invalid=110105199902300029", masked);
+    }
+
+    @Test
+    void unknownKeyValueTypeSkipsWithoutDefaultFallback() {
+        SafeOutputLogMessageMasker custom = new SafeOutputLogMessageMasker(
+                MaskRuleMatcher.withConfiguredRules(Arrays.asList(MaskRule.configured("custom")
+                        .keys(Arrays.asList("customToken"))
+                        .type("mobileM")
+                        .build())),
+                MaskStrategyRegistry.withBuiltIns());
+
+        assertEquals("customToken=abcdef123456", custom.mask("customToken=abcdef123456"));
     }
 
     @Test

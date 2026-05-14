@@ -29,6 +29,8 @@
 
 核心扩展契约使用 String 类型标签贯穿策略、规则、上下文、结果和统计链路。`MaskTypes` 提供内置标准类型常量，`MaskType` 保留为内置清单和兼容入口。
 
+规则命中但未找到对应策略时默认跳过当前字段，不回退到 `DEFAULT`；核心会记录 warning，并通过 `UnknownTypeRecorder` 暴露聚合统计钩子。
+
 ## 关键入口
 
 - `ObjectMasker.mask(Object)`: 响应对象脱敏入口。

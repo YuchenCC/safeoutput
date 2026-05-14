@@ -14,10 +14,12 @@ public final class MaskReport {
     private final long averageElapsedNanos;
     private final long maxElapsedNanos;
     private final Map<String, Long> maskTypeCounts;
+    private final Map<String, Long> unknownTypeCounts;
     private final List<ApiMaskMetrics> apiMetrics;
 
     MaskReport(long totalCount, long responseCount, long logCount, long failureCount, long averageElapsedNanos,
-            long maxElapsedNanos, Map<String, Long> maskTypeCounts, List<ApiMaskMetrics> apiMetrics) {
+            long maxElapsedNanos, Map<String, Long> maskTypeCounts, Map<String, Long> unknownTypeCounts,
+            List<ApiMaskMetrics> apiMetrics) {
         this.totalCount = totalCount;
         this.responseCount = responseCount;
         this.logCount = logCount;
@@ -25,6 +27,7 @@ public final class MaskReport {
         this.averageElapsedNanos = averageElapsedNanos;
         this.maxElapsedNanos = maxElapsedNanos;
         this.maskTypeCounts = Collections.unmodifiableMap(new LinkedHashMap<String, Long>(maskTypeCounts));
+        this.unknownTypeCounts = Collections.unmodifiableMap(new LinkedHashMap<String, Long>(unknownTypeCounts));
         this.apiMetrics = Collections.unmodifiableList(apiMetrics);
     }
 
@@ -54,6 +57,10 @@ public final class MaskReport {
 
     public Map<String, Long> getMaskTypeCounts() {
         return maskTypeCounts;
+    }
+
+    public Map<String, Long> getUnknownTypeCounts() {
+        return unknownTypeCounts;
     }
 
     public List<ApiMaskMetrics> getApiMetrics() {

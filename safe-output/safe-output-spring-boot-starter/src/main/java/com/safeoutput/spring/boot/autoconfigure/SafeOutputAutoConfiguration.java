@@ -7,6 +7,7 @@ import com.safeoutput.core.MaskStrategyRegistry;
 import com.safeoutput.core.ObjectMasker;
 import com.safeoutput.core.ObjectMaskerOptions;
 import com.safeoutput.core.SensitiveFieldResolver;
+import com.safeoutput.core.UnknownTypeRecorder;
 import com.safeoutput.report.MaskMetricsCollector;
 import com.safeoutput.report.MaskReportExportOptions;
 import com.safeoutput.report.MaskReportExporter;
@@ -65,12 +66,14 @@ public class SafeOutputAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean
     public ObjectMasker objectMasker(MaskStrategyRegistry maskStrategyRegistry, MaskRuleMatcher maskRuleMatcher,
-            SensitiveFieldResolver sensitiveFieldResolver, SafeOutputProperties properties) {
+            SensitiveFieldResolver sensitiveFieldResolver, SafeOutputProperties properties,
+            ObjectProvider<UnknownTypeRecorder> unknownTypeRecorders) {
         ObjectMaskerOptions options = ObjectMaskerOptions.builder()
                 .maxDepth(properties.getMaxDepth())
                 .maxCollectionSize(properties.getMaxCollectionSize())
                 .build();
-        return new ObjectMasker(maskStrategyRegistry, maskRuleMatcher, sensitiveFieldResolver, options);
+        return new ObjectMasker(maskStrategyRegistry, maskRuleMatcher, sensitiveFieldResolver, options,
+                unknownTypeRecorders.getIfAvailable());
     }
 
     @Bean

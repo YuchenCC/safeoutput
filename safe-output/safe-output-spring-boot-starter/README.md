@@ -10,6 +10,7 @@
 - 根据配置启用 `MaskMetricsCollector` 和 `MaskReportExporter`。
 - 将配置 Rule、字段 Ignore、API Ignore 和报告配置绑定到 `SafeOutputProperties`。
 - `rules[].type` 使用 String 类型标签绑定，支持内置类型和业务自定义类型；策略查找会做 trim 和大小写归一化。
+- `safe-output.strategy.unknown-type-policy` 预留未知类型处理策略，当前默认且唯一行为为 `SKIP`。
 
 ## 最小接入
 
@@ -30,6 +31,8 @@ safe-output:
   enabled: true
   response:
     enabled: true
+  strategy:
+    unknown-type-policy: SKIP
   rules:
     - name: realName
       keys:

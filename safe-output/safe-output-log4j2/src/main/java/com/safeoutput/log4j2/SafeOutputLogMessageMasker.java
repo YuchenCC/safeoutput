@@ -11,10 +11,13 @@ import com.safeoutput.core.RuleAction;
 import com.safeoutput.core.RuleMatch;
 
 import java.util.Optional;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 final class SafeOutputLogMessageMasker {
+
+    private static final Logger LOGGER = Logger.getLogger(SafeOutputLogMessageMasker.class.getName());
 
     private static final int DEFAULT_MAX_MESSAGE_LENGTH = 5000;
 
@@ -104,6 +107,9 @@ final class SafeOutputLogMessageMasker {
         }
         Optional<MaskStrategy> strategy = strategyRegistry.find(match.get().getMaskType());
         if (!strategy.isPresent()) {
+            // 日志输出链路必须 fail-open；未知 type 只告警并跳过当前值。
+            LOGGER.warning("Skip log masking because no strategy registered for type "
+                    + MaskTypes.normalize(match.get().getMaskType()));
             return value;
         }
         String masked = strategy.get().mask(rawValue, MaskContext.builder()

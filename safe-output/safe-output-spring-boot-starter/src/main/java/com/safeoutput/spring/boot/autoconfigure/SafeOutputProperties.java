@@ -32,6 +32,8 @@ public class SafeOutputProperties {
 
     private final ReportProperties report = new ReportProperties();
 
+    private final StrategyProperties strategy = new StrategyProperties();
+
     public boolean isEnabled() {
         return enabled;
     }
@@ -82,6 +84,10 @@ public class SafeOutputProperties {
 
     public ReportProperties getReport() {
         return report;
+    }
+
+    public StrategyProperties getStrategy() {
+        return strategy;
     }
 
     public static class SceneProperties {
@@ -304,6 +310,23 @@ public class SafeOutputProperties {
 
         public void setRetainFiles(int retainFiles) {
             this.retainFiles = retainFiles;
+        }
+    }
+
+    public enum UnknownTypePolicy {
+        SKIP
+    }
+
+    public static class StrategyProperties {
+
+        private UnknownTypePolicy unknownTypePolicy = UnknownTypePolicy.SKIP;
+
+        public UnknownTypePolicy getUnknownTypePolicy() {
+            return unknownTypePolicy;
+        }
+
+        public void setUnknownTypePolicy(UnknownTypePolicy unknownTypePolicy) {
+            this.unknownTypePolicy = unknownTypePolicy == null ? UnknownTypePolicy.SKIP : unknownTypePolicy;
         }
     }
 
