@@ -26,7 +26,7 @@
 
 启用后，常见字段名会自动按默认 Rule 脱敏；业务代码无需显式调用 Safe Output API。
 
-需要主动脱敏明确类型的字符串时，可注入 `SafeOutputMaskService` 并调用 `mask(value, type)`；该入口只根据类型标签查找策略，不做字段规则匹配或 regex 扫描。需要复用响应对象规则时，可调用 `maskObject(value)` 递归处理 Bean、Map、Collection 和数组。
+需要主动脱敏明确类型的字符串时，可注入 `SafeOutputMaskService` 并调用 `mask(value, type)`；该入口只根据类型标签查找策略，不做字段规则匹配或 regex 扫描。需要复用响应对象规则时，可调用 `maskObject(value)` 递归处理 Bean、Map、Collection 和数组。需要显式强扫描文本或对象字符串时，可调用 `maskStrong(text)` 或 `maskObjectStrong(value)`；默认 fallback 类型为 `MOBILE`、`EMAIL`、`ID_CARD`。
 
 ## 常用配置
 
@@ -38,6 +38,10 @@ safe-output:
   log:
     key-value-rule-enabled: true
     max-rule-keys: 128
+  manual:
+    strong-scan:
+      types:
+        - BANK_CARD
   strategy:
     unknown-type-policy: SKIP
   rules:

@@ -26,6 +26,8 @@ public class SafeOutputProperties {
 
     private final LogProperties log = new LogProperties();
 
+    private final ManualProperties manual = new ManualProperties();
+
     private final List<RuleProperties> rules = new ArrayList<RuleProperties>();
 
     private final IgnoreProperties ignore = new IgnoreProperties();
@@ -72,6 +74,10 @@ public class SafeOutputProperties {
 
     public LogProperties getLog() {
         return log;
+    }
+
+    public ManualProperties getManual() {
+        return manual;
     }
 
     public List<RuleProperties> getRules() {
@@ -386,6 +392,24 @@ public class SafeOutputProperties {
 
         public RegexFallbackProperties getRegexFallback() {
             return regexFallback;
+        }
+    }
+
+    public static class ManualProperties extends SceneProperties {
+
+        private final StrongScanProperties strongScan = new StrongScanProperties();
+
+        public StrongScanProperties getStrongScan() {
+            return strongScan;
+        }
+    }
+
+    public static class StrongScanProperties {
+
+        private final List<String> types = new ArrayList<String>();
+
+        public List<String> getTypes() {
+            return types;
         }
     }
 

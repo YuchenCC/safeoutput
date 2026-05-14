@@ -31,6 +31,7 @@ class SafeOutputPropertiesBindingTest {
             assertEquals(300, properties.getLog().getMaxValueLength());
             assertTrue(properties.getLog().isKeyValueRuleEnabled());
             assertEquals(128, properties.getLog().getMaxRuleKeys());
+            assertTrue(properties.getManual().getStrongScan().getTypes().isEmpty());
             assertFalse(properties.getLog().getRegexFallback().isEnabled());
             assertTrue(properties.getLog().getRegexFallback().isIdCardCheckCodeEnabled());
             assertEquals(SafeOutputProperties.UnknownTypePolicy.SKIP,
@@ -79,6 +80,7 @@ class SafeOutputPropertiesBindingTest {
                         "safe-output.log.regex-fallback.id-card-check-code-enabled=false",
                         "safe-output.log.regex-fallback.types[0]=MOBILE",
                         "safe-output.log.regex-fallback.types[1]=EMAIL",
+                        "safe-output.manual.strong-scan.types[0]=BANK_CARD",
                         "safe-output.rules[1].name=customMobile",
                         "safe-output.rules[1].keys[0]=mobileM",
                         "safe-output.rules[1].type=mobileM")
@@ -120,6 +122,7 @@ class SafeOutputPropertiesBindingTest {
                     assertEquals(120, properties.getLog().getMaxValueLength());
                     assertFalse(properties.getLog().isKeyValueRuleEnabled());
                     assertEquals(12, properties.getLog().getMaxRuleKeys());
+                    assertEquals("BANK_CARD", properties.getManual().getStrongScan().getTypes().get(0));
                     assertTrue(properties.getLog().getRegexFallback().isEnabled());
                     assertFalse(properties.getLog().getRegexFallback().isIdCardCheckCodeEnabled());
                     assertEquals("EMAIL", properties.getLog().getRegexFallback().getTypes().get(1));

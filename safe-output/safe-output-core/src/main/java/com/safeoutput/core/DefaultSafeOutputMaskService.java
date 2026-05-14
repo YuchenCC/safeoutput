@@ -1,5 +1,6 @@
 package com.safeoutput.core;
 
+import java.util.Collection;
 import java.util.Optional;
 import java.util.logging.Logger;
 
@@ -11,16 +12,28 @@ public final class DefaultSafeOutputMaskService implements SafeOutputMaskService
 
     private final ObjectMasker objectMasker;
 
+    private final StrongTextMasker strongTextMasker;
+
+    private final StrongObjectMasker strongObjectMasker;
+
     public DefaultSafeOutputMaskService(MaskStrategyRegistry strategyRegistry) {
         this(strategyRegistry, null);
     }
 
     public DefaultSafeOutputMaskService(MaskStrategyRegistry strategyRegistry, ObjectMasker objectMasker) {
+        this(strategyRegistry, objectMasker, null);
+    }
+
+    public DefaultSafeOutputMaskService(MaskStrategyRegistry strategyRegistry, ObjectMasker objectMasker,
+            Collection<String> strongFallbackTypes) {
         this.strategyRegistry = strategyRegistry == null ? MaskStrategyRegistry.withBuiltIns() : strategyRegistry;
         this.objectMasker = objectMasker == null
                 ? new ObjectMasker(this.strategyRegistry, MaskRuleMatcher.withDefaultRules(),
                         ObjectMaskerOptions.defaults())
                 : objectMasker;
+        MaskRuleMatcher defaultRuleMatcher = MaskRuleMatcher.withDefaultRules();
+        this.strongTextMasker = new StrongTextMasker(this.strategyRegistry, defaultRuleMatcher, strongFallbackTypes);
+        this.strongObjectMasker = new StrongObjectMasker(this.strongTextMasker, ObjectMaskerOptions.defaults());
     }
 
     @Override
@@ -51,6 +64,21 @@ public final class DefaultSafeOutputMaskService implements SafeOutputMaskService
         try {
             // 对象主动脱敏复用响应对象递归能力，默认不对普通字符串做全局 regex 扫描。
             return objectMasker.mask(value);
+        } catch (RuntimeException ex) {
+            return value;
+        }
+    }
+
+    @Override
+    public String maskStrong(String value) {
+        return strongTextMasker.mask(value);
+    }
+
+    @Override
+    public Object maskObjectStrong(Object value) {
+        try {
+            // 强扫描必须由调用方显式进入；该路径会扫描对象中的普通字符串。
+            return strongObjectMasker.mask(value);
         } catch (RuntimeException ex) {
             return value;
         }

@@ -37,6 +37,8 @@
 - `ObjectMasker.mask(Object)`: 响应对象脱敏入口。
 - `SafeOutputMaskService.mask(String, String)`: 主动按类型标签脱敏单个字符串。
 - `SafeOutputMaskService.maskObject(Object)`: 主动按响应对象规则递归脱敏 Bean、Map、Collection 和数组。
+- `SafeOutputMaskService.maskStrong(String)`: 主动强扫描文本，默认扫描手机号、邮箱和身份证。
+- `SafeOutputMaskService.maskObjectStrong(Object)`: 主动强扫描对象中的字符串。
 - `MaskRuleMatcher.decide(MaskRuleRequest)`: 统一规则决策入口。
 - `MaskStrategyRegistry.withBuiltIns(...)`: 内置策略和自定义策略注册入口。
 - `BuiltInMaskStrategies.strategies()`: 内置策略集合。

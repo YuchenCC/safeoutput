@@ -83,8 +83,9 @@ public class SafeOutputAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean
     public SafeOutputMaskService safeOutputMaskService(MaskStrategyRegistry maskStrategyRegistry,
-            ObjectMasker objectMasker) {
-        return new DefaultSafeOutputMaskService(maskStrategyRegistry, objectMasker);
+            ObjectMasker objectMasker, SafeOutputProperties properties) {
+        return new DefaultSafeOutputMaskService(maskStrategyRegistry, objectMasker,
+                properties.getManual().getStrongScan().getTypes());
     }
 
     @Bean

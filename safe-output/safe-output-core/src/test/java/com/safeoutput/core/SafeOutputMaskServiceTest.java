@@ -68,6 +68,46 @@ class SafeOutputMaskServiceTest {
         assertEquals("手机号 13712345678", maskedMap.get("remark"));
     }
 
+    @Test
+    void strongTextMasksDefaultFallbackTypesAndKeyValuesOnlyWhenExplicitlyCalled() {
+        SafeOutputMaskService service = new DefaultSafeOutputMaskService(MaskStrategyRegistry.withBuiltIns(),
+                new ObjectMasker(MaskStrategyRegistry.withBuiltIns(), MaskRuleMatcher.withDefaultRules(),
+                        ObjectMaskerOptions.defaults()));
+
+        String masked = service.maskStrong("mobile=13812345678 contact 13912345678 foo@example.com "
+                + "id 11010519491231002X bank 6222021234567890123 name 张三");
+
+        assertEquals("mobile=138****5678 contact 139****5678 foo****@example.com "
+                + "id 110105********002X bank 6222021234567890123 name 张三", masked);
+    }
+
+    @Test
+    void strongObjectMasksStringsInsideMapAndBean() {
+        SafeOutputMaskService service = new DefaultSafeOutputMaskService(MaskStrategyRegistry.withBuiltIns(),
+                new ObjectMasker(MaskStrategyRegistry.withBuiltIns(), MaskRuleMatcher.withDefaultRules(),
+                        ObjectMaskerOptions.defaults()));
+        UserPayload payload = new UserPayload();
+        payload.remark = "联系 13912345678";
+        Map<String, Object> map = new LinkedHashMap<String, Object>();
+        map.put("message", "email foo@example.com");
+        map.put("payload", payload);
+
+        Map<?, ?> masked = (Map<?, ?>) service.maskObjectStrong(map);
+
+        assertEquals("email foo****@example.com", masked.get("message"));
+        assertEquals("联系 139****5678", ((UserPayload) masked.get("payload")).remark);
+    }
+
+    @Test
+    void configuredStrongFallbackTypesCanEnableBankCardScan() {
+        SafeOutputMaskService service = new DefaultSafeOutputMaskService(MaskStrategyRegistry.withBuiltIns(),
+                new ObjectMasker(MaskStrategyRegistry.withBuiltIns(), MaskRuleMatcher.withDefaultRules(),
+                        ObjectMaskerOptions.defaults()),
+                Arrays.asList(MaskTypes.BANK_CARD));
+
+        assertEquals("bank 622202*********0123", service.maskStrong("bank 6222021234567890123"));
+    }
+
     private static final class FixedStrategy implements MaskStrategy {
 
         private final String type;
