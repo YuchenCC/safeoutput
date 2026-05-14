@@ -350,6 +350,8 @@ public class SafeOutputProperties {
 
         private boolean enabled;
 
+        private boolean idCardCheckCodeEnabled = true;
+
         private final List<MaskType> types = new ArrayList<MaskType>();
 
         public boolean isEnabled() {
@@ -358,6 +360,14 @@ public class SafeOutputProperties {
 
         public void setEnabled(boolean enabled) {
             this.enabled = enabled;
+        }
+
+        public boolean isIdCardCheckCodeEnabled() {
+            return idCardCheckCodeEnabled;
+        }
+
+        public void setIdCardCheckCodeEnabled(boolean idCardCheckCodeEnabled) {
+            this.idCardCheckCodeEnabled = idCardCheckCodeEnabled;
         }
 
         public List<MaskType> getTypes() {

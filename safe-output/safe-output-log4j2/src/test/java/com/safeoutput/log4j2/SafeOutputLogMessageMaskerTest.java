@@ -41,6 +41,22 @@ class SafeOutputLogMessageMaskerTest {
     }
 
     @Test
+    void explicitIdCardKeyValueMasksEvenWhenCheckCodeIsNotValid() {
+        String masked = masker.mask("idCard=350102199001011234 invalid=110105199902300029");
+
+        assertEquals("idCard=350102********1234 invalid=110105199902300029", masked);
+    }
+
+    @Test
+    void idCardFallbackCheckCodeCanBeDisabledWithoutSkippingDateValidation() {
+        SafeOutputLogMessageMasker relaxed = new SafeOutputLogMessageMasker(1000, 300, true, false);
+
+        String masked = relaxed.mask("candidate 350102199001011234 invalidDate 110105199902300029");
+
+        assertEquals("candidate 350102********1234 invalidDate 110105199902300029", masked);
+    }
+
+    @Test
     void skipsLongMessagesAndLongValues() {
         SafeOutputLogMessageMasker shortMessageLimit = new SafeOutputLogMessageMasker(10, 100, true);
         SafeOutputLogMessageMasker shortValueLimit = new SafeOutputLogMessageMasker(1000, 5, false);

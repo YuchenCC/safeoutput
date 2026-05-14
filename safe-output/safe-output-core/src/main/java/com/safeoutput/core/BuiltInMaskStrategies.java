@@ -12,14 +12,14 @@ public final class BuiltInMaskStrategies {
 
     static {
         Map<MaskType, MaskStrategy> strategies = new EnumMap<>(MaskType.class);
-        register(strategies, new SimpleMaskStrategy(MaskType.MOBILE, BuiltInMaskStrategies::maskMobile));
+        register(strategies, new SimpleMaskStrategy(MaskType.MOBILE, (rawValue, context) -> maskMobile(rawValue)));
         register(strategies, new SimpleMaskStrategy(MaskType.ID_CARD, BuiltInMaskStrategies::maskIdCard));
-        register(strategies, new SimpleMaskStrategy(MaskType.BANK_CARD, BuiltInMaskStrategies::maskBankCard));
-        register(strategies, new SimpleMaskStrategy(MaskType.EMAIL, BuiltInMaskStrategies::maskEmail));
-        register(strategies, new SimpleMaskStrategy(MaskType.CHINESE_NAME, BuiltInMaskStrategies::maskChineseName));
-        register(strategies, new SimpleMaskStrategy(MaskType.ADDRESS, BuiltInMaskStrategies::maskAddress));
-        register(strategies, new SimpleMaskStrategy(MaskType.PASSWORD, BuiltInMaskStrategies::maskPassword));
-        register(strategies, new SimpleMaskStrategy(MaskType.DEFAULT, BuiltInMaskStrategies::maskDefault));
+        register(strategies, new SimpleMaskStrategy(MaskType.BANK_CARD, (rawValue, context) -> maskBankCard(rawValue)));
+        register(strategies, new SimpleMaskStrategy(MaskType.EMAIL, (rawValue, context) -> maskEmail(rawValue)));
+        register(strategies, new SimpleMaskStrategy(MaskType.CHINESE_NAME, (rawValue, context) -> maskChineseName(rawValue)));
+        register(strategies, new SimpleMaskStrategy(MaskType.ADDRESS, (rawValue, context) -> maskAddress(rawValue)));
+        register(strategies, new SimpleMaskStrategy(MaskType.PASSWORD, (rawValue, context) -> maskPassword(rawValue)));
+        register(strategies, new SimpleMaskStrategy(MaskType.DEFAULT, (rawValue, context) -> maskDefault(rawValue)));
         STRATEGIES = Collections.unmodifiableMap(strategies);
     }
 
@@ -51,9 +51,12 @@ public final class BuiltInMaskStrategies {
         return rawValue.substring(0, 3) + "****" + rawValue.substring(7);
     }
 
-    private static String maskIdCard(String rawValue) {
-        // 身份证脱敏前先做校验，避免把普通 18 位流水号误判为身份证。
-        if (!MainlandIdCards.isValid(rawValue)) {
+    private static String maskIdCard(String rawValue, MaskContext context) {
+        // 无上下文 fallback 先做轻量身份证校验；明确字段上下文优先避免敏感值明文输出。
+        if (!hasExplicitIdCardContext(context) && !MainlandIdCards.isValid(rawValue)) {
+            return rawValue;
+        }
+        if (rawValue.length() != 18) {
             return rawValue;
         }
         return rawValue.substring(0, 6) + "********" + rawValue.substring(14);
@@ -119,6 +122,17 @@ public final class BuiltInMaskStrategies {
         return first >= '\u4e00' && first <= '\u9fa5';
     }
 
+    private static boolean hasExplicitIdCardContext(MaskContext context) {
+        return context != null
+                && (context.getScene() == MaskScene.RESPONSE
+                || hasText(context.getFieldName())
+                || hasText(context.getPath()));
+    }
+
+    private static boolean hasText(String value) {
+        return value != null && !value.trim().isEmpty();
+    }
+
     private static String repeat(char value, int count) {
         StringBuilder builder = new StringBuilder(count);
         for (int i = 0; i < count; i++) {
@@ -128,7 +142,7 @@ public final class BuiltInMaskStrategies {
     }
 
     private interface MaskFunction {
-        String mask(String rawValue);
+        String mask(String rawValue, MaskContext context);
     }
 
     private static final class SimpleMaskStrategy implements MaskStrategy {
@@ -148,7 +162,7 @@ public final class BuiltInMaskStrategies {
 
         @Override
         public String mask(String rawValue, MaskContext context) {
-            return function.mask(rawValue);
+            return function.mask(rawValue, context);
         }
     }
 }

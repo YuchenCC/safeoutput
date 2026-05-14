@@ -4,7 +4,7 @@ import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.util.regex.Pattern;
 
-final class MainlandIdCards {
+public final class MainlandIdCards {
 
     private static final Pattern ID_CARD_PATTERN = Pattern.compile("\\d{17}[\\dXx]");
     private static final int[] WEIGHTS = {7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10, 5, 8, 4, 2};
@@ -13,12 +13,19 @@ final class MainlandIdCards {
     private MainlandIdCards() {
     }
 
-    static boolean isValid(String value) {
+    public static boolean isValid(String value) {
+        return isLikely(value, true);
+    }
+
+    public static boolean isLikely(String value, boolean checkCodeEnabled) {
         if (value == null || !ID_CARD_PATTERN.matcher(value).matches()) {
             return false;
         }
         if (!hasValidBirthDate(value)) {
             return false;
+        }
+        if (!checkCodeEnabled) {
+            return true;
         }
         return hasValidCheckCode(value);
     }

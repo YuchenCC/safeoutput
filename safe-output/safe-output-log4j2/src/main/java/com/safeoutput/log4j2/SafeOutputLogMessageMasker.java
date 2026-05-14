@@ -1,6 +1,7 @@
 package com.safeoutput.log4j2;
 
 import com.safeoutput.core.MaskContext;
+import com.safeoutput.core.MainlandIdCards;
 import com.safeoutput.core.MaskRuleMatcher;
 import com.safeoutput.core.MaskScene;
 import com.safeoutput.core.MaskStrategy;
@@ -40,26 +41,34 @@ final class SafeOutputLogMessageMasker {
 
     private final boolean regexFallbackEnabled;
 
+    private final boolean idCardCheckCodeEnabled;
+
     SafeOutputLogMessageMasker() {
         this(DEFAULT_MAX_MESSAGE_LENGTH, DEFAULT_MAX_VALUE_LENGTH, true);
     }
 
     SafeOutputLogMessageMasker(int maxMessageLength, int maxValueLength, boolean regexFallbackEnabled) {
+        this(maxMessageLength, maxValueLength, regexFallbackEnabled, true);
+    }
+
+    SafeOutputLogMessageMasker(int maxMessageLength, int maxValueLength, boolean regexFallbackEnabled,
+            boolean idCardCheckCodeEnabled) {
         this(MaskRuleMatcher.withDefaultRules(), MaskStrategyRegistry.withBuiltIns(), maxMessageLength,
-                maxValueLength, regexFallbackEnabled);
+                maxValueLength, regexFallbackEnabled, idCardCheckCodeEnabled);
     }
 
     SafeOutputLogMessageMasker(MaskRuleMatcher ruleMatcher, MaskStrategyRegistry strategyRegistry) {
-        this(ruleMatcher, strategyRegistry, DEFAULT_MAX_MESSAGE_LENGTH, DEFAULT_MAX_VALUE_LENGTH, true);
+        this(ruleMatcher, strategyRegistry, DEFAULT_MAX_MESSAGE_LENGTH, DEFAULT_MAX_VALUE_LENGTH, true, true);
     }
 
     private SafeOutputLogMessageMasker(MaskRuleMatcher ruleMatcher, MaskStrategyRegistry strategyRegistry,
-            int maxMessageLength, int maxValueLength, boolean regexFallbackEnabled) {
+            int maxMessageLength, int maxValueLength, boolean regexFallbackEnabled, boolean idCardCheckCodeEnabled) {
         this.ruleMatcher = ruleMatcher;
         this.strategyRegistry = strategyRegistry;
         this.maxMessageLength = Math.max(1, maxMessageLength);
         this.maxValueLength = Math.max(1, maxValueLength);
         this.regexFallbackEnabled = regexFallbackEnabled;
+        this.idCardCheckCodeEnabled = idCardCheckCodeEnabled;
     }
 
     String mask(String message) {
@@ -125,11 +134,18 @@ final class SafeOutputLogMessageMasker {
             if (rawValue.length() > maxValueLength) {
                 continue;
             }
-            String replacement = strategy.get().mask(rawValue, MaskContext.builder()
+            // 身份证无上下文兜底先做轻量格式、生日和可选校验位检查，避免误伤普通 18 位编号。
+            if (type == MaskType.ID_CARD && !MainlandIdCards.isLikely(rawValue, idCardCheckCodeEnabled)) {
+                continue;
+            }
+            MaskContext.Builder contextBuilder = MaskContext.builder()
                     .maskType(type)
                     .scene(MaskScene.LOG)
-                    .rawValue(rawValue)
-                    .build());
+                    .rawValue(rawValue);
+            if (type == MaskType.ID_CARD) {
+                contextBuilder.path("regex-fallback");
+            }
+            String replacement = strategy.get().mask(rawValue, contextBuilder.build());
             if (!rawValue.equals(replacement)) {
                 matcher.appendReplacement(masked, Matcher.quoteReplacement(replacement));
             }

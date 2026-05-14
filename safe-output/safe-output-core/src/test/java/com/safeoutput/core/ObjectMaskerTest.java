@@ -20,6 +20,7 @@ class ObjectMaskerTest {
         ObjectMasker masker = defaultMasker();
         CustomerPayload payload = new CustomerPayload();
         payload.mobile = "13812345678";
+        payload.idCard = "110105199902300029";
         payload.profile = new ProfilePayload();
         payload.profile.email = "alice@example.com";
         Map<String, Object> map = new LinkedHashMap<String, Object>();
@@ -32,6 +33,7 @@ class ObjectMaskerTest {
 
         assertSame(payload, masked);
         assertEquals("138****5678", masked.mobile);
+        assertEquals("110105********0029", masked.idCard);
         assertEquals("ali****@example.com", masked.profile.email);
         assertEquals("********", masked.attributes.get("password"));
         assertEquals("139****5678", ((ContactPayload) ((List<?>) masked.attributes.get("items")).get(0)).mobile);
@@ -114,6 +116,8 @@ class ObjectMaskerTest {
     private static final class CustomerPayload {
 
         private String mobile;
+
+        private String idCard;
 
         private ProfilePayload profile;
 

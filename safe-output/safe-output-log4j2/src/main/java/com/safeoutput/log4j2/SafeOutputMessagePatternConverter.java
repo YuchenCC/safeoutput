@@ -25,7 +25,7 @@ public final class SafeOutputMessagePatternConverter extends LogEventPatternConv
             ConverterOptions parsedOptions = ConverterOptions.parse(options);
             return new SafeOutputMessagePatternConverter(parsedOptions.enabled,
                     new SafeOutputLogMessageMasker(parsedOptions.maxMessageLength, parsedOptions.maxValueLength,
-                            parsedOptions.regexFallback));
+                            parsedOptions.regexFallback, parsedOptions.idCardCheckCode));
         } catch (RuntimeException ex) {
             // converter 初始化失败时禁用脱敏，避免日志配置问题影响业务启动或日志输出。
             return new SafeOutputMessagePatternConverter(false, null);
@@ -58,6 +58,8 @@ public final class SafeOutputMessagePatternConverter extends LogEventPatternConv
 
         private boolean regexFallback = true;
 
+        private boolean idCardCheckCode = true;
+
         private static ConverterOptions parse(String[] options) {
             ConverterOptions parsedOptions = new ConverterOptions();
             if (options == null) {
@@ -86,6 +88,8 @@ public final class SafeOutputMessagePatternConverter extends LogEventPatternConv
                 enabled = Boolean.parseBoolean(value);
             } else if ("regexFallback".equalsIgnoreCase(key)) {
                 regexFallback = Boolean.parseBoolean(value);
+            } else if ("idCardCheckCode".equalsIgnoreCase(key)) {
+                idCardCheckCode = Boolean.parseBoolean(value);
             } else if ("maxMessageLength".equalsIgnoreCase(key)) {
                 maxMessageLength = parsePositiveInt(value, maxMessageLength);
             } else if ("maxValueLength".equalsIgnoreCase(key)) {

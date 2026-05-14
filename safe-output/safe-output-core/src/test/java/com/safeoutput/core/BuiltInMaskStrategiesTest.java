@@ -55,6 +55,19 @@ class BuiltInMaskStrategiesTest {
     }
 
     @Test
+    void masksIdCardDirectlyWhenContextExplicitlyIdentifiesTheType() {
+        MaskResult result = BuiltInMaskStrategies.get(MaskType.ID_CARD).apply(MaskContext.builder()
+                .maskType(MaskType.ID_CARD)
+                .scene(MaskScene.RESPONSE)
+                .fieldName("idCard")
+                .rawValue("110105199902300029")
+                .build());
+
+        assertTrue(result.isMasked());
+        assertEquals("110105********0029", result.getValue());
+    }
+
+    @Test
     void masksBankCardOnlyForConfirmedBankCardType() {
         assertMasked(MaskType.BANK_CARD, "6222021234567890123", "622202*********0123");
         assertUnchanged(MaskType.BANK_CARD, null);

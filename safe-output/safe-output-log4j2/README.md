@@ -21,13 +21,14 @@
 
 - `enabled`: 是否启用日志脱敏，默认 `true`。
 - `regexFallback`: 是否启用无字段名上下文的兜底正则，默认 `true`。
+- `idCardCheckCode`: regex fallback 识别孤立身份证号时是否校验末位校验码，默认 `true`；日期格式和年份范围始终校验。
 - `maxMessageLength`: 超过该长度的整条日志不处理，默认 `5000`。
 - `maxValueLength`: 超过该长度的单个值不处理，默认 `300`。
 
 ## 边界
 
 - key-value 规则依赖字段名，例如 `mobile=13800138000` 或 `"email":"foo@example.com"`。
-- regex fallback 只覆盖手机号、邮箱和合法大陆身份证号。
+- regex fallback 只覆盖手机号、邮箱和通过轻量格式、日期、年份及可选校验位检查的大陆身份证号。
 - 无上下文银行卡号不做全局兜底，避免误伤普通流水号。
 - converter 或脱敏过程异常时返回原日志消息，保持 fail-open。
 
