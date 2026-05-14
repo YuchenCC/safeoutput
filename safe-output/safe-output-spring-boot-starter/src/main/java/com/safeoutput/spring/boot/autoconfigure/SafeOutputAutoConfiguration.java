@@ -40,6 +40,7 @@ public class SafeOutputAutoConfiguration {
     @ConditionalOnMissingBean
     public MaskRuleMatcher maskRuleMatcher(SafeOutputProperties properties) {
         List<MaskRule> rules = new ArrayList<MaskRule>();
+        // 配置项只负责声明 Rule，具体优先级统一交给 core 的 MaskRuleMatcher 决策。
         for (SafeOutputProperties.RuleProperties rule : properties.getRules()) {
             rules.add(MaskRule.configured(rule.getName())
                     .keys(rule.getKeys())

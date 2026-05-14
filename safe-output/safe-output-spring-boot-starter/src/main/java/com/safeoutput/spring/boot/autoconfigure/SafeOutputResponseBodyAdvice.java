@@ -55,12 +55,14 @@ public class SafeOutputResponseBodyAdvice implements ResponseBodyAdvice<Object> 
         try {
             Optional<ApiIgnoreMatch> apiIgnore = matchApiIgnore(request);
             if (apiIgnore.isPresent()) {
+                // API Ignore 返回明文，但仍记录风险事件，便于报告里看见显式豁免接口。
                 recordRisk(request, true, apiIgnore.get().getReason());
                 return body;
             }
             recordRisk(request, false, null);
             return objectMasker.mask(body);
         } catch (RuntimeException ex) {
+            // 响应脱敏必须 fail-open，避免安全组件异常放大成业务接口故障。
             return body;
         }
     }
