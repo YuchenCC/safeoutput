@@ -32,9 +32,14 @@ final class ApiIgnoreMatcher {
 
     private boolean matches(SafeOutputProperties.ApiIgnoreProperties api, String method, String path,
             MaskScene scene) {
+        String pattern = pattern(api);
+        if (pattern == null || pattern.trim().isEmpty()) {
+            // Ignore 是显式豁免；缺少路径的配置不能扩大成“所有接口豁免”。
+            return false;
+        }
         return matchesMethod(api.getMethod(), method)
                 && matchesScene(api.getScenes(), scene)
-                && pathMatcher.match(pattern(api), path);
+                && pathMatcher.match(pattern, path);
     }
 
     private static boolean matchesMethod(String expected, String actual) {
