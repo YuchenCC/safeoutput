@@ -1,12 +1,14 @@
 package com.safeoutput.spring.boot.autoconfigure;
 
+import com.safeoutput.core.DefaultSafeOutputMaskService;
+import com.safeoutput.core.MaskEventRecorder;
 import com.safeoutput.core.MaskRule;
 import com.safeoutput.core.MaskRuleMatcher;
-import com.safeoutput.core.MaskEventRecorder;
 import com.safeoutput.core.MaskStrategy;
 import com.safeoutput.core.MaskStrategyRegistry;
 import com.safeoutput.core.ObjectMasker;
 import com.safeoutput.core.ObjectMaskerOptions;
+import com.safeoutput.core.SafeOutputMaskService;
 import com.safeoutput.core.SensitiveFieldResolver;
 import com.safeoutput.core.UnknownTypeRecorder;
 import com.safeoutput.report.MaskMetricsCollector;
@@ -76,6 +78,12 @@ public class SafeOutputAutoConfiguration {
                 .build();
         return new ObjectMasker(maskStrategyRegistry, maskRuleMatcher, sensitiveFieldResolver, options,
                 unknownTypeRecorders.getIfAvailable(), maskEventRecorders.getIfAvailable());
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    public SafeOutputMaskService safeOutputMaskService(MaskStrategyRegistry maskStrategyRegistry) {
+        return new DefaultSafeOutputMaskService(maskStrategyRegistry);
     }
 
     @Bean
