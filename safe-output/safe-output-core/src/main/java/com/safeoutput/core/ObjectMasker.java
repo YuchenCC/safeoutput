@@ -28,9 +28,14 @@ public final class ObjectMasker {
 
     public ObjectMasker(MaskStrategyRegistry strategyRegistry, MaskRuleMatcher ruleMatcher,
             ObjectMaskerOptions options) {
+        this(strategyRegistry, ruleMatcher, null, options);
+    }
+
+    public ObjectMasker(MaskStrategyRegistry strategyRegistry, MaskRuleMatcher ruleMatcher,
+            SensitiveFieldResolver fieldResolver, ObjectMaskerOptions options) {
         this.strategyRegistry = strategyRegistry == null ? MaskStrategyRegistry.withBuiltIns() : strategyRegistry;
         this.ruleMatcher = ruleMatcher == null ? MaskRuleMatcher.withDefaultRules() : ruleMatcher;
-        this.fieldResolver = new SensitiveFieldResolver(this.ruleMatcher);
+        this.fieldResolver = fieldResolver == null ? new SensitiveFieldResolver(this.ruleMatcher) : fieldResolver;
         this.options = options == null ? ObjectMaskerOptions.defaults() : options;
     }
 
@@ -122,17 +127,18 @@ public final class ObjectMasker {
                 if (childDepth > options.getMaxDepth()) {
                     continue;
                 }
-                Optional<RuleMatch> match = fieldResolver.resolve(field, childPath(path, field.getName()));
+                String childPath = childPath(path, field.getName());
+                Optional<RuleMatch> match = fieldResolver.resolve(field, childPath);
                 if (current instanceof String && match.isPresent() && match.get().getAction() == RuleAction.MASK) {
-                    field.set(bean, applyStrategy((String) current, match.get(), childPath(path, field.getName()),
-                            field.getName()));
+                    field.set(bean, applyStrategy((String) current, match.get(), childPath, field.getName()));
                 } else {
-                    field.set(bean, maskValue(current, childPath(path, field.getName()), field.getName(), childDepth,
-                            visiting));
+                    field.set(bean, maskValue(current, childPath, field.getName(), childDepth, visiting));
                 }
             } catch (RuntimeException ex) {
+                // 输出侧脱敏必须 fail-open：反射或策略异常不能影响业务响应。
                 return bean;
             } catch (IllegalAccessException ex) {
+                // 输出侧脱敏必须 fail-open：反射或策略异常不能影响业务响应。
                 return bean;
             }
         }
