@@ -90,6 +90,16 @@ class SafeOutputResponseBodyAdviceIntegrationTest {
     }
 
     @Test
+    void apiIgnoreWithoutPathDoesNotDisableMasking() {
+        contextRunner
+                .withPropertyValues("safe-output.ignore.apis[0].method=GET")
+                .run(context -> mvc(context.getBean(SafeOutputResponseBodyAdvice.class))
+                        .perform(get("/bean"))
+                        .andExpect(status().isOk())
+                        .andExpect(content().string("{\"mobile\":\"138****5678\"}")));
+    }
+
+    @Test
     void adviceFailsOpenWhenMaskingThrows() throws Exception {
         SafeOutputResponseBodyAdvice advice = new SafeOutputResponseBodyAdvice(null, null);
 
