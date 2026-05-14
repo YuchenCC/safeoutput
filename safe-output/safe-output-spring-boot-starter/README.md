@@ -9,6 +9,7 @@
 - 在 Spring MVC 环境中注册 `SafeOutputResponseBodyAdvice`，于 JSON 序列化前处理响应体。
 - 根据配置启用 `MaskMetricsCollector` 和 `MaskReportExporter`。
 - 将配置 Rule、字段 Ignore、API Ignore 和报告配置绑定到 `SafeOutputProperties`。
+- `rules[].type` 使用 String 类型标签绑定，支持内置类型和业务自定义类型；策略查找会做 trim 和大小写归一化。
 
 ## 最小接入
 
@@ -34,6 +35,10 @@ safe-output:
       keys:
         - realName
       type: CHINESE_NAME
+    - name: customMobile
+      keys:
+        - mobileM
+      type: mobileM
   ignore:
     keys:
       - plainNote

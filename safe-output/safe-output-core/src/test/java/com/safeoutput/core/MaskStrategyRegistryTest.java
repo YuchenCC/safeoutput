@@ -38,6 +38,16 @@ class MaskStrategyRegistryTest {
     }
 
     @Test
+    void normalizesStringTypeLookupForCustomStrategies() {
+        MaskStrategy custom = new FixedMaskStrategy(" mobileM ", "custom-mobile");
+
+        MaskStrategyRegistry registry = new MaskStrategyRegistry(Arrays.asList(custom));
+
+        assertSame(custom, registry.find("mobileM").get());
+        assertSame(custom, registry.find(" MOBILEM ").get());
+    }
+
+    @Test
     void laterStrategyOverridesEarlierStrategyForSameMaskType() {
         MaskStrategy first = new FixedMaskStrategy(MaskType.EMAIL, "first");
         MaskStrategy second = new FixedMaskStrategy(MaskType.EMAIL, "second");
@@ -81,6 +91,11 @@ class MaskStrategyRegistryTest {
 
         private FixedMaskStrategy(MaskType type, String maskedValue) {
             this.type = MaskTypes.from(type);
+            this.maskedValue = maskedValue;
+        }
+
+        private FixedMaskStrategy(String type, String maskedValue) {
+            this.type = type;
             this.maskedValue = maskedValue;
         }
 

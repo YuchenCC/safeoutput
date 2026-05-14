@@ -1,6 +1,6 @@
 package com.safeoutput.spring.boot.autoconfigure;
 
-import com.safeoutput.core.MaskType;
+import com.safeoutput.core.MaskTypes;
 import com.safeoutput.core.MaskScene;
 
 import java.util.ArrayList;
@@ -105,7 +105,7 @@ public class SafeOutputProperties {
 
         private final List<String> paths = new ArrayList<String>();
 
-        private MaskType type = MaskType.UNKNOWN;
+        private String type = MaskTypes.UNKNOWN;
 
         private boolean enabled = true;
 
@@ -125,12 +125,12 @@ public class SafeOutputProperties {
             return paths;
         }
 
-        public MaskType getType() {
+        public String getType() {
             return type;
         }
 
-        public void setType(MaskType type) {
-            this.type = type;
+        public void setType(String type) {
+            this.type = MaskTypes.normalize(type);
         }
 
         public boolean isEnabled() {
@@ -352,7 +352,7 @@ public class SafeOutputProperties {
 
         private boolean idCardCheckCodeEnabled = true;
 
-        private final List<MaskType> types = new ArrayList<MaskType>();
+        private final List<String> types = new ArrayList<String>();
 
         public boolean isEnabled() {
             return enabled;
@@ -370,7 +370,7 @@ public class SafeOutputProperties {
             this.idCardCheckCodeEnabled = idCardCheckCodeEnabled;
         }
 
-        public List<MaskType> getTypes() {
+        public List<String> getTypes() {
             return types;
         }
     }

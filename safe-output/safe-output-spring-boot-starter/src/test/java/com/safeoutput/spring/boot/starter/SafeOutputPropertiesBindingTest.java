@@ -4,7 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.safeoutput.core.MaskType;
+import com.safeoutput.core.MaskTypes;
 import com.safeoutput.spring.boot.autoconfigure.SafeOutputAutoConfiguration;
 import com.safeoutput.spring.boot.autoconfigure.SafeOutputProperties;
 
@@ -50,7 +50,7 @@ class SafeOutputPropertiesBindingTest {
                         "safe-output.rules[0].keys[0]=mobile",
                         "safe-output.rules[0].keys[1]=phone",
                         "safe-output.rules[0].paths[0]=$.customer.mobile",
-                        "safe-output.rules[0].type=MOBILE",
+                        "safe-output.rules[0].type= MOBILE ",
                         "safe-output.rules[0].enabled=false",
                         "safe-output.ignore.keys[0]=productName",
                         "safe-output.ignore.paths[0]=$.items[*].title",
@@ -71,7 +71,10 @@ class SafeOutputPropertiesBindingTest {
                         "safe-output.log.regex-fallback.enabled=true",
                         "safe-output.log.regex-fallback.id-card-check-code-enabled=false",
                         "safe-output.log.regex-fallback.types[0]=MOBILE",
-                        "safe-output.log.regex-fallback.types[1]=EMAIL")
+                        "safe-output.log.regex-fallback.types[1]=EMAIL",
+                        "safe-output.rules[1].name=customMobile",
+                        "safe-output.rules[1].keys[0]=mobileM",
+                        "safe-output.rules[1].type=mobileM")
                 .run(context -> {
                     SafeOutputProperties properties = context.getBean(SafeOutputProperties.class);
 
@@ -83,7 +86,7 @@ class SafeOutputPropertiesBindingTest {
                     assertEquals(25, properties.getMaxCollectionSize());
 
                     assertEquals("customerMobile", properties.getRules().get(0).getName());
-                    assertEquals(MaskType.MOBILE, properties.getRules().get(0).getType());
+                    assertEquals(MaskTypes.MOBILE, properties.getRules().get(0).getType());
                     assertFalse(properties.getRules().get(0).isEnabled());
                     assertEquals("phone", properties.getRules().get(0).getKeys().get(1));
                     assertEquals("$.customer.mobile", properties.getRules().get(0).getPaths().get(0));
@@ -108,7 +111,8 @@ class SafeOutputPropertiesBindingTest {
                     assertEquals(120, properties.getLog().getMaxValueLength());
                     assertTrue(properties.getLog().getRegexFallback().isEnabled());
                     assertFalse(properties.getLog().getRegexFallback().isIdCardCheckCodeEnabled());
-                    assertEquals(MaskType.EMAIL, properties.getLog().getRegexFallback().getTypes().get(1));
+                    assertEquals("EMAIL", properties.getLog().getRegexFallback().getTypes().get(1));
+                    assertEquals("mobilem", properties.getRules().get(1).getType());
                 });
     }
 }
