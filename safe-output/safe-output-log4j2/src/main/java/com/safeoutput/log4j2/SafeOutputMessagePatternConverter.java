@@ -27,6 +27,7 @@ public final class SafeOutputMessagePatternConverter extends LogEventPatternConv
                     new SafeOutputLogMessageMasker(parsedOptions.maxMessageLength, parsedOptions.maxValueLength,
                             parsedOptions.regexFallback));
         } catch (RuntimeException ex) {
+            // converter 初始化失败时禁用脱敏，避免日志配置问题影响业务启动或日志输出。
             return new SafeOutputMessagePatternConverter(false, null);
         }
     }

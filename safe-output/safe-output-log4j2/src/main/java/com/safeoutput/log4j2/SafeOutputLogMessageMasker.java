@@ -69,6 +69,7 @@ final class SafeOutputLogMessageMasker {
         if (message.length() > maxMessageLength) {
             return message;
         }
+        // 第一阶段只处理带字段名上下文的片段，例如 mobile=... 或 "email":"..."。
         Matcher matcher = KEY_VALUE.matcher(message);
         StringBuffer masked = new StringBuffer();
         while (matcher.find()) {
@@ -106,6 +107,7 @@ final class SafeOutputLogMessageMasker {
     }
 
     private String maskFallback(String message) {
+        // 第二阶段才做 regex fallback，且只覆盖低误伤类型；银行卡不做无上下文兜底。
         String masked = maskFallbackType(message, MOBILE_FALLBACK, MaskType.MOBILE);
         masked = maskFallbackType(masked, EMAIL_FALLBACK, MaskType.EMAIL);
         return maskFallbackType(masked, ID_CARD_FALLBACK, MaskType.ID_CARD);
