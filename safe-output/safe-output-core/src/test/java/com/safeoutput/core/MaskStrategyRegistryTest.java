@@ -25,7 +25,7 @@ class MaskStrategyRegistryTest {
         assertTrue(strategy.isPresent());
         assertSame(BuiltInMaskStrategies.get(MaskType.MOBILE), strategy.get());
         assertFalse(registry.find(MaskType.UNKNOWN).isPresent());
-        assertFalse(registry.find(null).isPresent());
+        assertFalse(registry.find((String) null).isPresent());
     }
 
     @Test
@@ -76,16 +76,16 @@ class MaskStrategyRegistryTest {
 
     private static final class FixedMaskStrategy implements MaskStrategy {
 
-        private final MaskType type;
+        private final String type;
         private final String maskedValue;
 
         private FixedMaskStrategy(MaskType type, String maskedValue) {
-            this.type = type;
+            this.type = MaskTypes.from(type);
             this.maskedValue = maskedValue;
         }
 
         @Override
-        public MaskType supportType() {
+        public String type() {
             return type;
         }
 

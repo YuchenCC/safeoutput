@@ -16,7 +16,7 @@ class SensitiveFieldResolverTest {
         RuleMatch match = resolver.resolve(field("displayName"), "$.displayName").get();
 
         assertEquals(RuleAction.MASK, match.getAction());
-        assertEquals(MaskType.CHINESE_NAME, match.getMaskType());
+        assertEquals(MaskTypes.CHINESE_NAME, match.getMaskType());
         assertEquals(RuleSource.ANNOTATION, match.getSource());
     }
 
@@ -31,7 +31,7 @@ class SensitiveFieldResolverTest {
 
         RuleMatch match = resolver.resolve(field("displayName"), "$.displayName").get();
 
-        assertEquals(MaskType.CHINESE_NAME, match.getMaskType());
+        assertEquals(MaskTypes.CHINESE_NAME, match.getMaskType());
         assertEquals(RuleSource.ANNOTATION, match.getSource());
     }
 
@@ -72,7 +72,7 @@ class SensitiveFieldResolverTest {
 
     private static final class CustomerPayload {
 
-        @Desensitize(type = MaskType.CHINESE_NAME)
+        @Desensitize(type = MaskTypes.CHINESE_NAME)
         private String displayName;
     }
 }

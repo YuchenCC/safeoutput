@@ -4,7 +4,7 @@
 
 ## 职责
 
-- 定义 `MaskType`、`MaskScene`、`MaskRule`、`RuleMatch` 等核心模型。
+- 定义 `MaskTypes`、`MaskType`、`MaskScene`、`MaskRule`、`RuleMatch` 等核心模型。
 - 通过 `MaskRuleMatcher` 执行固定优先级的规则决策。
 - 通过 `ObjectMasker` 遍历 Bean、Map、Collection 和数组，并在命中规则时改写字符串值。
 - 通过 `MaskStrategyRegistry` 注册内置策略和调用方自定义策略。
@@ -26,6 +26,8 @@
 `CHINESE_NAME` 是兼容旧命名的通用姓名类型。命中该类型后会按首尾保留、中间脱敏处理中文姓名、英文姓名、中英混合姓名和带空格等分隔符的姓名；`name` 这类歧义字段仍不会因为字段名本身被默认规则强制脱敏。
 
 `ID_CARD` 在响应、注解、配置 path/key 或日志 key-value 等明确上下文命中时直接脱敏；无字段上下文的日志 fallback 仍只在通过轻量格式、日期、年份和可选校验位检查后脱敏。
+
+核心扩展契约使用 String 类型标签贯穿策略、规则、上下文、结果和统计链路。`MaskTypes` 提供内置标准类型常量，`MaskType` 保留为内置清单和兼容入口。
 
 ## 关键入口
 

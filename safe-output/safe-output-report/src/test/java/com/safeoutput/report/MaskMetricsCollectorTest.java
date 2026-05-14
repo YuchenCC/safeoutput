@@ -5,9 +5,11 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import com.safeoutput.core.MaskScene;
 import com.safeoutput.core.MaskType;
+import com.safeoutput.core.MaskTypes;
 import com.safeoutput.core.ResponseRiskEvent;
 
-import java.util.EnumMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 
@@ -29,17 +31,17 @@ class MaskMetricsCollectorTest {
         assertEquals(1, report.getFailureCount());
         assertEquals(15, report.getAverageElapsedNanos());
         assertEquals(20, report.getMaxElapsedNanos());
-        assertEquals(1, report.getMaskTypeCounts().get(MaskType.MOBILE).longValue());
-        assertEquals(1, report.getMaskTypeCounts().get(MaskType.EMAIL).longValue());
+        assertEquals(1, report.getMaskTypeCounts().get(MaskTypes.MOBILE).longValue());
+        assertEquals(1, report.getMaskTypeCounts().get(MaskTypes.EMAIL).longValue());
     }
 
     @Test
     void aggregatesApiRiskAndOverflowWithoutRawValues() {
         MaskMetricsCollector collector = new MaskMetricsCollector(2);
-        EnumMap<MaskType, Integer> mobileCounts = new EnumMap<MaskType, Integer>(MaskType.class);
-        mobileCounts.put(MaskType.MOBILE, 5);
-        EnumMap<MaskType, Integer> passwordCounts = new EnumMap<MaskType, Integer>(MaskType.class);
-        passwordCounts.put(MaskType.PASSWORD, 1);
+        Map<String, Integer> mobileCounts = new LinkedHashMap<String, Integer>();
+        mobileCounts.put(MaskTypes.MOBILE, 5);
+        Map<String, Integer> passwordCounts = new LinkedHashMap<String, Integer>();
+        passwordCounts.put(MaskTypes.PASSWORD, 1);
 
         collector.recordApi(new ResponseRiskEvent("GET", "/api/users", false, null, mobileCounts, 30));
         collector.recordApi(new ResponseRiskEvent("GET", "/api/passwords", false, null, passwordCounts, 40));

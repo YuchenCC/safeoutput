@@ -4,7 +4,7 @@
 
 ## 职责
 
-- 通过 `MaskMetricsCollector` 聚合脱敏次数、场景、`MaskType`、失败次数和耗时。
+- 通过 `MaskMetricsCollector` 聚合脱敏次数、场景、String 类型标签、失败次数和耗时。
 - 通过 `ResponseRiskRecorder` 接收响应接口风险事件。
 - 通过 `ApiMaskMetrics` 维护接口级命中、Ignore 和风险等级。
 - 通过 `MaskReportExporter` 定时或手动导出本地 JSON 报告快照。
@@ -15,7 +15,7 @@
 
 - 总脱敏次数、响应脱敏次数、日志脱敏次数。
 - 失败次数、平均耗时、最大耗时。
-- 按 `MaskType` 聚合的计数。
+- 按 String 类型标签聚合的计数，内置类型使用 `MaskTypes` 标准值。
 - 接口维度的命中次数、Ignore 状态、Ignore 原因和风险等级。
 
 报告快照不包含：

@@ -1,10 +1,10 @@
 package com.safeoutput.report;
 
-import com.safeoutput.core.MaskType;
+import com.safeoutput.core.MaskTypes;
 import com.safeoutput.core.ResponseRiskEvent;
 
 import java.util.Collections;
-import java.util.EnumMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 public final class ApiMaskMetrics {
@@ -23,7 +23,7 @@ public final class ApiMaskMetrics {
 
     private long maxElapsedNanos;
 
-    private final Map<MaskType, Long> maskTypeCounts = new EnumMap<MaskType, Long>(MaskType.class);
+    private final Map<String, Long> maskTypeCounts = new LinkedHashMap<String, Long>();
 
     ApiMaskMetrics(String method, String path) {
         this.method = method;
@@ -38,9 +38,10 @@ public final class ApiMaskMetrics {
         }
         totalElapsedNanos += Math.max(0, event.getElapsedNanos());
         maxElapsedNanos = Math.max(maxElapsedNanos, event.getElapsedNanos());
-        for (Map.Entry<MaskType, Integer> entry : event.getMaskTypeCounts().entrySet()) {
-            long previous = maskTypeCounts.containsKey(entry.getKey()) ? maskTypeCounts.get(entry.getKey()) : 0L;
-            maskTypeCounts.put(entry.getKey(), previous + entry.getValue());
+        for (Map.Entry<String, Integer> entry : event.getMaskTypeCounts().entrySet()) {
+            String type = MaskTypes.normalize(entry.getKey());
+            long previous = maskTypeCounts.containsKey(type) ? maskTypeCounts.get(type) : 0L;
+            maskTypeCounts.put(type, previous + entry.getValue());
         }
     }
 
@@ -72,7 +73,7 @@ public final class ApiMaskMetrics {
         return maxElapsedNanos;
     }
 
-    public Map<MaskType, Long> getMaskTypeCounts() {
+    public Map<String, Long> getMaskTypeCounts() {
         return Collections.unmodifiableMap(maskTypeCounts);
     }
 
@@ -80,19 +81,19 @@ public final class ApiMaskMetrics {
         if (ignored) {
             return ApiRiskLevel.IGNORED_HIGH;
         }
-        if (has(MaskType.PASSWORD)) {
+        if (has(MaskTypes.PASSWORD)) {
             return ApiRiskLevel.CRITICAL;
         }
-        if (has(MaskType.ID_CARD) || has(MaskType.BANK_CARD) || totalMaskCount() >= 5) {
+        if (has(MaskTypes.ID_CARD) || has(MaskTypes.BANK_CARD) || totalMaskCount() >= 5) {
             return ApiRiskLevel.HIGH;
         }
-        if (has(MaskType.MOBILE) || has(MaskType.EMAIL) || has(MaskType.CHINESE_NAME)) {
+        if (has(MaskTypes.MOBILE) || has(MaskTypes.EMAIL) || has(MaskTypes.CHINESE_NAME)) {
             return ApiRiskLevel.MEDIUM;
         }
         return totalMaskCount() > 0 ? ApiRiskLevel.LOW : ApiRiskLevel.LOW;
     }
 
-    private boolean has(MaskType type) {
+    private boolean has(String type) {
         return maskTypeCounts.containsKey(type) && maskTypeCounts.get(type) > 0;
     }
 

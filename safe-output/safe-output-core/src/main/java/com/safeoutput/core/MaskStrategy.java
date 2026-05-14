@@ -2,7 +2,11 @@ package com.safeoutput.core;
 
 public interface MaskStrategy {
 
-    MaskType supportType();
+    String type();
+
+    default MaskType supportType() {
+        return MaskType.fromCode(type());
+    }
 
     String mask(String rawValue, MaskContext context);
 
@@ -11,7 +15,7 @@ public interface MaskStrategy {
             return MaskResult.unchanged(MaskContext.builder().build());
         }
         String rawValue = context.getRawValue();
-        if (context.getMaskType() == MaskType.UNKNOWN || context.getMaskType() != supportType()
+        if (MaskTypes.isUnknown(context.getMaskType()) || !MaskTypes.same(context.getMaskType(), type())
                 || rawValue == null || rawValue.isEmpty()) {
             return MaskResult.unchanged(context);
         }

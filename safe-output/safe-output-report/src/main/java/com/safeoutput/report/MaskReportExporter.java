@@ -1,7 +1,5 @@
 package com.safeoutput.report;
 
-import com.safeoutput.core.MaskType;
-
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -155,14 +153,14 @@ public final class MaskReportExporter {
         return json;
     }
 
-    private static StringBuilder maskTypeCounts(StringBuilder json, Map<MaskType, Long> counts) {
+    private static StringBuilder maskTypeCounts(StringBuilder json, Map<String, Long> counts) {
         json.append('{');
         int index = 0;
-        for (Map.Entry<MaskType, Long> entry : counts.entrySet()) {
+        for (Map.Entry<String, Long> entry : counts.entrySet()) {
             if (index > 0) {
                 json.append(',');
             }
-            string(json, entry.getKey().name()).append(':').append(entry.getValue());
+            string(json, entry.getKey()).append(':').append(entry.getValue());
             index++;
         }
         json.append('}');

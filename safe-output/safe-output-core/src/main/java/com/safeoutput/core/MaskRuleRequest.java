@@ -8,9 +8,9 @@ public final class MaskRuleRequest {
 
     private final boolean apiIgnored;
 
-    private final MaskType annotationType;
+    private final String annotationType;
 
-    private final MaskType regexFallbackType;
+    private final String regexFallbackType;
 
     private MaskRuleRequest(Builder builder) {
         this.key = builder.key;
@@ -36,11 +36,11 @@ public final class MaskRuleRequest {
         return apiIgnored;
     }
 
-    public MaskType getAnnotationType() {
+    public String getAnnotationType() {
         return annotationType;
     }
 
-    public MaskType getRegexFallbackType() {
+    public String getRegexFallbackType() {
         return regexFallbackType;
     }
 
@@ -52,9 +52,9 @@ public final class MaskRuleRequest {
 
         private boolean apiIgnored;
 
-        private MaskType annotationType = MaskType.UNKNOWN;
+        private String annotationType = MaskTypes.UNKNOWN;
 
-        private MaskType regexFallbackType = MaskType.UNKNOWN;
+        private String regexFallbackType = MaskTypes.UNKNOWN;
 
         private Builder() {
         }
@@ -75,12 +75,22 @@ public final class MaskRuleRequest {
         }
 
         public Builder annotationType(MaskType annotationType) {
-            this.annotationType = annotationType == null ? MaskType.UNKNOWN : annotationType;
+            this.annotationType = MaskTypes.from(annotationType);
+            return this;
+        }
+
+        public Builder annotationType(String annotationType) {
+            this.annotationType = MaskTypes.normalize(annotationType);
             return this;
         }
 
         public Builder regexFallbackType(MaskType regexFallbackType) {
-            this.regexFallbackType = regexFallbackType == null ? MaskType.UNKNOWN : regexFallbackType;
+            this.regexFallbackType = MaskTypes.from(regexFallbackType);
+            return this;
+        }
+
+        public Builder regexFallbackType(String regexFallbackType) {
+            this.regexFallbackType = MaskTypes.normalize(regexFallbackType);
             return this;
         }
 

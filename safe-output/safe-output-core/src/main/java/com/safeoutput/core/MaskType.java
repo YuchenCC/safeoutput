@@ -5,14 +5,14 @@ import java.util.Locale;
 public enum MaskType {
 
     UNKNOWN("unknown"),
-    MOBILE("mobile"),
-    EMAIL("email"),
-    ID_CARD("id_card"),
-    BANK_CARD("bank_card"),
-    CHINESE_NAME("chinese_name"),
-    ADDRESS("address"),
-    PASSWORD("password"),
-    DEFAULT("default");
+    MOBILE(MaskTypes.MOBILE),
+    EMAIL(MaskTypes.EMAIL),
+    ID_CARD(MaskTypes.ID_CARD),
+    BANK_CARD(MaskTypes.BANK_CARD),
+    CHINESE_NAME(MaskTypes.CHINESE_NAME),
+    ADDRESS(MaskTypes.ADDRESS),
+    PASSWORD(MaskTypes.PASSWORD),
+    DEFAULT(MaskTypes.DEFAULT);
 
     private final String code;
 
@@ -25,18 +25,13 @@ public enum MaskType {
     }
 
     public static MaskType fromCode(String code) {
-        if (code == null || code.trim().isEmpty()) {
+        String normalized = MaskTypes.normalize(code);
+        if (MaskTypes.UNKNOWN.equals(normalized)) {
             return UNKNOWN;
         }
-
-        String normalized = code.trim()
-                .replace('-', '_')
-                .toUpperCase(Locale.ENGLISH);
-        if ("PHONE".equals(normalized)) {
-            return MOBILE;
-        }
         for (MaskType type : values()) {
-            if (type.name().equals(normalized) || type.code.equalsIgnoreCase(code.trim())) {
+            if (type.name().equals(normalized.toUpperCase(Locale.ENGLISH))
+                    || type.code.equalsIgnoreCase(normalized)) {
                 return type;
             }
         }

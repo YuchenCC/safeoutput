@@ -1,9 +1,7 @@
 package com.safeoutput.report;
 
-import com.safeoutput.core.MaskType;
-
 import java.util.Collections;
-import java.util.EnumMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -15,18 +13,18 @@ public final class MaskReport {
     private final long failureCount;
     private final long averageElapsedNanos;
     private final long maxElapsedNanos;
-    private final Map<MaskType, Long> maskTypeCounts;
+    private final Map<String, Long> maskTypeCounts;
     private final List<ApiMaskMetrics> apiMetrics;
 
     MaskReport(long totalCount, long responseCount, long logCount, long failureCount, long averageElapsedNanos,
-            long maxElapsedNanos, Map<MaskType, Long> maskTypeCounts, List<ApiMaskMetrics> apiMetrics) {
+            long maxElapsedNanos, Map<String, Long> maskTypeCounts, List<ApiMaskMetrics> apiMetrics) {
         this.totalCount = totalCount;
         this.responseCount = responseCount;
         this.logCount = logCount;
         this.failureCount = failureCount;
         this.averageElapsedNanos = averageElapsedNanos;
         this.maxElapsedNanos = maxElapsedNanos;
-        this.maskTypeCounts = Collections.unmodifiableMap(new EnumMap<MaskType, Long>(maskTypeCounts));
+        this.maskTypeCounts = Collections.unmodifiableMap(new LinkedHashMap<String, Long>(maskTypeCounts));
         this.apiMetrics = Collections.unmodifiableList(apiMetrics);
     }
 
@@ -54,7 +52,7 @@ public final class MaskReport {
         return maxElapsedNanos;
     }
 
-    public Map<MaskType, Long> getMaskTypeCounts() {
+    public Map<String, Long> getMaskTypeCounts() {
         return maskTypeCounts;
     }
 

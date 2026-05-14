@@ -83,8 +83,8 @@ class ObjectMaskerTest {
     void skipsBareSimpleValuesAndFailsOpenWhenStrategyThrows() {
         MaskStrategy throwing = new MaskStrategy() {
             @Override
-            public MaskType supportType() {
-                return MaskType.MOBILE;
+            public String type() {
+                return MaskTypes.MOBILE;
             }
 
             @Override

@@ -35,7 +35,7 @@ class MaskContractTest {
                 .rawValue("a@example.com")
                 .build();
 
-        assertEquals(MaskType.EMAIL, context.getMaskType());
+        assertEquals(MaskTypes.EMAIL, context.getMaskType());
         assertEquals(MaskScene.RESPONSE, context.getScene());
         assertEquals("$.user.email", context.getPath());
         assertEquals("email", context.getFieldName());
@@ -77,7 +77,7 @@ class MaskContractTest {
 
         MaskResult result = strategy.apply(context);
 
-        assertEquals(MaskType.EMAIL, strategy.supportType());
+        assertEquals(MaskTypes.EMAIL, strategy.type());
         assertEquals("***@example.com", result.getValue());
         assertTrue(result.isMasked());
         assertSame(context, result.getContext());
@@ -120,8 +120,8 @@ class MaskContractTest {
     private static final class PrefixMaskStrategy implements MaskStrategy {
 
         @Override
-        public MaskType supportType() {
-            return MaskType.EMAIL;
+        public String type() {
+            return MaskTypes.EMAIL;
         }
 
         @Override

@@ -102,23 +102,23 @@ public final class MaskRuleMatcher {
         // 默认规则只覆盖语义清晰的字段名；name/id/code/no 等歧义字段必须由显式 Rule 或注解声明。
         rules.add(MaskRule.defaults("default.mobile")
                 .keys(Arrays.asList("mobile", "phone", "telephone", "tel", "userMobile"))
-                .type(MaskType.MOBILE)
+                .type(MaskTypes.MOBILE)
                 .build());
         rules.add(MaskRule.defaults("default.id-card")
                 .keys(Arrays.asList("idCard", "certNo", "identityNo", "certificateNo"))
-                .type(MaskType.ID_CARD)
+                .type(MaskTypes.ID_CARD)
                 .build());
         rules.add(MaskRule.defaults("default.bank-card")
                 .keys(Arrays.asList("bankCard", "cardNo", "bankNo"))
-                .type(MaskType.BANK_CARD)
+                .type(MaskTypes.BANK_CARD)
                 .build());
         rules.add(MaskRule.defaults("default.email")
                 .keys(Arrays.asList("email", "mail"))
-                .type(MaskType.EMAIL)
+                .type(MaskTypes.EMAIL)
                 .build());
         rules.add(MaskRule.defaults("default.password")
                 .keys(Arrays.asList("password", "secret", "token"))
-                .type(MaskType.PASSWORD)
+                .type(MaskTypes.PASSWORD)
                 .build());
         return rules;
     }
@@ -137,7 +137,7 @@ public final class MaskRuleMatcher {
     }
 
     private static boolean isUsable(MaskRule rule) {
-        return rule != null && rule.isEnabled() && rule.getType() != null && rule.getType() != MaskType.UNKNOWN;
+        return rule != null && rule.isEnabled() && !MaskTypes.isUnknown(rule.getType());
     }
 
     private static Optional<RuleMatch> matchPath(List<MaskRule> rules, String path) {
@@ -174,11 +174,11 @@ public final class MaskRuleMatcher {
     }
 
     private static RuleMatch ignore(String ruleName, RuleSource source) {
-        return new RuleMatch(MaskType.UNKNOWN, ruleName, source, RuleAction.IGNORE);
+        return new RuleMatch(MaskTypes.UNKNOWN, ruleName, source, RuleAction.IGNORE);
     }
 
-    private static boolean isMaskType(MaskType type) {
-        return type != null && type != MaskType.UNKNOWN;
+    private static boolean isMaskType(String type) {
+        return !MaskTypes.isUnknown(type);
     }
 
     private static List<String> normalizedKeys(Collection<String> keys) {

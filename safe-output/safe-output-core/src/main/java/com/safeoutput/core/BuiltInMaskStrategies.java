@@ -2,24 +2,24 @@ package com.safeoutput.core;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.EnumMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
 
 public final class BuiltInMaskStrategies {
 
-    private static final Map<MaskType, MaskStrategy> STRATEGIES;
+    private static final Map<String, MaskStrategy> STRATEGIES;
 
     static {
-        Map<MaskType, MaskStrategy> strategies = new EnumMap<>(MaskType.class);
-        register(strategies, new SimpleMaskStrategy(MaskType.MOBILE, (rawValue, context) -> maskMobile(rawValue)));
-        register(strategies, new SimpleMaskStrategy(MaskType.ID_CARD, BuiltInMaskStrategies::maskIdCard));
-        register(strategies, new SimpleMaskStrategy(MaskType.BANK_CARD, (rawValue, context) -> maskBankCard(rawValue)));
-        register(strategies, new SimpleMaskStrategy(MaskType.EMAIL, (rawValue, context) -> maskEmail(rawValue)));
-        register(strategies, new SimpleMaskStrategy(MaskType.CHINESE_NAME, (rawValue, context) -> maskChineseName(rawValue)));
-        register(strategies, new SimpleMaskStrategy(MaskType.ADDRESS, (rawValue, context) -> maskAddress(rawValue)));
-        register(strategies, new SimpleMaskStrategy(MaskType.PASSWORD, (rawValue, context) -> maskPassword(rawValue)));
-        register(strategies, new SimpleMaskStrategy(MaskType.DEFAULT, (rawValue, context) -> maskDefault(rawValue)));
+        Map<String, MaskStrategy> strategies = new LinkedHashMap<String, MaskStrategy>();
+        register(strategies, new SimpleMaskStrategy(MaskTypes.MOBILE, (rawValue, context) -> maskMobile(rawValue)));
+        register(strategies, new SimpleMaskStrategy(MaskTypes.ID_CARD, BuiltInMaskStrategies::maskIdCard));
+        register(strategies, new SimpleMaskStrategy(MaskTypes.BANK_CARD, (rawValue, context) -> maskBankCard(rawValue)));
+        register(strategies, new SimpleMaskStrategy(MaskTypes.EMAIL, (rawValue, context) -> maskEmail(rawValue)));
+        register(strategies, new SimpleMaskStrategy(MaskTypes.CHINESE_NAME, (rawValue, context) -> maskChineseName(rawValue)));
+        register(strategies, new SimpleMaskStrategy(MaskTypes.ADDRESS, (rawValue, context) -> maskAddress(rawValue)));
+        register(strategies, new SimpleMaskStrategy(MaskTypes.PASSWORD, (rawValue, context) -> maskPassword(rawValue)));
+        register(strategies, new SimpleMaskStrategy(MaskTypes.DEFAULT, (rawValue, context) -> maskDefault(rawValue)));
         STRATEGIES = Collections.unmodifiableMap(strategies);
     }
 
@@ -29,19 +29,27 @@ public final class BuiltInMaskStrategies {
     }
 
     public static boolean supports(MaskType type) {
-        return STRATEGIES.containsKey(type);
+        return supports(MaskTypes.from(type));
+    }
+
+    public static boolean supports(String type) {
+        return STRATEGIES.containsKey(MaskTypes.normalize(type));
     }
 
     public static MaskStrategy get(MaskType type) {
-        return STRATEGIES.get(type);
+        return get(MaskTypes.from(type));
+    }
+
+    public static MaskStrategy get(String type) {
+        return STRATEGIES.get(MaskTypes.normalize(type));
     }
 
     public static Collection<MaskStrategy> strategies() {
         return STRATEGIES.values();
     }
 
-    private static void register(Map<MaskType, MaskStrategy> strategies, MaskStrategy strategy) {
-        strategies.put(strategy.supportType(), strategy);
+    private static void register(Map<String, MaskStrategy> strategies, MaskStrategy strategy) {
+        strategies.put(MaskTypes.normalize(strategy.type()), strategy);
     }
 
     private static String maskMobile(String rawValue) {
@@ -147,16 +155,16 @@ public final class BuiltInMaskStrategies {
 
     private static final class SimpleMaskStrategy implements MaskStrategy {
 
-        private final MaskType type;
+        private final String type;
         private final MaskFunction function;
 
-        private SimpleMaskStrategy(MaskType type, MaskFunction function) {
-            this.type = type;
+        private SimpleMaskStrategy(String type, MaskFunction function) {
+            this.type = MaskTypes.normalize(type);
             this.function = function;
         }
 
         @Override
-        public MaskType supportType() {
+        public String type() {
             return type;
         }
 

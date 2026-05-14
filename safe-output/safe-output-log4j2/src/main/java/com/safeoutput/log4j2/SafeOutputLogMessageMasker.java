@@ -6,7 +6,7 @@ import com.safeoutput.core.MaskRuleMatcher;
 import com.safeoutput.core.MaskScene;
 import com.safeoutput.core.MaskStrategy;
 import com.safeoutput.core.MaskStrategyRegistry;
-import com.safeoutput.core.MaskType;
+import com.safeoutput.core.MaskTypes;
 import com.safeoutput.core.RuleAction;
 import com.safeoutput.core.RuleMatch;
 
@@ -117,12 +117,12 @@ final class SafeOutputLogMessageMasker {
 
     private String maskFallback(String message) {
         // 第二阶段才做 regex fallback，且只覆盖低误伤类型；银行卡不做无上下文兜底。
-        String masked = maskFallbackType(message, MOBILE_FALLBACK, MaskType.MOBILE);
-        masked = maskFallbackType(masked, EMAIL_FALLBACK, MaskType.EMAIL);
-        return maskFallbackType(masked, ID_CARD_FALLBACK, MaskType.ID_CARD);
+        String masked = maskFallbackType(message, MOBILE_FALLBACK, MaskTypes.MOBILE);
+        masked = maskFallbackType(masked, EMAIL_FALLBACK, MaskTypes.EMAIL);
+        return maskFallbackType(masked, ID_CARD_FALLBACK, MaskTypes.ID_CARD);
     }
 
-    private String maskFallbackType(String message, Pattern pattern, MaskType type) {
+    private String maskFallbackType(String message, Pattern pattern, String type) {
         Optional<MaskStrategy> strategy = strategyRegistry.find(type);
         if (!strategy.isPresent()) {
             return message;
@@ -135,14 +135,14 @@ final class SafeOutputLogMessageMasker {
                 continue;
             }
             // 身份证无上下文兜底先做轻量格式、生日和可选校验位检查，避免误伤普通 18 位编号。
-            if (type == MaskType.ID_CARD && !MainlandIdCards.isLikely(rawValue, idCardCheckCodeEnabled)) {
+            if (MaskTypes.ID_CARD.equals(type) && !MainlandIdCards.isLikely(rawValue, idCardCheckCodeEnabled)) {
                 continue;
             }
             MaskContext.Builder contextBuilder = MaskContext.builder()
                     .maskType(type)
                     .scene(MaskScene.LOG)
                     .rawValue(rawValue);
-            if (type == MaskType.ID_CARD) {
+            if (MaskTypes.ID_CARD.equals(type)) {
                 contextBuilder.path("regex-fallback");
             }
             String replacement = strategy.get().mask(rawValue, contextBuilder.build());

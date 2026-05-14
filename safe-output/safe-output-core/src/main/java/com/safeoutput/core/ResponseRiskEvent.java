@@ -1,7 +1,7 @@
 package com.safeoutput.core;
 
 import java.util.Collections;
-import java.util.EnumMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 public final class ResponseRiskEvent {
@@ -14,16 +14,16 @@ public final class ResponseRiskEvent {
 
     private final String ignoreReason;
 
-    private final Map<MaskType, Integer> maskTypeCounts;
+    private final Map<String, Integer> maskTypeCounts;
 
     private final long elapsedNanos;
 
     public ResponseRiskEvent(String method, String path, boolean ignored, String ignoreReason) {
-        this(method, path, ignored, ignoreReason, Collections.<MaskType, Integer>emptyMap(), 0);
+        this(method, path, ignored, ignoreReason, Collections.<String, Integer>emptyMap(), 0);
     }
 
     public ResponseRiskEvent(String method, String path, boolean ignored, String ignoreReason,
-            Map<MaskType, Integer> maskTypeCounts, long elapsedNanos) {
+            Map<String, Integer> maskTypeCounts, long elapsedNanos) {
         this.method = method;
         this.path = path;
         this.ignored = ignored;
@@ -48,7 +48,7 @@ public final class ResponseRiskEvent {
         return ignoreReason;
     }
 
-    public Map<MaskType, Integer> getMaskTypeCounts() {
+    public Map<String, Integer> getMaskTypeCounts() {
         return maskTypeCounts;
     }
 
@@ -56,10 +56,10 @@ public final class ResponseRiskEvent {
         return elapsedNanos;
     }
 
-    private static Map<MaskType, Integer> immutableCounts(Map<MaskType, Integer> counts) {
+    private static Map<String, Integer> immutableCounts(Map<String, Integer> counts) {
         if (counts == null || counts.isEmpty()) {
             return Collections.emptyMap();
         }
-        return Collections.unmodifiableMap(new EnumMap<MaskType, Integer>(counts));
+        return Collections.unmodifiableMap(new LinkedHashMap<String, Integer>(counts));
     }
 }

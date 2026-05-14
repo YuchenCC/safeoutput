@@ -13,7 +13,7 @@ public final class MaskRule {
 
     private final List<String> paths;
 
-    private final MaskType type;
+    private final String type;
 
     private final boolean enabled;
 
@@ -48,7 +48,7 @@ public final class MaskRule {
         return paths;
     }
 
-    public MaskType getType() {
+    public String getType() {
         return type;
     }
 
@@ -70,7 +70,7 @@ public final class MaskRule {
 
         private final List<String> paths = new ArrayList<String>();
 
-        private MaskType type = MaskType.UNKNOWN;
+        private String type = MaskTypes.UNKNOWN;
 
         private boolean enabled = true;
 
@@ -94,7 +94,12 @@ public final class MaskRule {
         }
 
         public Builder type(MaskType type) {
-            this.type = type == null ? MaskType.UNKNOWN : type;
+            this.type = MaskTypes.from(type);
+            return this;
+        }
+
+        public Builder type(String type) {
+            this.type = MaskTypes.normalize(type);
             return this;
         }
 

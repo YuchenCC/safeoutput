@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.safeoutput.core.MaskScene;
 import com.safeoutput.core.MaskType;
+import com.safeoutput.core.MaskTypes;
 import com.safeoutput.core.ResponseRiskEvent;
 
 import java.nio.charset.StandardCharsets;
@@ -31,7 +32,7 @@ class MaskReportExporterTest {
         MaskMetricsCollector collector = new MaskMetricsCollector(10);
         collector.recordMask(MaskScene.RESPONSE, MaskType.MOBILE, TimeUnit.MILLISECONDS.toNanos(2));
         collector.recordApi(new ResponseRiskEvent("GET", "/customers", false, null,
-                Collections.singletonMap(MaskType.MOBILE, 1), TimeUnit.MILLISECONDS.toNanos(2)));
+                Collections.singletonMap(MaskTypes.MOBILE, 1), TimeUnit.MILLISECONDS.toNanos(2)));
 
         MaskReportExporter exporter = new MaskReportExporter(new MaskReportExportOptions(tempDir, "safe-output",
                 1000, 3), collector);
@@ -41,7 +42,7 @@ class MaskReportExporterTest {
 
         assertTrue(json.contains("\"totalCount\":1"));
         assertTrue(json.contains("\"responseCount\":1"));
-        assertTrue(json.contains("\"MOBILE\":1"));
+        assertTrue(json.contains("\"mobile\":1"));
         assertTrue(json.contains("\"method\":\"GET\""));
         assertTrue(json.contains("\"path\":\"/customers\""));
         assertFalse(json.contains("13800138000"));

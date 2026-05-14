@@ -3,7 +3,7 @@ package com.safeoutput.spring.boot.starter;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.safeoutput.core.MaskRuleMatcher;
-import com.safeoutput.core.MaskType;
+import com.safeoutput.core.MaskTypes;
 import com.safeoutput.core.RuleSource;
 import com.safeoutput.spring.boot.autoconfigure.SafeOutputAutoConfiguration;
 
@@ -25,9 +25,9 @@ class SafeOutputRuleMatcherAutoConfigurationTest {
                 .run(context -> {
                     MaskRuleMatcher matcher = context.getBean(MaskRuleMatcher.class);
 
-                    assertEquals(MaskType.CHINESE_NAME, matcher.match("realName", "$.realName").get().getMaskType());
+                    assertEquals(MaskTypes.CHINESE_NAME, matcher.match("realName", "$.realName").get().getMaskType());
                     assertEquals(RuleSource.CONFIGURED, matcher.match("realName", "$.realName").get().getSource());
-                    assertEquals(MaskType.MOBILE, matcher.match("mobile", "$.mobile").get().getMaskType());
+                    assertEquals(MaskTypes.MOBILE, matcher.match("mobile", "$.mobile").get().getMaskType());
                     assertEquals(RuleSource.DEFAULT, matcher.match("mobile", "$.mobile").get().getSource());
                 });
     }

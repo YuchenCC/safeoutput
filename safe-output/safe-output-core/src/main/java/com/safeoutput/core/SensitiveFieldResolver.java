@@ -34,7 +34,7 @@ public final class SensitiveFieldResolver {
 
     private static FieldMetadata metadata(Field field) {
         Desensitize desensitize = field.getAnnotation(Desensitize.class);
-        MaskType annotationType = desensitize == null ? MaskType.UNKNOWN : desensitize.type();
+        String annotationType = desensitize == null ? MaskTypes.UNKNOWN : desensitize.type();
         return new FieldMetadata(field.getName(), annotationType);
     }
 
@@ -42,9 +42,9 @@ public final class SensitiveFieldResolver {
 
         private final String fieldName;
 
-        private final MaskType annotationType;
+        private final String annotationType;
 
-        private FieldMetadata(String fieldName, MaskType annotationType) {
+        private FieldMetadata(String fieldName, String annotationType) {
             this.fieldName = fieldName;
             this.annotationType = annotationType;
         }
@@ -53,7 +53,7 @@ public final class SensitiveFieldResolver {
             return fieldName;
         }
 
-        private MaskType getAnnotationType() {
+        private String getAnnotationType() {
             return annotationType;
         }
     }

@@ -9,6 +9,7 @@ import com.safeoutput.core.MaskResult;
 import com.safeoutput.core.MaskStrategy;
 import com.safeoutput.core.MaskStrategyRegistry;
 import com.safeoutput.core.MaskType;
+import com.safeoutput.core.MaskTypes;
 import com.safeoutput.spring.boot.autoconfigure.SafeOutputAutoConfiguration;
 
 import org.junit.jupiter.api.Test;
@@ -58,8 +59,8 @@ class SafeOutputAutoConfigurationTest {
         MaskStrategy customEmailStrategy() {
             return new MaskStrategy() {
                 @Override
-                public MaskType supportType() {
-                    return MaskType.EMAIL;
+                public String type() {
+                    return MaskTypes.EMAIL;
                 }
 
                 @Override

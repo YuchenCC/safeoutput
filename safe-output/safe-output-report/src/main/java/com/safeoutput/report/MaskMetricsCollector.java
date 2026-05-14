@@ -2,11 +2,11 @@ package com.safeoutput.report;
 
 import com.safeoutput.core.MaskScene;
 import com.safeoutput.core.MaskType;
+import com.safeoutput.core.MaskTypes;
 import com.safeoutput.core.ResponseRiskEvent;
 import com.safeoutput.core.ResponseRiskRecorder;
 
 import java.util.ArrayList;
-import java.util.EnumMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -16,7 +16,7 @@ public final class MaskMetricsCollector implements ResponseRiskRecorder {
     private static final String OVERFLOW_PATH = "__overflow__";
 
     private final int maxApiMetrics;
-    private final Map<MaskType, Long> maskTypeCounts = new EnumMap<MaskType, Long>(MaskType.class);
+    private final Map<String, Long> maskTypeCounts = new LinkedHashMap<String, Long>();
     private final Map<String, ApiMaskMetrics> apiMetrics = new LinkedHashMap<String, ApiMaskMetrics>();
 
     private long totalCount;
@@ -31,6 +31,10 @@ public final class MaskMetricsCollector implements ResponseRiskRecorder {
     }
 
     public synchronized void recordMask(MaskScene scene, MaskType type, long elapsedNanos) {
+        recordMask(scene, MaskTypes.from(type), elapsedNanos);
+    }
+
+    public synchronized void recordMask(MaskScene scene, String type, long elapsedNanos) {
         try {
             if (scene == MaskScene.RESPONSE) {
                 responseCount++;
@@ -40,8 +44,9 @@ public final class MaskMetricsCollector implements ResponseRiskRecorder {
             totalCount++;
             totalElapsedNanos += Math.max(0, elapsedNanos);
             maxElapsedNanos = Math.max(maxElapsedNanos, elapsedNanos);
-            long previous = maskTypeCounts.containsKey(type) ? maskTypeCounts.get(type) : 0L;
-            maskTypeCounts.put(type, previous + 1);
+            String normalizedType = MaskTypes.normalize(type);
+            long previous = maskTypeCounts.containsKey(normalizedType) ? maskTypeCounts.get(normalizedType) : 0L;
+            maskTypeCounts.put(normalizedType, previous + 1);
         } catch (RuntimeException ex) {
             // Metrics must never affect masking flow.
         }

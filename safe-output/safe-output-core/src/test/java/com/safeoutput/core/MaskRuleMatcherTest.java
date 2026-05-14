@@ -132,6 +132,10 @@ class MaskRuleMatcherTest {
     }
 
     private static void assertMatch(Optional<RuleMatch> match, MaskType type, String ruleName, RuleSource source) {
+        assertMatch(match, MaskTypes.from(type), ruleName, source);
+    }
+
+    private static void assertMatch(Optional<RuleMatch> match, String type, String ruleName, RuleSource source) {
         assertEquals(RuleAction.MASK, match.get().getAction());
         assertEquals(type, match.get().getMaskType());
         assertEquals(ruleName, match.get().getRuleName());
