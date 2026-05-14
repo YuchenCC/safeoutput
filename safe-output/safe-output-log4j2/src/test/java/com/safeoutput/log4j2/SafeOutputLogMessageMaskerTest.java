@@ -62,7 +62,7 @@ class SafeOutputLogMessageMaskerTest {
         custom.mask("phoneNo=13812345678 certNum: 11010519491231002X mailAddr=foo@example.com");
         custom.mask("phoneNo=13912345678");
 
-        List<LogRuleSuggestionMetric> metrics = collector.snapshot();
+        List<LogRuleSuggestionMetric> metrics = collector.snapshotSuggestions();
         assertEquals(3, metrics.size());
         assertMetric(metrics, "phoneno", MaskTypes.MOBILE, 2);
         assertMetric(metrics, "certnum", MaskTypes.ID_CARD, 1);
@@ -84,7 +84,7 @@ class SafeOutputLogMessageMaskerTest {
 
         custom.mask("phoneNo=13812345678 mailAddr=foo@example.com");
 
-        List<LogRuleSuggestionMetric> metrics = collector.snapshot();
+        List<LogRuleSuggestionMetric> metrics = collector.snapshotSuggestions();
         assertEquals(1, metrics.size());
         assertEquals("mailaddr", metrics.get(0).getKey());
     }

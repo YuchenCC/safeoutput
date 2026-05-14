@@ -8,6 +8,7 @@
 - 通过 `ResponseRiskRecorder` 接收响应接口风险事件。
 - 通过 `ApiMaskMetrics` 维护接口级命中、Ignore、失败、字段数量、耗时、慢脱敏次数和风险等级。
 - 通过 `ResponseRiskAnalyzer` 在报告快照阶段生成接口风险画像和性能画像。
+- 通过 `LogRuleSuggestionAnalyzer` 将 Log fallback 线索转换为人工确认的规则建议和 YAML 片段。
 - 通过 `MaskReportExporter` 定时或手动导出本地 JSON 报告快照。
 
 ## 报告内容
@@ -20,6 +21,7 @@
 - 按未知 String 类型标签聚合的计数，用于发现配置了但未注册策略的 type。
 - 接口维度的稳定接口标识、命中次数、Ignore 状态、Ignore 原因、失败次数、脱敏字段数量、平均耗时、最大耗时、慢脱敏次数和风险等级。
 - `responseRiskSummary`、`topRiskApis`、`ignoredRiskApis`，其中敏感风险原因和性能告警分开展示。
+- `logRuleSuggestions` 和 `configSnippet`，建议默认 `autoApply=false`，只为中高置信度线索生成候选配置片段。
 
 报告快照不包含：
 

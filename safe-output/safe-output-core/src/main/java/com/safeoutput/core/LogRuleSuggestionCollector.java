@@ -6,5 +6,5 @@ public interface LogRuleSuggestionCollector {
 
     void record(LogRuleSuggestionEvent event);
 
-    List<LogRuleSuggestionMetric> snapshot();
+    List<LogRuleSuggestionMetric> snapshotSuggestions();
 }

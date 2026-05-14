@@ -4,10 +4,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import com.safeoutput.core.MaskScene;
+import com.safeoutput.core.LogRuleSuggestionEvent;
 import com.safeoutput.core.MaskType;
 import com.safeoutput.core.MaskTypes;
 import com.safeoutput.core.ResponseRiskEvent;
 
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -132,12 +134,65 @@ class MaskMetricsCollectorTest {
     }
 
     @Test
+    void logRuleSuggestionAnalysisBuildsConfidenceAndConfigSnippet() {
+        MaskMetricsCollector collector = new MaskMetricsCollector(10);
+        recordSuggestions(collector, "phoneNo", MaskTypes.MOBILE, 5);
+        recordSuggestions(collector, "certNum", MaskTypes.ID_CARD, 2);
+        recordSuggestions(collector, "mailAddr", MaskTypes.EMAIL, 1);
+
+        LogRuleSuggestionReport report = new LogRuleSuggestionAnalyzer().analyze(collector.snapshotSuggestions(),
+                Collections.<String>emptyList());
+
+        assertEquals(3, report.getLogRuleSuggestions().size());
+        assertSuggestion(report.getLogRuleSuggestions(), "phoneno", LogRuleSuggestionConfidence.HIGH);
+        assertSuggestion(report.getLogRuleSuggestions(), "certnum", LogRuleSuggestionConfidence.MEDIUM);
+        assertSuggestion(report.getLogRuleSuggestions(), "mailaddr", LogRuleSuggestionConfidence.LOW);
+        assertEquals(true, report.getConfigSnippet().contains("phoneno"));
+        assertEquals(true, report.getConfigSnippet().contains("certnum"));
+        assertEquals(false, report.getConfigSnippet().contains("mailaddr"));
+        assertEquals(false, report.getConfigSnippet().contains("13812345678"));
+    }
+
+    @Test
+    void logRuleSuggestionAnalysisSkipsConfiguredKeys() {
+        MaskMetricsCollector collector = new MaskMetricsCollector(10);
+        recordSuggestions(collector, "phoneNo", MaskTypes.MOBILE, 5);
+
+        LogRuleSuggestionReport report = new LogRuleSuggestionAnalyzer().analyze(collector.snapshotSuggestions(),
+                Collections.singletonList("phoneNo"));
+
+        assertEquals(0, report.getLogRuleSuggestions().size());
+        assertEquals("", report.getConfigSnippet());
+    }
+
+    @Test
     void collectorSwallowsRecorderExceptions() {
         MaskMetricsCollector collector = new MaskMetricsCollector(1);
 
-        collector.record(null);
+        collector.record((ResponseRiskEvent) null);
         collector.recordApi(null);
 
         assertEquals(0, collector.snapshot().getTotalCount());
+    }
+
+    private static void recordSuggestions(MaskMetricsCollector collector, String key, String type, int count) {
+        for (int i = 0; i < count; i++) {
+            collector.record(new LogRuleSuggestionEvent(key, type, key.toLowerCase() + "=<" + type + ">", i + 1));
+        }
+    }
+
+    private static void assertSuggestion(java.util.List<LogRuleSuggestion> suggestions, String key,
+            LogRuleSuggestionConfidence confidence) {
+        for (LogRuleSuggestion suggestion : suggestions) {
+            if (key.equals(suggestion.getKey())) {
+                assertEquals(confidence, suggestion.getConfidence());
+                assertEquals(false, suggestion.isAutoApply());
+                assertEquals(true, suggestion.getEffectScopes().contains("RESPONSE"));
+                assertEquals(true, suggestion.getEffectScopes().contains("LOG"));
+                assertEquals(true, suggestion.getEffectScopes().contains("MANUAL_OBJECT"));
+                return;
+            }
+        }
+        throw new AssertionError("Missing suggestion " + key);
     }
 }

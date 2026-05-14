@@ -68,7 +68,9 @@ public final class MaskReportExporter {
             Files.createDirectories(options.getDirectory());
             Path target = nextFile();
             // 报告只写聚合快照，不写原始响应、原始日志或敏感字段值。
-            Files.write(target, toJson(collector.snapshot()).getBytes(StandardCharsets.UTF_8));
+            LogRuleSuggestionReport suggestions = new LogRuleSuggestionAnalyzer()
+                    .analyze(collector.snapshotSuggestions(), java.util.Collections.<String>emptyList());
+            Files.write(target, toJson(collector.snapshot(), suggestions).getBytes(StandardCharsets.UTF_8));
             retainNewestFiles();
             return target;
         } catch (RuntimeException ex) {
@@ -112,7 +114,7 @@ public final class MaskReportExporter {
         }
     }
 
-    private static String toJson(MaskReport report) {
+    private static String toJson(MaskReport report, LogRuleSuggestionReport suggestions) {
         StringBuilder json = new StringBuilder();
         json.append('{');
         field(json, "totalCount", report.getTotalCount()).append(',');
@@ -134,9 +136,34 @@ public final class MaskReportExporter {
         json.append("\"topRiskApis\":");
         riskApis(json, analysis.getTopRiskApis()).append(',');
         json.append("\"ignoredRiskApis\":");
-        riskApis(json, analysis.getIgnoredRiskApis());
+        riskApis(json, analysis.getIgnoredRiskApis()).append(',');
+        json.append("\"logRuleSuggestions\":");
+        logRuleSuggestions(json, suggestions.getLogRuleSuggestions()).append(',');
+        stringField(json, "configSnippet", suggestions.getConfigSnippet());
         json.append('}');
         return json.toString();
+    }
+
+    private static StringBuilder logRuleSuggestions(StringBuilder json, List<LogRuleSuggestion> suggestions) {
+        json.append('[');
+        for (int i = 0; i < suggestions.size(); i++) {
+            if (i > 0) {
+                json.append(',');
+            }
+            LogRuleSuggestion suggestion = suggestions.get(i);
+            json.append('{');
+            stringField(json, "key", suggestion.getKey()).append(',');
+            stringField(json, "suggestedType", suggestion.getSuggestedType()).append(',');
+            field(json, "hitCount", suggestion.getHitCount()).append(',');
+            stringField(json, "confidence", suggestion.getConfidence().name()).append(',');
+            stringField(json, "evidence", suggestion.getEvidence()).append(',');
+            json.append("\"effectScopes\":");
+            strings(json, suggestion.getEffectScopes()).append(',');
+            booleanField(json, "autoApply", suggestion.isAutoApply());
+            json.append('}');
+        }
+        json.append(']');
+        return json;
     }
 
     private static StringBuilder responseRiskSummary(StringBuilder json, ResponseRiskSummary summary) {

@@ -1,6 +1,10 @@
 package com.safeoutput.report;
 
 import com.safeoutput.core.MaskScene;
+import com.safeoutput.core.InMemoryLogRuleSuggestionCollector;
+import com.safeoutput.core.LogRuleSuggestionCollector;
+import com.safeoutput.core.LogRuleSuggestionEvent;
+import com.safeoutput.core.LogRuleSuggestionMetric;
 import com.safeoutput.core.MaskEventRecorder;
 import com.safeoutput.core.MaskType;
 import com.safeoutput.core.MaskTypes;
@@ -11,8 +15,10 @@ import com.safeoutput.core.UnknownTypeRecorder;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.List;
 
-public final class MaskMetricsCollector implements ResponseRiskRecorder, UnknownTypeRecorder, MaskEventRecorder {
+public final class MaskMetricsCollector implements ResponseRiskRecorder, UnknownTypeRecorder, MaskEventRecorder,
+        LogRuleSuggestionCollector {
 
     private static final String OVERFLOW_METHOD = "OVERFLOW";
     private static final String OVERFLOW_PATH = "__overflow__";
@@ -21,6 +27,7 @@ public final class MaskMetricsCollector implements ResponseRiskRecorder, Unknown
     private final Map<String, Long> maskTypeCounts = new LinkedHashMap<String, Long>();
     private final Map<String, Long> unknownTypeCounts = new LinkedHashMap<String, Long>();
     private final Map<String, ApiMaskMetrics> apiMetrics = new LinkedHashMap<String, ApiMaskMetrics>();
+    private final InMemoryLogRuleSuggestionCollector logRuleSuggestions = new InMemoryLogRuleSuggestionCollector();
 
     private long totalCount;
     private long responseCount;
@@ -97,6 +104,16 @@ public final class MaskMetricsCollector implements ResponseRiskRecorder, Unknown
         long average = totalCount == 0 ? 0 : totalElapsedNanos / totalCount;
         return new MaskReport(totalCount, responseCount, logCount, manualCount, failureCount, average, maxElapsedNanos,
                 maskTypeCounts, unknownTypeCounts, new ArrayList<ApiMaskMetrics>(apiMetrics.values()));
+    }
+
+    @Override
+    public void record(LogRuleSuggestionEvent event) {
+        logRuleSuggestions.record(event);
+    }
+
+    @Override
+    public List<LogRuleSuggestionMetric> snapshotSuggestions() {
+        return logRuleSuggestions.snapshotSuggestions();
     }
 
     private ApiMaskMetrics apiMetric(ResponseRiskEvent event) {

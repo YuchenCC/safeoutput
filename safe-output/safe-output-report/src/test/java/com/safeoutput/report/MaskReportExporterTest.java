@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.safeoutput.core.MaskScene;
+import com.safeoutput.core.LogRuleSuggestionEvent;
 import com.safeoutput.core.MaskType;
 import com.safeoutput.core.MaskTypes;
 import com.safeoutput.core.ResponseRiskEvent;
@@ -33,6 +34,8 @@ class MaskReportExporterTest {
         collector.recordMask(MaskScene.RESPONSE, MaskType.MOBILE, TimeUnit.MILLISECONDS.toNanos(2));
         collector.recordMask(MaskScene.MANUAL, MaskType.EMAIL, TimeUnit.MILLISECONDS.toNanos(1));
         collector.recordUnknownType("mobileM", MaskScene.RESPONSE);
+        collector.record(new LogRuleSuggestionEvent("phoneNo", MaskTypes.MOBILE, "phoneno=<mobile>", 1));
+        collector.record(new LogRuleSuggestionEvent("phoneNo", MaskTypes.MOBILE, "phoneno=<mobile>", 2));
         collector.recordApi(new ResponseRiskEvent("GET", "/customers", false, null,
                 Collections.singletonMap(MaskTypes.MOBILE, 1), TimeUnit.MILLISECONDS.toNanos(2)));
 
@@ -55,6 +58,12 @@ class MaskReportExporterTest {
         assertTrue(json.contains("\"riskReasons\""));
         assertTrue(json.contains("\"governanceAdvice\""));
         assertTrue(json.contains("\"performanceProfile\""));
+        assertTrue(json.contains("\"logRuleSuggestions\""));
+        assertTrue(json.contains("\"suggestedType\":\"mobile\""));
+        assertTrue(json.contains("\"confidence\":\"MEDIUM\""));
+        assertTrue(json.contains("\"effectScopes\":[\"RESPONSE\",\"LOG\",\"MANUAL_OBJECT\"]"));
+        assertTrue(json.contains("\"autoApply\":false"));
+        assertTrue(json.contains("\"configSnippet\""));
         assertFalse(json.contains("13800138000"));
         assertFalse(json.contains("responseBody"));
         assertFalse(json.contains("logMessage"));

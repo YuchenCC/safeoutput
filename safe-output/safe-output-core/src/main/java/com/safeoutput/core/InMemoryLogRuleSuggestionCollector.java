@@ -32,7 +32,7 @@ public final class InMemoryLogRuleSuggestionCollector implements LogRuleSuggesti
     }
 
     @Override
-    public synchronized List<LogRuleSuggestionMetric> snapshot() {
+    public synchronized List<LogRuleSuggestionMetric> snapshotSuggestions() {
         List<LogRuleSuggestionMetric> snapshot = new ArrayList<LogRuleSuggestionMetric>();
         for (MutableMetric metric : metrics.values()) {
             snapshot.add(metric.snapshot());
