@@ -31,6 +31,7 @@ class MaskReportExporterTest {
     void exportsSnapshotAsJsonWithoutRawPayloadFields() throws Exception {
         MaskMetricsCollector collector = new MaskMetricsCollector(10);
         collector.recordMask(MaskScene.RESPONSE, MaskType.MOBILE, TimeUnit.MILLISECONDS.toNanos(2));
+        collector.recordMask(MaskScene.MANUAL, MaskType.EMAIL, TimeUnit.MILLISECONDS.toNanos(1));
         collector.recordUnknownType("mobileM", MaskScene.RESPONSE);
         collector.recordApi(new ResponseRiskEvent("GET", "/customers", false, null,
                 Collections.singletonMap(MaskTypes.MOBILE, 1), TimeUnit.MILLISECONDS.toNanos(2)));
@@ -41,8 +42,9 @@ class MaskReportExporterTest {
         Path written = exporter.exportNow();
         String json = new String(Files.readAllBytes(written), StandardCharsets.UTF_8);
 
-        assertTrue(json.contains("\"totalCount\":1"));
+        assertTrue(json.contains("\"totalCount\":2"));
         assertTrue(json.contains("\"responseCount\":1"));
+        assertTrue(json.contains("\"manualCount\":1"));
         assertTrue(json.contains("\"mobile\":1"));
         assertTrue(json.contains("\"unknownTypeCounts\":{\"mobilem\":1}"));
         assertTrue(json.contains("\"method\":\"GET\""));

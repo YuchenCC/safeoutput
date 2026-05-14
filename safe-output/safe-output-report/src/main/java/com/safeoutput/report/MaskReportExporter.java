@@ -118,6 +118,7 @@ public final class MaskReportExporter {
         field(json, "totalCount", report.getTotalCount()).append(',');
         field(json, "responseCount", report.getResponseCount()).append(',');
         field(json, "logCount", report.getLogCount()).append(',');
+        field(json, "manualCount", report.getManualCount()).append(',');
         field(json, "failureCount", report.getFailureCount()).append(',');
         field(json, "averageElapsedNanos", report.getAverageElapsedNanos()).append(',');
         field(json, "maxElapsedNanos", report.getMaxElapsedNanos()).append(',');

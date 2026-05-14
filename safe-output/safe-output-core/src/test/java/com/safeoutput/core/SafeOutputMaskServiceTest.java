@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.jupiter.api.Test;
 
@@ -106,6 +107,33 @@ class SafeOutputMaskServiceTest {
                 Arrays.asList(MaskTypes.BANK_CARD));
 
         assertEquals("bank 622202*********0123", service.maskStrong("bank 6222021234567890123"));
+    }
+
+    @Test
+    void manualCallsRecordManualSceneWithoutResponseApiRisk() {
+        final AtomicInteger manualCount = new AtomicInteger();
+        MaskEventRecorder recorder = new MaskEventRecorder() {
+            @Override
+            public void recordMask(MaskScene scene, String type, long elapsedNanos) {
+                if (scene == MaskScene.MANUAL) {
+                    manualCount.incrementAndGet();
+                }
+            }
+        };
+        ObjectMasker objectMasker = new ObjectMasker(MaskStrategyRegistry.withBuiltIns(),
+                MaskRuleMatcher.withDefaultRules(), null, ObjectMaskerOptions.defaults(), null, recorder);
+        SafeOutputMaskService service = new DefaultSafeOutputMaskService(MaskStrategyRegistry.withBuiltIns(),
+                objectMasker,
+                null,
+                recorder);
+        UserPayload payload = new UserPayload();
+        payload.mobile = "13812345678";
+
+        service.mask("13812345678", MaskTypes.MOBILE);
+        service.maskObject(payload);
+        service.maskStrong("foo@example.com");
+
+        assertEquals(3, manualCount.get());
     }
 
     private static final class FixedStrategy implements MaskStrategy {

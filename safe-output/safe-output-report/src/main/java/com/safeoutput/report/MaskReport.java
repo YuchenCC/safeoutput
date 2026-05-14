@@ -10,6 +10,7 @@ public final class MaskReport {
     private final long totalCount;
     private final long responseCount;
     private final long logCount;
+    private final long manualCount;
     private final long failureCount;
     private final long averageElapsedNanos;
     private final long maxElapsedNanos;
@@ -17,12 +18,13 @@ public final class MaskReport {
     private final Map<String, Long> unknownTypeCounts;
     private final List<ApiMaskMetrics> apiMetrics;
 
-    MaskReport(long totalCount, long responseCount, long logCount, long failureCount, long averageElapsedNanos,
-            long maxElapsedNanos, Map<String, Long> maskTypeCounts, Map<String, Long> unknownTypeCounts,
-            List<ApiMaskMetrics> apiMetrics) {
+    MaskReport(long totalCount, long responseCount, long logCount, long manualCount, long failureCount,
+            long averageElapsedNanos, long maxElapsedNanos, Map<String, Long> maskTypeCounts,
+            Map<String, Long> unknownTypeCounts, List<ApiMaskMetrics> apiMetrics) {
         this.totalCount = totalCount;
         this.responseCount = responseCount;
         this.logCount = logCount;
+        this.manualCount = manualCount;
         this.failureCount = failureCount;
         this.averageElapsedNanos = averageElapsedNanos;
         this.maxElapsedNanos = maxElapsedNanos;
@@ -41,6 +43,10 @@ public final class MaskReport {
 
     public long getLogCount() {
         return logCount;
+    }
+
+    public long getManualCount() {
+        return manualCount;
     }
 
     public long getFailureCount() {

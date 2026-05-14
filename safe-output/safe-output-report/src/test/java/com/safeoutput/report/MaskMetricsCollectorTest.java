@@ -21,19 +21,22 @@ class MaskMetricsCollectorTest {
 
         collector.recordMask(MaskScene.RESPONSE, MaskType.MOBILE, 10);
         collector.recordMask(MaskScene.LOG, MaskType.EMAIL, 20);
+        collector.recordMask(MaskScene.MANUAL, MaskType.ID_CARD, 30);
         collector.recordUnknownType("mobileM", MaskScene.RESPONSE);
         collector.recordFailure();
 
         MaskReport report = collector.snapshot();
 
-        assertEquals(2, report.getTotalCount());
+        assertEquals(3, report.getTotalCount());
         assertEquals(1, report.getResponseCount());
         assertEquals(1, report.getLogCount());
+        assertEquals(1, report.getManualCount());
         assertEquals(1, report.getFailureCount());
-        assertEquals(15, report.getAverageElapsedNanos());
-        assertEquals(20, report.getMaxElapsedNanos());
+        assertEquals(20, report.getAverageElapsedNanos());
+        assertEquals(30, report.getMaxElapsedNanos());
         assertEquals(1, report.getMaskTypeCounts().get(MaskTypes.MOBILE).longValue());
         assertEquals(1, report.getMaskTypeCounts().get(MaskTypes.EMAIL).longValue());
+        assertEquals(1, report.getMaskTypeCounts().get(MaskTypes.ID_CARD).longValue());
         assertEquals(1, report.getUnknownTypeCounts().get("mobilem").longValue());
     }
 

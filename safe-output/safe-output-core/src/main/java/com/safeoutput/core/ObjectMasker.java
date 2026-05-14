@@ -60,10 +60,14 @@ public final class ObjectMasker {
     }
 
     public Object mask(Object value) {
-        return maskValue(value, "$", null, 0, identitySet());
+        return mask(value, MaskScene.RESPONSE);
     }
 
-    private Object maskValue(Object value, String path, String key, int depth, Set<Object> visiting) {
+    public Object mask(Object value, MaskScene scene) {
+        return maskValue(value, "$", null, 0, identitySet(), scene == null ? MaskScene.RESPONSE : scene);
+    }
+
+    private Object maskValue(Object value, String path, String key, int depth, Set<Object> visiting, MaskScene scene) {
         // 递归入口统一处理跳过、深度、循环引用和类型分发，避免各容器分支重复这些保护逻辑。
         if (value == null || isUnsupported(value) || isSimpleValue(value)) {
             return value;
@@ -75,21 +79,21 @@ public final class ObjectMasker {
             return value;
         }
         if (value instanceof String) {
-            return maskString((String) value, path, key);
+            return maskString((String) value, path, key, scene);
         }
 
         visiting.add(value);
         try {
             if (value instanceof Map<?, ?>) {
-                return maskMap((Map<?, ?>) value, path, depth, visiting);
+                return maskMap((Map<?, ?>) value, path, depth, visiting, scene);
             }
             if (value instanceof Collection<?>) {
-                return maskCollection((Collection<?>) value, path, depth, visiting);
+                return maskCollection((Collection<?>) value, path, depth, visiting, scene);
             }
             if (value.getClass().isArray()) {
-                return maskArray(value, path, depth, visiting);
+                return maskArray(value, path, depth, visiting, scene);
             }
-            return maskBean(value, path, depth, visiting);
+            return maskBean(value, path, depth, visiting, scene);
         } catch (RuntimeException ex) {
             return value;
         } finally {
@@ -97,14 +101,15 @@ public final class ObjectMasker {
         }
     }
 
-    private Map<Object, Object> maskMap(Map<?, ?> source, String path, int depth, Set<Object> visiting) {
+    private Map<Object, Object> maskMap(Map<?, ?> source, String path, int depth, Set<Object> visiting,
+            MaskScene scene) {
         Map<Object, Object> masked = new LinkedHashMap<Object, Object>();
         int index = 0;
         for (Map.Entry<?, ?> entry : source.entrySet()) {
             String key = String.valueOf(entry.getKey());
             Object value = entry.getValue();
             if (index < options.getMaxCollectionSize()) {
-                value = maskValue(value, childPath(path, key), key, depth + 1, visiting);
+                value = maskValue(value, childPath(path, key), key, depth + 1, visiting, scene);
             }
             masked.put(entry.getKey(), value);
             index++;
@@ -112,12 +117,13 @@ public final class ObjectMasker {
         return masked;
     }
 
-    private List<Object> maskCollection(Collection<?> source, String path, int depth, Set<Object> visiting) {
+    private List<Object> maskCollection(Collection<?> source, String path, int depth, Set<Object> visiting,
+            MaskScene scene) {
         List<Object> masked = new ArrayList<Object>(source.size());
         int index = 0;
         for (Object value : source) {
             if (index < options.getMaxCollectionSize()) {
-                masked.add(maskValue(value, path + "[" + index + "]", null, depth + 1, visiting));
+                masked.add(maskValue(value, path + "[" + index + "]", null, depth + 1, visiting, scene));
             } else {
                 masked.add(value);
             }
@@ -126,20 +132,20 @@ public final class ObjectMasker {
         return masked;
     }
 
-    private Object maskArray(Object source, String path, int depth, Set<Object> visiting) {
+    private Object maskArray(Object source, String path, int depth, Set<Object> visiting, MaskScene scene) {
         int length = Array.getLength(source);
         Object masked = Array.newInstance(source.getClass().getComponentType(), length);
         for (int i = 0; i < length; i++) {
             Object value = Array.get(source, i);
             if (i < options.getMaxCollectionSize()) {
-                value = maskValue(value, path + "[" + i + "]", null, depth + 1, visiting);
+                value = maskValue(value, path + "[" + i + "]", null, depth + 1, visiting, scene);
             }
             Array.set(masked, i, value);
         }
         return masked;
     }
 
-    private Object maskBean(Object bean, String path, int depth, Set<Object> visiting) {
+    private Object maskBean(Object bean, String path, int depth, Set<Object> visiting, MaskScene scene) {
         for (Field field : fields(bean.getClass())) {
             try {
                 field.setAccessible(true);
@@ -152,9 +158,9 @@ public final class ObjectMasker {
                 Optional<RuleMatch> match = fieldResolver.resolve(field, childPath);
                 // 字符串字段可以直接按当前字段规则脱敏；复杂对象继续递归，让内部字段自行决策。
                 if (current instanceof String && match.isPresent() && match.get().getAction() == RuleAction.MASK) {
-                    field.set(bean, applyStrategy((String) current, match.get(), childPath, field.getName()));
+                    field.set(bean, applyStrategy((String) current, match.get(), childPath, field.getName(), scene));
                 } else {
-                    field.set(bean, maskValue(current, childPath, field.getName(), childDepth, visiting));
+                    field.set(bean, maskValue(current, childPath, field.getName(), childDepth, visiting, scene));
                 }
             } catch (RuntimeException ex) {
                 // 输出侧脱敏必须 fail-open：反射或策略异常不能影响业务响应。
@@ -167,18 +173,18 @@ public final class ObjectMasker {
         return bean;
     }
 
-    private String maskString(String value, String path, String key) {
+    private String maskString(String value, String path, String key, MaskScene scene) {
         Optional<RuleMatch> match = ruleMatcher.decide(MaskRuleRequest.builder()
                 .key(key)
                 .path(path)
                 .build());
         if (match.isPresent() && match.get().getAction() == RuleAction.MASK) {
-            return applyStrategy(value, match.get(), path, key);
+            return applyStrategy(value, match.get(), path, key, scene);
         }
         return value;
     }
 
-    private String applyStrategy(String value, RuleMatch match, String path, String key) {
+    private String applyStrategy(String value, RuleMatch match, String path, String key, MaskScene scene) {
         try {
             Optional<MaskStrategy> strategy = strategyRegistry.find(match.getMaskType());
             if (!strategy.isPresent()) {
@@ -188,13 +194,13 @@ public final class ObjectMasker {
             long startedAt = System.nanoTime();
             MaskResult result = strategy.get().apply(MaskContext.builder()
                     .maskType(match.getMaskType())
-                    .scene(MaskScene.RESPONSE)
+                    .scene(scene)
                     .path(path)
                     .fieldName(key)
                     .rawValue(value)
                     .build());
             if (result.isMasked()) {
-                recordMask(result.getContext().getMaskType(), System.nanoTime() - startedAt);
+                recordMask(scene, result.getContext().getMaskType(), System.nanoTime() - startedAt);
             }
             return result.getValue();
         } catch (RuntimeException ex) {
@@ -202,9 +208,9 @@ public final class ObjectMasker {
         }
     }
 
-    private void recordMask(String type, long elapsedNanos) {
+    private void recordMask(MaskScene scene, String type, long elapsedNanos) {
         if (maskEventRecorder != null) {
-            maskEventRecorder.recordMask(MaskScene.RESPONSE, type, elapsedNanos);
+            maskEventRecorder.recordMask(scene, type, elapsedNanos);
         }
     }
 

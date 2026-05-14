@@ -16,6 +16,8 @@ public final class DefaultSafeOutputMaskService implements SafeOutputMaskService
 
     private final StrongObjectMasker strongObjectMasker;
 
+    private final MaskEventRecorder maskEventRecorder;
+
     public DefaultSafeOutputMaskService(MaskStrategyRegistry strategyRegistry) {
         this(strategyRegistry, null);
     }
@@ -26,13 +28,20 @@ public final class DefaultSafeOutputMaskService implements SafeOutputMaskService
 
     public DefaultSafeOutputMaskService(MaskStrategyRegistry strategyRegistry, ObjectMasker objectMasker,
             Collection<String> strongFallbackTypes) {
+        this(strategyRegistry, objectMasker, strongFallbackTypes, null);
+    }
+
+    public DefaultSafeOutputMaskService(MaskStrategyRegistry strategyRegistry, ObjectMasker objectMasker,
+            Collection<String> strongFallbackTypes, MaskEventRecorder maskEventRecorder) {
         this.strategyRegistry = strategyRegistry == null ? MaskStrategyRegistry.withBuiltIns() : strategyRegistry;
+        this.maskEventRecorder = maskEventRecorder;
         this.objectMasker = objectMasker == null
                 ? new ObjectMasker(this.strategyRegistry, MaskRuleMatcher.withDefaultRules(),
                         ObjectMaskerOptions.defaults())
                 : objectMasker;
         MaskRuleMatcher defaultRuleMatcher = MaskRuleMatcher.withDefaultRules();
-        this.strongTextMasker = new StrongTextMasker(this.strategyRegistry, defaultRuleMatcher, strongFallbackTypes);
+        this.strongTextMasker = new StrongTextMasker(this.strategyRegistry, defaultRuleMatcher, strongFallbackTypes,
+                maskEventRecorder);
         this.strongObjectMasker = new StrongObjectMasker(this.strongTextMasker, ObjectMaskerOptions.defaults());
     }
 
@@ -48,12 +57,17 @@ public final class DefaultSafeOutputMaskService implements SafeOutputMaskService
                         + MaskTypes.normalize(type));
                 return value;
             }
+            long startedAt = System.nanoTime();
             // 指定 type 主动脱敏只按类型标签找策略，不做字段规则匹配或 regex 扫描。
-            return strategy.get().mask(value, MaskContext.builder()
+            String masked = strategy.get().mask(value, MaskContext.builder()
                     .maskType(type)
-                    .scene(MaskScene.UNKNOWN)
+                    .scene(MaskScene.MANUAL)
                     .rawValue(value)
                     .build());
+            if (!value.equals(masked)) {
+                recordManualMask(type, System.nanoTime() - startedAt);
+            }
+            return masked;
         } catch (RuntimeException ex) {
             return value;
         }
@@ -63,7 +77,7 @@ public final class DefaultSafeOutputMaskService implements SafeOutputMaskService
     public Object maskObject(Object value) {
         try {
             // 对象主动脱敏复用响应对象递归能力，默认不对普通字符串做全局 regex 扫描。
-            return objectMasker.mask(value);
+            return objectMasker.mask(value, MaskScene.MANUAL);
         } catch (RuntimeException ex) {
             return value;
         }
@@ -81,6 +95,12 @@ public final class DefaultSafeOutputMaskService implements SafeOutputMaskService
             return strongObjectMasker.mask(value);
         } catch (RuntimeException ex) {
             return value;
+        }
+    }
+
+    private void recordManualMask(String type, long elapsedNanos) {
+        if (maskEventRecorder != null) {
+            maskEventRecorder.recordMask(MaskScene.MANUAL, type, elapsedNanos);
         }
     }
 }

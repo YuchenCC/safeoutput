@@ -7,6 +7,7 @@ public enum MaskScene {
     UNKNOWN("unknown"),
     RESPONSE("response"),
     LOG("log"),
+    MANUAL("manual"),
     REPORT("report");
 
     private final String code;

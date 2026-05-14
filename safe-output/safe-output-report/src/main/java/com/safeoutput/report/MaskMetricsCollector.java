@@ -25,6 +25,7 @@ public final class MaskMetricsCollector implements ResponseRiskRecorder, Unknown
     private long totalCount;
     private long responseCount;
     private long logCount;
+    private long manualCount;
     private long failureCount;
     private long totalElapsedNanos;
     private long maxElapsedNanos;
@@ -43,6 +44,8 @@ public final class MaskMetricsCollector implements ResponseRiskRecorder, Unknown
                 responseCount++;
             } else if (scene == MaskScene.LOG) {
                 logCount++;
+            } else if (scene == MaskScene.MANUAL) {
+                manualCount++;
             }
             totalCount++;
             totalElapsedNanos += Math.max(0, elapsedNanos);
@@ -92,7 +95,7 @@ public final class MaskMetricsCollector implements ResponseRiskRecorder, Unknown
 
     public synchronized MaskReport snapshot() {
         long average = totalCount == 0 ? 0 : totalElapsedNanos / totalCount;
-        return new MaskReport(totalCount, responseCount, logCount, failureCount, average, maxElapsedNanos,
+        return new MaskReport(totalCount, responseCount, logCount, manualCount, failureCount, average, maxElapsedNanos,
                 maskTypeCounts, unknownTypeCounts, new ArrayList<ApiMaskMetrics>(apiMetrics.values()));
     }
 

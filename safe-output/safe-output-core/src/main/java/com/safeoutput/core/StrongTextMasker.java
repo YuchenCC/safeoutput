@@ -33,15 +33,23 @@ final class StrongTextMasker {
 
     private final List<String> fallbackTypes;
 
+    private final MaskEventRecorder maskEventRecorder;
+
     StrongTextMasker(MaskStrategyRegistry strategyRegistry, MaskRuleMatcher ruleMatcher) {
         this(strategyRegistry, ruleMatcher, null);
     }
 
     StrongTextMasker(MaskStrategyRegistry strategyRegistry, MaskRuleMatcher ruleMatcher,
             Collection<String> fallbackTypes) {
+        this(strategyRegistry, ruleMatcher, fallbackTypes, null);
+    }
+
+    StrongTextMasker(MaskStrategyRegistry strategyRegistry, MaskRuleMatcher ruleMatcher,
+            Collection<String> fallbackTypes, MaskEventRecorder maskEventRecorder) {
         this.strategyRegistry = strategyRegistry;
         this.keyMatches = ruleMatcher.logKeyMatches(128);
         this.fallbackTypes = normalizedFallbackTypes(fallbackTypes);
+        this.maskEventRecorder = maskEventRecorder;
     }
 
     String mask(String value) {
@@ -85,12 +93,14 @@ final class StrongTextMasker {
         if (!strategy.isPresent()) {
             return value;
         }
+        long startedAt = System.nanoTime();
         String masked = strategy.get().mask(rawValue, MaskContext.builder()
                 .maskType(match.getMaskType())
-                .scene(MaskScene.UNKNOWN)
+                .scene(MaskScene.MANUAL)
                 .fieldName(key)
                 .rawValue(rawValue)
                 .build());
+        recordManualMask(match.getMaskType(), rawValue, masked, startedAt);
         return requote(value, masked);
     }
 
@@ -110,12 +120,14 @@ final class StrongTextMasker {
             if (MaskTypes.ID_CARD.equals(type) && !MainlandIdCards.isLikely(rawValue, true)) {
                 continue;
             }
+            long startedAt = System.nanoTime();
             String replacement = strategy.get().mask(rawValue, MaskContext.builder()
                     .maskType(type)
-                    .scene(MaskScene.UNKNOWN)
+                    .scene(MaskScene.MANUAL)
                     .rawValue(rawValue)
                     .build());
             if (!rawValue.equals(replacement)) {
+                recordManualMask(type, rawValue, replacement, startedAt);
                 matcher.appendReplacement(masked, Matcher.quoteReplacement(replacement));
             }
         }
@@ -137,6 +149,12 @@ final class StrongTextMasker {
             return BANK_CARD_FALLBACK;
         }
         return null;
+    }
+
+    private void recordManualMask(String type, String rawValue, String maskedValue, long startedAt) {
+        if (maskEventRecorder != null && !rawValue.equals(maskedValue)) {
+            maskEventRecorder.recordMask(MaskScene.MANUAL, type, System.nanoTime() - startedAt);
+        }
     }
 
     private static List<String> normalizedFallbackTypes(Collection<String> configuredTypes) {
