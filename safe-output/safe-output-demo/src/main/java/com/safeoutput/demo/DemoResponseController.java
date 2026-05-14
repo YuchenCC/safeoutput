@@ -48,6 +48,7 @@ public class DemoResponseController {
 
     public static final class CustomerResponse {
 
+        // name 是歧义字段，demo 用注解显式声明为中文姓名脱敏。
         @Desensitize(type = MaskType.CHINESE_NAME)
         private String name;
 
