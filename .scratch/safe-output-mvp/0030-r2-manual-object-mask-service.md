@@ -14,13 +14,13 @@
 
 ## Acceptance criteria
 
-- [ ] 调用 `maskObject(userDTO)` 时，可按 Response 规则自动脱敏。
-- [ ] 调用 `maskObject(map)` 时，可根据 key 自动选择策略。
-- [ ] 嵌套对象和集合中的字段可按规则自动脱敏。
-- [ ] `maskObject` 默认不对所有字符串 value 做全局正则扫描。
-- [ ] 默认行为与 Response 自动脱敏结果保持一致。
-- [ ] 超过最大深度或最大集合数量时安全停止。
-- [ ] 主动对象脱敏异常不影响宿主业务主流程。
+- [x] 调用 `maskObject(userDTO)` 时，可按 Response 规则自动脱敏。
+- [x] 调用 `maskObject(map)` 时，可根据 key 自动选择策略。
+- [x] 嵌套对象和集合中的字段可按规则自动脱敏。
+- [x] `maskObject` 默认不对所有字符串 value 做全局正则扫描。
+- [x] 默认行为与 Response 自动脱敏结果保持一致。
+- [x] 超过最大深度或最大集合数量时安全停止。
+- [x] 主动对象脱敏异常不影响宿主业务主流程。
 
 ## Blocked by
 

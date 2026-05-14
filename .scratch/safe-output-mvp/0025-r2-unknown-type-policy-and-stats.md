@@ -14,13 +14,13 @@
 
 ## Acceptance criteria
 
-- [ ] 未注册 `mobileM` 策略时，命中该规则不抛出业务异常。
-- [ ] 未注册 type 命中时字段默认跳过脱敏。
-- [ ] 未注册 type 命中时输出 warn 日志。
-- [ ] unknown type 名称和次数进入统计快照。
-- [ ] unknown type 报告不包含敏感原文或完整字段值。
-- [ ] 未知 type 不回退到 `DEFAULT` 策略。
-- [ ] 预留 `safe-output.strategy.unknown-type-policy` 配置模型，默认行为为 `SKIP`。
+- [x] 未注册 `mobileM` 策略时，命中该规则不抛出业务异常。
+- [x] 未注册 type 命中时字段默认跳过脱敏。
+- [x] 未注册 type 命中时输出 warn 日志。
+- [x] unknown type 名称和次数进入统计快照。
+- [x] unknown type 报告不包含敏感原文或完整字段值。
+- [x] 未知 type 不回退到 `DEFAULT` 策略。
+- [x] 预留 `safe-output.strategy.unknown-type-policy` 配置模型，默认行为为 `SKIP`。
 
 ## Blocked by
 

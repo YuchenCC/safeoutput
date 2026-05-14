@@ -14,13 +14,13 @@
 
 ## Acceptance criteria
 
-- [ ] `@Desensitize.type` 支持 String 类型标签。
-- [ ] `MaskStrategy.type()` 返回 String 类型标签。
-- [ ] `MaskContext`、`MaskResult`、`MaskRule`、`RuleMatch` 中的脱敏类型字段支持 String。
-- [ ] `MaskStrategyRegistry` 使用 String 作为注册和查找 key。
-- [ ] 新增 `MaskTypes` 常量类，包含 MVP 内置标准类型。
-- [ ] 内置 `MOBILE`、`ID_CARD`、`EMAIL` 等类型继续可用。
-- [ ] 现有默认规则库仍能引用内置标准类型。
+- [x] `@Desensitize.type` 支持 String 类型标签。
+- [x] `MaskStrategy.type()` 返回 String 类型标签。
+- [x] `MaskContext`、`MaskResult`、`MaskRule`、`RuleMatch` 中的脱敏类型字段支持 String。
+- [x] `MaskStrategyRegistry` 使用 String 作为注册和查找 key。
+- [x] 新增 `MaskTypes` 常量类，包含 MVP 内置标准类型。
+- [x] 内置 `MOBILE`、`ID_CARD`、`EMAIL` 等类型继续可用。
+- [x] 现有默认规则库仍能引用内置标准类型。
 
 ## Blocked by
 

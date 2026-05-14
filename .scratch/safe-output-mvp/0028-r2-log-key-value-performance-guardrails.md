@@ -14,14 +14,14 @@
 
 ## Acceptance criteria
 
-- [ ] 支持 `safe-output.log.key-value-rule-enabled` 开关。
-- [ ] 支持最大日志长度限制，超限时不影响日志输出。
-- [ ] 支持单个 value 最大扫描长度限制，超限时安全跳过或降级。
-- [ ] 支持参与日志匹配的 rule key 数量限制。
-- [ ] 初始化阶段构建 key -> type 映射和必要缓存。
-- [ ] 每条日志处理过程中不动态编译规则集合。
-- [ ] 日志脱敏异常不影响应用正常输出。
-- [ ] 不引入 fastjson、Jackson 等 JSON Parser 作为日志脱敏强依赖。
+- [x] 支持 `safe-output.log.key-value-rule-enabled` 开关。
+- [x] 支持最大日志长度限制，超限时不影响日志输出。
+- [x] 支持单个 value 最大扫描长度限制，超限时安全跳过或降级。
+- [x] 支持参与日志匹配的 rule key 数量限制。
+- [x] 初始化阶段构建 key -> type 映射和必要缓存。
+- [x] 每条日志处理过程中不动态编译规则集合。
+- [x] 日志脱敏异常不影响应用正常输出。
+- [x] 不引入 fastjson、Jackson 等 JSON Parser 作为日志脱敏强依赖。
 
 ## Blocked by
 

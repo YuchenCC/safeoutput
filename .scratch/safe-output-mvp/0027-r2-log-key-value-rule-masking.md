@@ -14,14 +14,14 @@
 
 ## Acceptance criteria
 
-- [ ] 配置 `keys: [chineseName] type: CHINESE_NAME` 后，日志 `chineseName: 张三` 输出为 `chineseName: 张*`。
-- [ ] 日志 `"chineseName":"王小明"` 可按姓名策略脱敏。
-- [ ] 支持 `key=value`、`key: value`、`key = value`、`key : value`。
-- [ ] 支持双引号、单引号和不带引号的 key-value。
-- [ ] 配置自定义 `type: mobileM` 且注册对应策略后，日志 `mobileM=13812345678` 可按自定义策略脱敏。
-- [ ] 未注册自定义策略时不影响日志输出，并记录 warn。
-- [ ] `ignore.keys` 命中的日志字段不脱敏。
-- [ ] `rules.paths` 暂不作为日志文本匹配依据。
+- [x] 配置 `keys: [chineseName] type: CHINESE_NAME` 后，日志 `chineseName: 张三` 输出为 `chineseName: 张*`。
+- [x] 日志 `"chineseName":"王小明"` 可按姓名策略脱敏。
+- [x] 支持 `key=value`、`key: value`、`key = value`、`key : value`。
+- [x] 支持双引号、单引号和不带引号的 key-value。
+- [x] 配置自定义 `type: mobileM` 且注册对应策略后，日志 `mobileM=13812345678` 可按自定义策略脱敏。
+- [x] 未注册自定义策略时不影响日志输出，并记录 warn。
+- [x] `ignore.keys` 命中的日志字段不脱敏。
+- [x] `rules.paths` 暂不作为日志文本匹配依据。
 
 ## Blocked by
 

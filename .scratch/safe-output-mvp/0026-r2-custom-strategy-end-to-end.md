@@ -14,12 +14,12 @@
 
 ## Acceptance criteria
 
-- [ ] 注册自定义 `MaskStrategy.type() = "mobileM"` 后，配置 `type: mobileM` 可执行自定义脱敏。
-- [ ] `@Desensitize(type = "mobileM")` 可以编译并执行自定义脱敏。
-- [ ] 自定义策略命中次数可按 `mobileM` 类型标签统计。
-- [ ] 自定义策略不会破坏内置策略注册和查找。
-- [ ] 内置策略和自定义策略存在冲突时有明确日志提示或覆盖规则。
-- [ ] Demo 或测试中包含一个可复现的 `mobileM` 策略样例。
+- [x] 注册自定义 `MaskStrategy.type() = "mobileM"` 后，配置 `type: mobileM` 可执行自定义脱敏。
+- [x] `@Desensitize(type = "mobileM")` 可以编译并执行自定义脱敏。
+- [x] 自定义策略命中次数可按 `mobileM` 类型标签统计。
+- [x] 自定义策略不会破坏内置策略注册和查找。
+- [x] 内置策略和自定义策略存在冲突时有明确日志提示或覆盖规则。
+- [x] Demo 或测试中包含一个可复现的 `mobileM` 策略样例。
 
 ## Blocked by
 

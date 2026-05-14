@@ -14,14 +14,14 @@
 
 ## Acceptance criteria
 
-- [ ] 调用 `maskStrong(text)` 时，可脱敏文本中的手机号、邮箱、身份证。
-- [ ] 强扫描支持 key-value 轻量识别。
-- [ ] 强扫描支持 value 内轻量扫描和通用正则兜底。
-- [ ] `maskObjectStrong` 可对对象中的字符串执行强扫描。
-- [ ] 强扫描必须由业务方显式调用。
-- [ ] 默认扫描类型为 MOBILE、EMAIL、ID_CARD。
-- [ ] 默认不扫描 BANK_CARD、CHINESE_NAME、ADDRESS，除非显式配置开启。
-- [ ] 强扫描异常不影响宿主业务主流程。
+- [x] 调用 `maskStrong(text)` 时，可脱敏文本中的手机号、邮箱、身份证。
+- [x] 强扫描支持 key-value 轻量识别。
+- [x] 强扫描支持 value 内轻量扫描和通用正则兜底。
+- [x] `maskObjectStrong` 可对对象中的字符串执行强扫描。
+- [x] 强扫描必须由业务方显式调用。
+- [x] 默认扫描类型为 MOBILE、EMAIL、ID_CARD。
+- [x] 默认不扫描 BANK_CARD、CHINESE_NAME、ADDRESS，除非显式配置开启。
+- [x] 强扫描异常不影响宿主业务主流程。
 
 ## Blocked by
 

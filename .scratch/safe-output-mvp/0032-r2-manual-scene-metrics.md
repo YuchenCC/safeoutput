@@ -14,13 +14,13 @@
 
 ## Acceptance criteria
 
-- [ ] `MaskScene` 支持 MANUAL 场景。
-- [ ] 指定 type 主动脱敏记录 type 维度统计。
-- [ ] 对象规则主动脱敏记录对象脱敏字段数。
-- [ ] 强扫描主动脱敏记录正则兜底和 key-value 命中统计。
-- [ ] 主动调用统计不默认进入 Response 接口风险统计。
-- [ ] 报告可区分 Response、Log、Manual 脱敏次数。
-- [ ] 统计异常不影响主动脱敏结果。
+- [x] `MaskScene` 支持 MANUAL 场景。
+- [x] 指定 type 主动脱敏记录 type 维度统计。
+- [x] 对象规则主动脱敏记录对象脱敏字段数。
+- [x] 强扫描主动脱敏记录正则兜底和 key-value 命中统计。
+- [x] 主动调用统计不默认进入 Response 接口风险统计。
+- [x] 报告可区分 Response、Log、Manual 脱敏次数。
+- [x] 统计异常不影响主动脱敏结果。
 
 ## Blocked by
 

@@ -14,12 +14,12 @@
 
 ## Acceptance criteria
 
-- [ ] 配置 `type: mobileM` 时应用可以正常启动。
-- [ ] 配置 `type: MOBILE`、`ID_CARD`、`EMAIL` 等内置类型仍保持兼容。
-- [ ] type 前后空格不影响策略查找。
-- [ ] type 大小写差异不影响策略查找。
-- [ ] 配置绑定阶段不因非内置类型失败。
-- [ ] 默认规则、配置规则和 path/key 匹配仍按既有优先级工作。
+- [x] 配置 `type: mobileM` 时应用可以正常启动。
+- [x] 配置 `type: MOBILE`、`ID_CARD`、`EMAIL` 等内置类型仍保持兼容。
+- [x] type 前后空格不影响策略查找。
+- [x] type 大小写差异不影响策略查找。
+- [x] 配置绑定阶段不因非内置类型失败。
+- [x] 默认规则、配置规则和 path/key 匹配仍按既有优先级工作。
 
 ## Blocked by
 
