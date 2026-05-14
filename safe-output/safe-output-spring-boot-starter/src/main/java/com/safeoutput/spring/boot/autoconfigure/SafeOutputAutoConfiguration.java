@@ -64,11 +64,12 @@ public class SafeOutputAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean
     public ObjectMasker objectMasker(MaskStrategyRegistry maskStrategyRegistry, MaskRuleMatcher maskRuleMatcher,
-            SafeOutputProperties properties) {
-        return new ObjectMasker(maskStrategyRegistry, maskRuleMatcher, ObjectMaskerOptions.builder()
+            SensitiveFieldResolver sensitiveFieldResolver, SafeOutputProperties properties) {
+        ObjectMaskerOptions options = ObjectMaskerOptions.builder()
                 .maxDepth(properties.getMaxDepth())
                 .maxCollectionSize(properties.getMaxCollectionSize())
-                .build());
+                .build();
+        return new ObjectMasker(maskStrategyRegistry, maskRuleMatcher, sensitiveFieldResolver, options);
     }
 
     @Bean
