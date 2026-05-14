@@ -54,6 +54,7 @@ public final class BuiltInMaskStrategies {
     }
 
     private static String maskIdCard(String rawValue) {
+        // 身份证脱敏前先做校验，避免把普通 18 位流水号误判为身份证。
         if (!MainlandIdCards.isValid(rawValue)) {
             return rawValue;
         }

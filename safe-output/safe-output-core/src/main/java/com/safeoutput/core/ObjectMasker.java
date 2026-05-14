@@ -44,6 +44,7 @@ public final class ObjectMasker {
     }
 
     private Object maskValue(Object value, String path, String key, int depth, Set<Object> visiting) {
+        // 递归入口统一处理跳过、深度、循环引用和类型分发，避免各容器分支重复这些保护逻辑。
         if (value == null || isUnsupported(value) || isSimpleValue(value)) {
             return value;
         }
@@ -129,6 +130,7 @@ public final class ObjectMasker {
                 }
                 String childPath = childPath(path, field.getName());
                 Optional<RuleMatch> match = fieldResolver.resolve(field, childPath);
+                // 字符串字段可以直接按当前字段规则脱敏；复杂对象继续递归，让内部字段自行决策。
                 if (current instanceof String && match.isPresent() && match.get().getAction() == RuleAction.MASK) {
                     field.set(bean, applyStrategy((String) current, match.get(), childPath, field.getName()));
                 } else {

@@ -64,6 +64,7 @@ public final class MaskRuleMatcher {
         if (request == null) {
             return Optional.empty();
         }
+        // 这里固定 Safe Output 的规则优先级：Ignore 优先于注解，注解优先于 Rule，fallback 最后执行。
         if (request.isApiIgnored()) {
             return Optional.of(ignore("api-ignore", RuleSource.API_IGNORE));
         }
@@ -98,6 +99,7 @@ public final class MaskRuleMatcher {
 
     private static List<MaskRule> defaultRules() {
         List<MaskRule> rules = new ArrayList<MaskRule>();
+        // 默认规则只覆盖语义清晰的字段名；name/id/code/no 等歧义字段必须由显式 Rule 或注解声明。
         rules.add(MaskRule.defaults("default.mobile")
                 .keys(Arrays.asList("mobile", "phone", "telephone", "tel", "userMobile"))
                 .type(MaskType.MOBILE)

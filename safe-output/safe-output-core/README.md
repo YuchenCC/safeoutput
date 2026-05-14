@@ -1,0 +1,41 @@
+# safe-output-core
+
+`safe-output-core` 是 Safe Output 的核心引擎模块，不依赖 Spring。它负责定义脱敏领域模型、规则匹配、内置脱敏策略、注解解析和响应对象递归脱敏。
+
+## 职责
+
+- 定义 `MaskType`、`MaskScene`、`MaskRule`、`RuleMatch` 等核心模型。
+- 通过 `MaskRuleMatcher` 执行固定优先级的规则决策。
+- 通过 `ObjectMasker` 遍历 Bean、Map、Collection 和数组，并在命中规则时改写字符串值。
+- 通过 `MaskStrategyRegistry` 注册内置策略和调用方自定义策略。
+- 通过 `SensitiveFieldResolver` 缓存字段元数据，并解析 `@Desensitize` 注解。
+
+## 规则优先级
+
+`MaskRuleMatcher.decide()` 的优先级从高到低为：
+
+1. API Ignore
+2. 字段 Ignore
+3. `@Desensitize` 注解
+4. 配置 Rule
+5. 默认 Rule
+6. Regex fallback
+
+其中 `name`、`id`、`code`、`no` 这类歧义字段不会被默认规则命中，需要显式 Rule 或注解覆盖。
+
+## 关键入口
+
+- `ObjectMasker.mask(Object)`: 响应对象脱敏入口。
+- `MaskRuleMatcher.decide(MaskRuleRequest)`: 统一规则决策入口。
+- `MaskStrategyRegistry.withBuiltIns(...)`: 内置策略和自定义策略注册入口。
+- `BuiltInMaskStrategies.strategies()`: 内置策略集合。
+
+## 本模块验证
+
+在 `safe-output/` 根目录执行：
+
+```sh
+mvn -pl safe-output-core test
+```
+
+核心测试覆盖默认规则、注解解析、对象递归脱敏、循环引用保护、集合限制、策略注册和内置策略边界。
