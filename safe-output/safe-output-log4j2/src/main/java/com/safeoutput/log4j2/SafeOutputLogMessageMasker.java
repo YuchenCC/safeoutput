@@ -169,6 +169,7 @@ final class SafeOutputLogMessageMasker {
                     + MaskTypes.normalize(match.getMaskType()));
             return value;
         }
+        // key-value 命中时只脱敏 value，保留原始 key 和引号形态，降低日志格式兼容风险。
         String masked = strategy.get().mask(rawValue, MaskContext.builder()
                 .maskType(match.getMaskType())
                 .scene(MaskScene.LOG)

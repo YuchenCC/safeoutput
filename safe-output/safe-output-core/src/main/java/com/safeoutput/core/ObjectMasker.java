@@ -78,13 +78,10 @@ public final class ObjectMasker {
     private Object maskValue(Object value, String path, String key, int depth, Set<Object> visiting, MaskScene scene,
             MaskingSummary summary) {
         // 递归入口统一处理跳过、深度、循环引用和类型分发，避免各容器分支重复这些保护逻辑。
-        if (value == null || isUnsupported(value) || isSimpleValue(value)) {
+        if (shouldSkipValue(value, depth)) {
             return value;
         }
         if (visiting.contains(value)) {
-            return value;
-        }
-        if (depth > options.getMaxDepth()) {
             return value;
         }
         if (value instanceof String) {
@@ -117,7 +114,7 @@ public final class ObjectMasker {
         for (Map.Entry<?, ?> entry : source.entrySet()) {
             String key = String.valueOf(entry.getKey());
             Object value = entry.getValue();
-            if (index < options.getMaxCollectionSize()) {
+            if (shouldMaskCollectionElement(index)) {
                 value = maskValue(value, childPath(path, key), key, depth + 1, visiting, scene, summary);
             }
             masked.put(entry.getKey(), value);
@@ -131,7 +128,7 @@ public final class ObjectMasker {
         List<Object> masked = new ArrayList<Object>(source.size());
         int index = 0;
         for (Object value : source) {
-            if (index < options.getMaxCollectionSize()) {
+            if (shouldMaskCollectionElement(index)) {
                 masked.add(maskValue(value, path + "[" + index + "]", null, depth + 1, visiting, scene, summary));
             } else {
                 masked.add(value);
@@ -147,7 +144,7 @@ public final class ObjectMasker {
         Object masked = Array.newInstance(source.getClass().getComponentType(), length);
         for (int i = 0; i < length; i++) {
             Object value = Array.get(source, i);
-            if (i < options.getMaxCollectionSize()) {
+            if (shouldMaskCollectionElement(i)) {
                 value = maskValue(value, path + "[" + i + "]", null, depth + 1, visiting, scene, summary);
             }
             Array.set(masked, i, value);
@@ -184,6 +181,14 @@ public final class ObjectMasker {
             }
         }
         return bean;
+    }
+
+    private boolean shouldSkipValue(Object value, int depth) {
+        return value == null || isUnsupported(value) || isSimpleValue(value) || depth > options.getMaxDepth();
+    }
+
+    private boolean shouldMaskCollectionElement(int index) {
+        return index < options.getMaxCollectionSize();
     }
 
     private String maskString(String value, String path, String key, MaskScene scene, MaskingSummary summary) {

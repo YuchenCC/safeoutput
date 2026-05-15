@@ -30,7 +30,8 @@ final class StrongObjectMasker {
     }
 
     private Object maskValue(Object value, int depth, Set<Object> visiting) {
-        if (value == null || isSimpleValue(value) || depth > options.getMaxDepth()) {
+        // 强扫描是调用方显式进入的能力，但仍保留深度和循环保护，避免扫描任意大对象图。
+        if (shouldSkipValue(value, depth)) {
             return value;
         }
         if (value instanceof String) {
@@ -63,7 +64,7 @@ final class StrongObjectMasker {
         int index = 0;
         for (Map.Entry<?, ?> entry : source.entrySet()) {
             Object value = entry.getValue();
-            if (index < options.getMaxCollectionSize()) {
+            if (shouldMaskCollectionElement(index)) {
                 value = maskValue(value, depth + 1, visiting);
             }
             masked.put(entry.getKey(), value);
@@ -76,7 +77,7 @@ final class StrongObjectMasker {
         List<Object> masked = new ArrayList<Object>(source.size());
         int index = 0;
         for (Object value : source) {
-            masked.add(index < options.getMaxCollectionSize() ? maskValue(value, depth + 1, visiting) : value);
+            masked.add(shouldMaskCollectionElement(index) ? maskValue(value, depth + 1, visiting) : value);
             index++;
         }
         return masked;
@@ -87,7 +88,7 @@ final class StrongObjectMasker {
         Object masked = Array.newInstance(source.getClass().getComponentType(), length);
         for (int i = 0; i < length; i++) {
             Object value = Array.get(source, i);
-            Object element = i < options.getMaxCollectionSize() ? maskValue(value, depth + 1, visiting) : value;
+            Object element = shouldMaskCollectionElement(i) ? maskValue(value, depth + 1, visiting) : value;
             Array.set(masked, i, element);
         }
         return masked;
@@ -99,12 +100,22 @@ final class StrongObjectMasker {
                 field.setAccessible(true);
                 field.set(bean, maskValue(field.get(bean), depth + 1, visiting));
             } catch (RuntimeException ex) {
+                // 主动强扫描失败必须 fail-open，不能阻断业务侧手工调用。
                 return bean;
             } catch (IllegalAccessException ex) {
+                // 主动强扫描失败必须 fail-open，不能阻断业务侧手工调用。
                 return bean;
             }
         }
         return bean;
+    }
+
+    private boolean shouldSkipValue(Object value, int depth) {
+        return value == null || isSimpleValue(value) || depth > options.getMaxDepth();
+    }
+
+    private boolean shouldMaskCollectionElement(int index) {
+        return index < options.getMaxCollectionSize();
     }
 
     private static List<Field> fields(Class<?> type) {
