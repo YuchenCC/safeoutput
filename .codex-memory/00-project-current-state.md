@@ -35,7 +35,7 @@ Safe Output 是面向 Spring Boot 2.x / Java 8 老项目的通用数据脱敏 st
 ## 已知风险
 
 - `ObjectMasker` 对 Bean 是原地修改字段；如果调用方复用响应对象实例，需要注意副作用。
-- `MaskRuleMatcher.decide` 当前优先级是 API ignore / 字段 ignore > 注解 > 配置/默认规则 > regex fallback；与“配置优先，注解增强”的边界存在偏差。
+- `MaskRuleMatcher.decide` 当前确认优先级是 API ignore / 字段 ignore > 注解 > 配置/默认规则 > regex fallback；后续改动需同步测试该优先级边界。
 - 日志和强扫描对 `EMAIL` 存在无上下文 regex fallback；与“除手机、身份证外，不做无上下文全局兜底”的边界存在偏差。
 - 日志 `%safeOutputMsg` 默认使用内置默认规则，不自动消费 Spring `safe-output.rules[]`。
 - 报告 JSON 使用手写序列化，字段较稳定但不是通用 JSON 序列化框架。

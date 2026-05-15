@@ -8,7 +8,7 @@
 - 统计不保存敏感原文：`MaskMetricsCollector`、`ResponseRiskEvent`、报告输出只保留计数、类型、接口、耗时、脱敏字段数量；日志建议 evidence 为 `key=<type>` 形态。
 - 脱敏异常不能影响主业务：Response、Object、Log、Manual、Report 均采用 fail-open 或记录失败指标。
 - 老项目即插即用优先：Java 8、Spring Boot 2.7.18、`spring.factories`、starter 聚合内部模块，支持 `single-jar` profile。
-- 配置优先，注解增强：【实现偏差】`MaskRuleMatcher.decide` 当前顺序为 ignore > 注解 > 配置/默认规则 > fallback，注解会优先于配置规则。
+- 脱敏规则优先级：`MaskRuleMatcher.decide` 当前确认顺序为 API ignore / 字段 ignore > 注解 > 配置/默认规则 > regex fallback；后续改动需同步测试该优先级边界。
 - Spring Boot 2.x 兼容优先：使用 `spring.factories` 和 `spring-boot-autoconfigure`，未迁移 Boot 3 `AutoConfiguration.imports`。
 
 ## 额外边界
