@@ -12,6 +12,8 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 
 import org.springframework.core.MethodParameter;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.server.ServerHttpRequest;
@@ -23,6 +25,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice;
 
 @ControllerAdvice
+@Order(Ordered.HIGHEST_PRECEDENCE)
 public class SafeOutputResponseBodyAdvice implements ResponseBodyAdvice<Object> {
 
     private static final Pattern NUMERIC_SEGMENT = Pattern.compile("/\\d+(?=/|$)");
