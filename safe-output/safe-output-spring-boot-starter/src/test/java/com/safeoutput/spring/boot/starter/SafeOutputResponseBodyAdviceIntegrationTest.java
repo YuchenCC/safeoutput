@@ -169,6 +169,38 @@ class SafeOutputResponseBodyAdviceIntegrationTest {
                 .andExpect(content().string("{\"mobile\":\"13812345678\"}"));
     }
 
+    @Test
+    void bodyDataPathExtractsAndMasksOnlyDataField() {
+        contextRunner
+                .withPropertyValues("safe-output.response.body-data-path=data")
+                .run(context -> mvc(context.getBean(SafeOutputResponseBodyAdvice.class))
+                        .perform(get("/result"))
+                        .andExpect(status().isOk())
+                        .andExpect(content().string("{\"code\":200,\"message\":\"ok\","
+                                + "\"data\":{\"mobile\":\"138****5678\"}}")));
+    }
+
+    @Test
+    void bodyDataPathWithNestedPath() {
+        contextRunner
+                .withPropertyValues("safe-output.response.body-data-path=result.data")
+                .run(context -> mvc(context.getBean(SafeOutputResponseBodyAdvice.class))
+                        .perform(get("/nested-result"))
+                        .andExpect(status().isOk())
+                        .andExpect(content().string("{\"result\":{\"code\":200,\"message\":null,\"data\":"
+                                + "{\"mobile\":\"138****5678\"}}}")));
+    }
+
+    @Test
+    void bodyDataPathMissingFieldFailsOpen() {
+        contextRunner
+                .withPropertyValues("safe-output.response.body-data-path=nonexistent")
+                .run(context -> mvc(context.getBean(SafeOutputResponseBodyAdvice.class))
+                        .perform(get("/bean"))
+                        .andExpect(status().isOk())
+                        .andExpect(content().string("{\"mobile\":\"13812345678\"}")));
+    }
+
     private static MockMvc mvc(Object advice) {
         return MockMvcBuilders.standaloneSetup(new DemoController())
                 .setControllerAdvice(advice)
@@ -228,6 +260,17 @@ class SafeOutputResponseBodyAdviceIntegrationTest {
         @GetMapping("/custom-annotation")
         CustomAnnotatedResponse customAnnotation() {
             return new CustomAnnotatedResponse("13812345678");
+        }
+
+        @GetMapping("/result")
+        Result<CustomerResponse> resultBody() {
+            return new Result<CustomerResponse>(200, "ok", new CustomerResponse("13812345678"));
+        }
+
+        @GetMapping("/nested-result")
+        NestedResult<CustomerResponse> nestedResultBody() {
+            return new NestedResult<CustomerResponse>(new Result<CustomerResponse>(200, null,
+                    new CustomerResponse("13812345678")));
         }
     }
 
@@ -295,6 +338,48 @@ class SafeOutputResponseBodyAdviceIntegrationTest {
         @Override
         public void record(ResponseRiskEvent event) {
             lastEvent.set(event);
+        }
+    }
+
+    private static final class Result<T> {
+
+        private final int code;
+        private final String message;
+        private final T data;
+
+        private Result(int code, String message, T data) {
+            this.code = code;
+            this.message = message;
+            this.data = data;
+        }
+
+        @SuppressWarnings("unused")
+        public int getCode() {
+            return code;
+        }
+
+        @SuppressWarnings("unused")
+        public String getMessage() {
+            return message;
+        }
+
+        @SuppressWarnings("unused")
+        public T getData() {
+            return data;
+        }
+    }
+
+    private static final class NestedResult<T> {
+
+        private final Result<T> result;
+
+        private NestedResult(Result<T> result) {
+            this.result = result;
+        }
+
+        @SuppressWarnings("unused")
+        public Result<T> getResult() {
+            return result;
         }
     }
 }
