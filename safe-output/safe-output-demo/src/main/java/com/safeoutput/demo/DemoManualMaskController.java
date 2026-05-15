@@ -21,6 +21,7 @@ public class DemoManualMaskController {
 
     @PostMapping("/demo/mask/by-type")
     public Map<String, Object> byType(@RequestBody ByTypeRequest request) {
+        // Demo 连续执行两次，用响应里的 idempotent 字段展示主动脱敏不会反复破坏格式。
         String first = maskService.mask(request.getValue(), request.getType());
         String second = maskService.mask(first, request.getType());
         return result(first, second);
@@ -35,6 +36,7 @@ public class DemoManualMaskController {
 
     @PostMapping("/demo/mask/strong")
     public Map<String, Object> strong(@RequestBody StrongRequest request) {
+        // 强扫描必须由调用方显式进入，普通对象主动脱敏不会默认全局 regex 扫描文本。
         String first = maskService.maskStrong(request.getText());
         String second = maskService.maskStrong(first);
         return result(first, second);
