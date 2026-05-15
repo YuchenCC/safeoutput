@@ -2,7 +2,7 @@
 
 - 不引入 fastjson：当前 core/report/log/starter 未引入 fastjson，报告 JSON 为手写输出，starter 测试只用 Jackson 作为测试转换器。
 - 不做粗暴全局正则乱扫：Response 默认不全局扫字符串；日志仅先处理 key-value/JSON-like 片段，再做有限 fallback。
-- 除手机、身份证外，不做无上下文全局兜底：【实现偏差】`SafeOutputLogMessageMasker` 和 `StrongTextMasker` 默认对 `EMAIL` 也做无上下文 fallback；`StrongTextMasker` 还可通过配置启用 `BANK_CARD` fallback。
+- 除手机、身份证、邮箱外，不做无上下文全局兜底：`SafeOutputLogMessageMasker` 和 `StrongTextMasker` 默认允许对 `MOBILE` / `ID_CARD` / `EMAIL` 做无上下文 fallback；`StrongTextMasker` 还可通过配置启用 `BANK_CARD` fallback，需注意该配置可能超出默认边界。
 - 日志只做轻量 JSON-like 识别，不强制依赖 JSON Parser：`SafeOutputLogMessageMasker.KEY_VALUE` 正则处理 `"key":"value"`、`key=value`，无 JSON Parser 依赖。
 - Response ignore 后仍应进入风险统计：`SafeOutputResponseBodyAdvice` 命中 API ignore 后返回原 body，但调用 `recordRisk(ignored=true)`。
 - 统计不保存敏感原文：`MaskMetricsCollector`、`ResponseRiskEvent`、报告输出只保留计数、类型、接口、耗时、脱敏字段数量；日志建议 evidence 为 `key=<type>` 形态。

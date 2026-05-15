@@ -6,7 +6,7 @@
 
 ## 日志脱敏完整调用链
 
-Log4j2 PatternLayout `%safeOutputMsg{...}` -> `SafeOutputMessagePatternConverter.newInstance` -> `SafeOutputLogMessageMasker.mask` -> key-value/JSON-like 正则匹配 -> `keyValueMatches` 查规则 -> 策略脱敏 -> `maskFallback` 扫 mobile/email/idCard -> 输出日志 message。风险点：converter 不由 Spring 创建，默认不读取 `safe-output.rules[]`；email 存在无上下文 fallback。
+Log4j2 PatternLayout `%safeOutputMsg{...}` -> `SafeOutputMessagePatternConverter.newInstance` -> `SafeOutputLogMessageMasker.mask` -> key-value/JSON-like 正则匹配 -> `keyValueMatches` 查规则 -> 策略脱敏 -> `maskFallback` 扫 mobile/email/idCard -> 输出日志 message。风险点：converter 不由 Spring 创建，默认不读取 `safe-output.rules[]`。
 
 ## 配置加载与规则匹配链路
 
