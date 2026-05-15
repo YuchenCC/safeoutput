@@ -47,6 +47,7 @@ public final class MaskMetricsCollector implements ResponseRiskRecorder, Unknown
 
     public synchronized void recordMask(MaskScene scene, String type, long elapsedNanos) {
         try {
+            // 指标采集只累计场景、类型和耗时，不接收也不保存敏感原文。
             if (scene == MaskScene.RESPONSE) {
                 responseCount++;
             } else if (scene == MaskScene.LOG) {
@@ -94,6 +95,7 @@ public final class MaskMetricsCollector implements ResponseRiskRecorder, Unknown
             if (event == null) {
                 return;
             }
+            // 接口风险统计使用稳定 API key 聚合，避免把高基数原始路径无限展开。
             apiMetric(event).record(event);
         } catch (RuntimeException ex) {
             // Metrics must never affect masking flow.
@@ -101,6 +103,7 @@ public final class MaskMetricsCollector implements ResponseRiskRecorder, Unknown
     }
 
     public synchronized MaskReport snapshot() {
+        // 快照是聚合视图，调用方不能从这里恢复任何原始 response、log 或敏感值。
         long average = totalCount == 0 ? 0 : totalElapsedNanos / totalCount;
         return new MaskReport(totalCount, responseCount, logCount, manualCount, failureCount, average, maxElapsedNanos,
                 maskTypeCounts, unknownTypeCounts, new ArrayList<ApiMaskMetrics>(apiMetrics.values()));

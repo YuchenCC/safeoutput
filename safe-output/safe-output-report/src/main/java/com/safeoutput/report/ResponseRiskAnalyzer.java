@@ -46,6 +46,7 @@ public final class ResponseRiskAnalyzer {
         List<String> reasons = new ArrayList<String>();
         List<String> advice = new ArrayList<String>();
         int score = 0;
+        // 风险画像只基于聚合后的类型计数和接口指标，不读取原始响应内容。
         score += addTypeRisk(metric, MaskTypes.PASSWORD, "PASSWORD", 45, reasons);
         score += addTypeRisk(metric, MaskTypes.ID_CARD, "ID_CARD", 35, reasons);
         score += addTypeRisk(metric, MaskTypes.BANK_CARD, "BANK_CARD", 35, reasons);
@@ -93,6 +94,7 @@ public final class ResponseRiskAnalyzer {
 
     private ApiRiskLevel level(int score, ApiMaskMetrics metric) {
         if (metric.isIgnored()) {
+            // Ignore 表示显式豁免脱敏，不表示风险消失；报告中单独标为高风险豁免。
             return ApiRiskLevel.IGNORED_HIGH;
         }
         if (score >= 80) {
