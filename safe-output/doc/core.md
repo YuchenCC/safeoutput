@@ -29,6 +29,16 @@ public class SafeOutputResponseBodyAdvice implements ResponseBodyAdvice<Object> 
                 recordRisk(... ignored=true ...);
                 return body;   // 命中 API Ignore → 原样放行，但保留风险画像基础数据
             }
+            String bodyDataPath = properties.getResponse().getBodyDataPath();
+            if (bodyDataPath != null && !bodyDataPath.isEmpty()) {
+                Object data = extractData(body, bodyDataPath);   // 按路径提取业务数据
+                if (data != null) {
+                    MaskingResult result = objectMasker.maskWithResult(data, MaskScene.RESPONSE);
+                    setData(body, bodyDataPath, result.getValue());   // 脱敏后回写，包装层不变
+                    recordRisk(... result.getMaskTypeCounts() ...);
+                }
+                return body;   // 只脱敏 data，包装层原样保留
+            }
             MaskingResult result = objectMasker.maskWithResult(body, MaskScene.RESPONSE);
             recordRisk(... result.getMaskTypeCounts() ...);
             return result.getValue();   // 否则 → 进脱敏引擎并记录轻量聚合摘要
@@ -54,6 +64,17 @@ public class SafeOutputMvcAutoConfiguration {
     }
 }
 ```
+
+**包装层跳过**（`bodyDataPath`）：许多业务系统在 Controller 返回值外层套了 `Result<T>` 等统一包装，其中 `code`/`message` 等字段无需脱敏。配置 `safe-output.response.body-data-path` 后，Advice 会先按路径提取业务数据，只对 data 部分调用脱敏引擎，然后将脱敏后的 data 回写到 body 原位。包装层不参与脱敏，不消耗 depth，也不触发无关字段的规则匹配。
+
+```yaml
+safe-output:
+  response:
+    body-data-path: data          # 取 body.data 脱敏
+    # body-data-path: result.data # 多层：取 body.result.data 脱敏
+```
+
+路径解析规则：点分路径逐级导航，Bean 通过反射取字段（含父类），Map 按 key 取值。路径不存在时 fail-open，原样返回 body。
 
 ---
 
@@ -174,6 +195,10 @@ HTTP 请求
        └→ Controller 方法执行，返回 body 对象
             └→ SafeOutputResponseBodyAdvice.beforeBodyWrite()
                  ├─ [命中 API Ignore] → 原样返回，并记录 ignored 风险事件
+                 ├─ [配置 bodyDataPath] → extractData(body, path) 提取业务数据
+                 │    └→ ObjectMasker.maskWithResult(data) 只脱敏 data
+                 │    └→ setData(body, path, maskedData) 回写，包装层不变
+                 │    └→ 返回原始 body（包装层 + 脱敏后 data）
                  └─ [正常] → ObjectMasker.maskWithResult(body)
                               └→ maskValue() 递归遍历对象图
                                    ├─ Bean 字段 → SensitiveFieldResolver
@@ -200,6 +225,8 @@ HTTP 请求
 | 特性 | 实现 |
 |------|------|
 | **拦截点** | `ResponseBodyAdvice.beforeBodyWrite`，序列化前，无侵入 |
+| **拦截顺序** | `@Order(Ordered.HIGHEST_PRECEDENCE)`，确保在其他 Advice 之前拿到原始 body |
+| **包装层跳过** | `bodyDataPath` 配置点分路径（如 `data`、`result.data`），只提取并脱敏业务数据，包装层原样保留 |
 | **字段识别** | 字段名 key 匹配（大小写不敏感）+ JSONPath 精准 path 匹配 |
 | **注解支持** | `@Desensitize(type = MaskType.XXX)` 标注在字段上，优先级高于规则 |
 | **循环引用** | `IdentityHashMap` 访问集防止死循环 |
