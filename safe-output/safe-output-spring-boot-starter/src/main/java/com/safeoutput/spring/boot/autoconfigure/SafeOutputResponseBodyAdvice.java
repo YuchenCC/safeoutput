@@ -6,10 +6,8 @@ import com.safeoutput.core.MaskingResult;
 import com.safeoutput.core.ResponseRiskEvent;
 import com.safeoutput.core.ResponseRiskRecorder;
 
-import java.lang.reflect.Field;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
@@ -42,6 +40,8 @@ public class SafeOutputResponseBodyAdvice implements ResponseBodyAdvice<Object> 
     private final ApiIgnoreMatcher apiIgnoreMatcher;
 
     private final List<ResponseRiskRecorder> riskRecorders;
+
+    private final ResponseBodyDataAccessor bodyDataAccessor = new ResponseBodyDataAccessor();
 
     public SafeOutputResponseBodyAdvice(ObjectMasker objectMasker, SafeOutputProperties properties) {
         this(objectMasker, properties, null, Collections.<ResponseRiskRecorder>emptyList());
@@ -92,84 +92,17 @@ public class SafeOutputResponseBodyAdvice implements ResponseBodyAdvice<Object> 
     }
 
     private Object maskDataPath(Object body, String bodyDataPath, ServerHttpRequest request) {
-        Object data = extractData(body, bodyDataPath);
+        // body-data-path 只处理配置指定的响应子树；找不到路径时保持原响应 fail-open。
+        Object data = bodyDataAccessor.extract(body, bodyDataPath);
         if (data == null) {
             return body;
         }
         long startedAt = System.nanoTime();
         MaskingResult result = objectMasker.maskWithResult(data, MaskScene.RESPONSE);
-        setData(body, bodyDataPath, result.getValue());
+        bodyDataAccessor.set(body, bodyDataPath, result.getValue());
         recordRisk(request, false, null, false, result.getMaskedFieldCount(), result.getMaskTypeCounts(),
                 System.nanoTime() - startedAt);
         return body;
-    }
-
-    @SuppressWarnings("unchecked")
-    private Object extractData(Object target, String path) {
-        String[] segments = path.split("\\.");
-        Object current = target;
-        for (String segment : segments) {
-            if (current == null) {
-                return null;
-            }
-            if (current instanceof Map) {
-                current = ((Map<String, Object>) current).get(segment);
-            } else {
-                current = getFieldValue(current, segment);
-            }
-        }
-        return current;
-    }
-
-    @SuppressWarnings("unchecked")
-    private void setData(Object target, String path, Object value) {
-        String[] segments = path.split("\\.");
-        Object parent = target;
-        for (int i = 0; i < segments.length - 1; i++) {
-            if (parent instanceof Map) {
-                parent = ((Map<String, Object>) parent).get(segments[i]);
-            } else {
-                parent = getFieldValue(parent, segments[i]);
-            }
-        }
-        String lastSegment = segments[segments.length - 1];
-        if (parent instanceof Map) {
-            ((Map<String, Object>) parent).put(lastSegment, value);
-        } else {
-            setFieldValue(parent, lastSegment, value);
-        }
-    }
-
-    private static Object getFieldValue(Object target, String fieldName) {
-        Class<?> clazz = target.getClass();
-        while (clazz != null && clazz != Object.class) {
-            try {
-                Field field = clazz.getDeclaredField(fieldName);
-                field.setAccessible(true);
-                return field.get(target);
-            } catch (NoSuchFieldException ex) {
-                clazz = clazz.getSuperclass();
-            } catch (IllegalAccessException ex) {
-                return null;
-            }
-        }
-        return null;
-    }
-
-    private static void setFieldValue(Object target, String fieldName, Object value) {
-        Class<?> clazz = target.getClass();
-        while (clazz != null && clazz != Object.class) {
-            try {
-                Field field = clazz.getDeclaredField(fieldName);
-                field.setAccessible(true);
-                field.set(target, value);
-                return;
-            } catch (NoSuchFieldException ex) {
-                clazz = clazz.getSuperclass();
-            } catch (IllegalAccessException ex) {
-                return;
-            }
-        }
     }
 
     private Optional<ApiIgnoreMatch> matchApiIgnore(ServerHttpRequest request) {

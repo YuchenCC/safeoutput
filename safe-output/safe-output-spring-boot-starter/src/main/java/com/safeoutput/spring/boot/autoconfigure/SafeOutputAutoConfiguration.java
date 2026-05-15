@@ -72,6 +72,7 @@ public class SafeOutputAutoConfiguration {
             SensitiveFieldResolver sensitiveFieldResolver, SafeOutputProperties properties,
             ObjectProvider<UnknownTypeRecorder> unknownTypeRecorders,
             ObjectProvider<MaskEventRecorder> maskEventRecorders) {
+        // starter 只把 Spring 配置转成 core 选项，递归和 fail-open 语义仍由 ObjectMasker 负责。
         ObjectMaskerOptions options = ObjectMaskerOptions.builder()
                 .maxDepth(properties.getMaxDepth())
                 .maxCollectionSize(properties.getMaxCollectionSize())
