@@ -100,12 +100,22 @@ public class SafeOutputProperties {
 
         private boolean enabled = true;
 
+        private String bodyDataPath;
+
         public boolean isEnabled() {
             return enabled;
         }
 
         public void setEnabled(boolean enabled) {
             this.enabled = enabled;
+        }
+
+        public String getBodyDataPath() {
+            return bodyDataPath;
+        }
+
+        public void setBodyDataPath(String bodyDataPath) {
+            this.bodyDataPath = bodyDataPath;
         }
     }
 
