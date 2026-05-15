@@ -11,6 +11,7 @@ import com.safeoutput.core.ObjectMaskerOptions;
 import com.safeoutput.core.SafeOutputMaskService;
 import com.safeoutput.core.SensitiveFieldResolver;
 import com.safeoutput.core.UnknownTypeRecorder;
+import com.safeoutput.log4j2.SafeOutputLog4j2Runtime;
 import com.safeoutput.report.MaskMetricsCollector;
 import com.safeoutput.report.MaskReportExportOptions;
 import com.safeoutput.report.MaskReportExporter;
@@ -90,6 +91,13 @@ public class SafeOutputAutoConfiguration {
                 properties.getManual().getStrongScan().getTypes(), maskEventRecorders.getIfAvailable());
     }
 
+    @Bean(destroyMethod = "close")
+    public SafeOutputLog4j2RuntimeRegistration safeOutputLog4j2RuntimeRegistration(
+            MaskRuleMatcher maskRuleMatcher, MaskStrategyRegistry maskStrategyRegistry,
+            SafeOutputProperties properties) {
+        return new SafeOutputLog4j2RuntimeRegistration(maskRuleMatcher, maskStrategyRegistry, properties);
+    }
+
     @Bean
     @ConditionalOnMissingBean
     @ConditionalOnProperty(prefix = "safe-output.report", name = "enabled", havingValue = "true")
@@ -110,5 +118,22 @@ public class SafeOutputAutoConfiguration {
                 report.getRetainFiles()), collector);
         exporter.start();
         return exporter;
+    }
+
+    public static final class SafeOutputLog4j2RuntimeRegistration implements AutoCloseable {
+
+        public SafeOutputLog4j2RuntimeRegistration(MaskRuleMatcher maskRuleMatcher,
+                MaskStrategyRegistry maskStrategyRegistry, SafeOutputProperties properties) {
+            SafeOutputProperties.LogProperties log = properties.getLog();
+            SafeOutputLog4j2Runtime.configure(maskRuleMatcher, maskStrategyRegistry, log.isEnabled(),
+                    log.getMaxMessageLength(), log.getMaxValueLength(), log.getRegexFallback().isEnabled(),
+                    log.getRegexFallback().isIdCardCheckCodeEnabled(), log.isKeyValueRuleEnabled(),
+                    log.getMaxRuleKeys());
+        }
+
+        @Override
+        public void close() {
+            SafeOutputLog4j2Runtime.reset();
+        }
     }
 }

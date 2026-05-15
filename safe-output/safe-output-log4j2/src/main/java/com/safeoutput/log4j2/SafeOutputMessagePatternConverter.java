@@ -1,8 +1,5 @@
 package com.safeoutput.log4j2;
 
-import com.safeoutput.core.MaskRuleMatcher;
-import com.safeoutput.core.MaskStrategyRegistry;
-
 import org.apache.logging.log4j.core.LogEvent;
 import org.apache.logging.log4j.core.config.plugins.Plugin;
 import org.apache.logging.log4j.core.pattern.ConverterKeys;
@@ -26,11 +23,10 @@ public final class SafeOutputMessagePatternConverter extends LogEventPatternConv
     public static SafeOutputMessagePatternConverter newInstance(String[] options) {
         try {
             ConverterOptions parsedOptions = ConverterOptions.parse(options);
-            return new SafeOutputMessagePatternConverter(parsedOptions.enabled,
-                    new SafeOutputLogMessageMasker(MaskRuleMatcher.withDefaultRules(),
-                            MaskStrategyRegistry.withBuiltIns(), parsedOptions.maxMessageLength,
-                            parsedOptions.maxValueLength, parsedOptions.regexFallback, parsedOptions.idCardCheckCode,
-                            parsedOptions.keyValueRuleEnabled, parsedOptions.maxRuleKeys));
+            SafeOutputLogMessageMasker masker = SafeOutputLog4j2Runtime.createMasker(parsedOptions.enabled,
+                    parsedOptions.maxMessageLength, parsedOptions.maxValueLength, parsedOptions.regexFallback,
+                    parsedOptions.idCardCheckCode, parsedOptions.keyValueRuleEnabled, parsedOptions.maxRuleKeys);
+            return new SafeOutputMessagePatternConverter(parsedOptions.enabled && masker != null, masker);
         } catch (RuntimeException ex) {
             // converter 初始化失败时禁用脱敏，避免日志配置问题影响业务启动或日志输出。
             return new SafeOutputMessagePatternConverter(false, null);
