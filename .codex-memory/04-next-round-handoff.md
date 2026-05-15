@@ -4,6 +4,7 @@
 
 - core 规则匹配、内置策略、自定义策略注册、对象递归脱敏。
 - starter 自动装配和 ResponseBodyAdvice 接入。
+- starter 到 Log4j2 `%safeOutputMsg` 的 runtime bridge，可复用 Spring 配置规则、自定义策略和日志选项。
 - report 聚合指标、Response 风险画像、本地 JSON 快照。
 - demo 端到端测试覆盖 Response、Log、Manual、Report。
 

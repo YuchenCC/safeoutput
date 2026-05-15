@@ -111,9 +111,11 @@ public class CustomerResponse {
 
 日志脱敏支持 JSON-like 和 key-value 片段，例如 `"mobile":"13800138000"`、`email=foo@example.com`。整条 message fallback 会识别手机号、邮箱和严格合法的大陆身份证；普通 18 位流水号和无上下文银行卡号不会全局兜底脱敏。
 
+通过 starter 启动时，`%safeOutputMsg` 会复用 Spring 绑定出的 `safe-output.rules[].keys`、`safe-output.ignore.keys`、自定义 `MaskStrategy` Bean 和 `safe-output.log.*` 选项。未超过 `safe-output.log.max-message-length` 的日志会处理所有匹配的 key-value；超过长度限制时整条日志 fail-open 返回原文。
+
 regex fallback 命中后可提取 nearbyKey 规则线索。线索和报告只保存 key、type、次数、时间和脱敏后的 evidence，不保存敏感原文或完整日志。生成的规则建议默认 `autoApply=false`，需要接入方人工确认。
 
-`%safeOutputMsg` 支持 `enabled`、`regexFallback`、`maxMessageLength`、`maxValueLength` 选项:
+无 Spring 环境直接使用 log4j2 模块时，`%safeOutputMsg` 支持 `enabled`、`regexFallback`、`maxMessageLength`、`maxValueLength` 等 pattern 选项:
 
 ```xml
 <PatternLayout pattern="%safeOutputMsg{regexFallback=false,maxMessageLength=5000,maxValueLength=300}%n"/>

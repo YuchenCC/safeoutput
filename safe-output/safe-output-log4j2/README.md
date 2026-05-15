@@ -5,6 +5,7 @@
 ## 职责
 
 - 通过 `SafeOutputMessagePatternConverter` 接入 Log4j2 `PatternLayout`。
+- 通过 `SafeOutputLog4j2Runtime` 接收 starter 注册的 Spring 规则、策略和日志选项。
 - 通过 `SafeOutputLogMessageMasker` 处理 JSON-like 和 key-value 日志片段。
 - key-value 脱敏复用 `rules.keys` 到类型标签的映射，支持内置和自定义策略。
 - 对没有字段名上下文的手机号、邮箱、合法大陆身份证号执行可选 regex fallback。
@@ -29,11 +30,14 @@
 - `maxValueLength`: 超过该长度的单个值不处理，默认 `300`。
 - `maxRuleKeys`: 参与日志 key-value 匹配的字段名上限，默认 `128`；超限时跳过 key-value 规则。
 
+通过 `safe-output-spring-boot-starter` 使用时，starter 会在 Spring 启动后注册 `safe-output.rules[].keys`、`safe-output.ignore.keys`、自定义 `MaskStrategy` Bean 和 `safe-output.log.*` 选项；无 Spring 注册时，converter 使用本模块默认规则和 pattern 选项。
+
 ## 边界
 
 - key-value 规则依赖字段名，例如 `mobile=13800138000` 或 `"email":"foo@example.com"`。
 - key-value 支持 `key=value`、`key: value`、`key = value`、`key : value`，key 和 value 可使用单引号、双引号或不带引号。
 - `ignore.keys` 命中时优先跳过日志 key-value 脱敏；`rules.paths` 不作为日志文本匹配依据。
+- 未超过 `maxMessageLength` 的日志会遍历处理多个 key-value；超过该限制时整条日志 fail-open 返回原文。
 - key-value 规则在 `SafeOutputLogMessageMasker` 初始化时构建字段名缓存；单条日志处理不动态拼接或编译规则集合。
 - regex fallback 只覆盖手机号、邮箱和通过轻量格式、日期、年份及可选校验位检查的大陆身份证号。
 - fallback 规则线索不会保存命中值或完整日志；已配置 `rules.keys` 的 key 不重复生成线索。

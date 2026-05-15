@@ -6,7 +6,7 @@
 
 ## 日志脱敏完整调用链
 
-Log4j2 PatternLayout `%safeOutputMsg{...}` -> `SafeOutputMessagePatternConverter.newInstance` -> `SafeOutputLogMessageMasker.mask` -> key-value/JSON-like 正则匹配 -> `keyValueMatches` 查规则 -> 策略脱敏 -> `maskFallback` 扫 mobile/email/idCard -> 输出日志 message。风险点：converter 不由 Spring 创建，默认不读取 `safe-output.rules[]`。
+Log4j2 PatternLayout `%safeOutputMsg{...}` -> `SafeOutputMessagePatternConverter.newInstance` -> 优先从 `SafeOutputLog4j2Runtime` 读取 starter 注册的 `MaskRuleMatcher` / `MaskStrategyRegistry` / log 选项，无 Spring 注册时回退默认规则 -> `SafeOutputLogMessageMasker.mask` -> key-value/JSON-like 正则匹配 -> `keyValueMatches` 查规则 -> 策略脱敏 -> `maskFallback` 扫 mobile/email/idCard -> 输出日志 message。风险点：runtime bridge 是进程级静态配置，适合单应用上下文；超过 `maxMessageLength` 的日志整条 fail-open。
 
 ## 配置加载与规则匹配链路
 
