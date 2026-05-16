@@ -14,6 +14,8 @@ R2 扩展了 String 类型标签、自定义策略、主动脱敏、Response 风
 
 ## 引用方式
 
+完整业务接入步骤见 [组件接入手册](doc/component-integration-guide.md)。
+
 Maven:
 
 ```xml
