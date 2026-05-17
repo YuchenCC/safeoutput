@@ -206,13 +206,15 @@ public final class ObjectMasker {
             MaskingSummary summary) {
         try {
             Optional<MaskStrategy> strategy = strategyRegistry.find(match.getMaskType());
+            String effectiveType = match.getMaskType();
             if (!strategy.isPresent()) {
                 recordUnknownType(match.getMaskType());
-                return value;
+                strategy = defaultStrategy();
+                effectiveType = MaskTypes.DEFAULT;
             }
             long startedAt = System.nanoTime();
             MaskResult result = strategy.get().apply(MaskContext.builder()
-                    .maskType(match.getMaskType())
+                    .maskType(effectiveType)
                     .scene(scene)
                     .path(path)
                     .fieldName(key)
@@ -235,11 +237,20 @@ public final class ObjectMasker {
     }
 
     private void recordUnknownType(String type) {
-        // 未知类型默认 skip，但保留告警和聚合统计，帮助定位配置里拼错或未注册的策略。
-        LOGGER.warning("Skip masking because no strategy registered for type " + MaskTypes.normalize(type));
+        // 未知类型回退 DEFAULT，但保留告警和聚合统计，帮助定位配置里拼错或未注册的策略。
+        LOGGER.warning("Fallback masking to default because no strategy registered for type "
+                + MaskTypes.normalize(type));
         if (unknownTypeRecorder != null) {
             unknownTypeRecorder.recordUnknownType(type, MaskScene.RESPONSE);
         }
+    }
+
+    private Optional<MaskStrategy> defaultStrategy() {
+        Optional<MaskStrategy> strategy = strategyRegistry.find(MaskTypes.DEFAULT);
+        if (strategy.isPresent()) {
+            return strategy;
+        }
+        return Optional.of(BuiltInMaskStrategies.get(MaskTypes.DEFAULT));
     }
 
     private static List<Field> fields(Class<?> type) {

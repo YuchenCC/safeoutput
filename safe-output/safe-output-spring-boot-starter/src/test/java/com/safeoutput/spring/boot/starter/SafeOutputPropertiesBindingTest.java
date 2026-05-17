@@ -34,8 +34,6 @@ class SafeOutputPropertiesBindingTest {
             assertTrue(properties.getManual().getStrongScan().getTypes().isEmpty());
             assertFalse(properties.getLog().getRegexFallback().isEnabled());
             assertTrue(properties.getLog().getRegexFallback().isIdCardCheckCodeEnabled());
-            assertEquals(SafeOutputProperties.UnknownTypePolicy.SKIP,
-                    properties.getStrategy().getUnknownTypePolicy());
             assertTrue(properties.getRules().isEmpty());
             assertTrue(properties.getIgnore().getKeys().isEmpty());
         });
@@ -51,7 +49,6 @@ class SafeOutputPropertiesBindingTest {
                         "safe-output.mask-char=#",
                         "safe-output.max-depth=4",
                         "safe-output.max-collection-size=25",
-                        "safe-output.strategy.unknown-type-policy=SKIP",
                         "safe-output.rules[0].name=customerMobile",
                         "safe-output.rules[0].keys[0]=mobile",
                         "safe-output.rules[0].keys[1]=phone",
@@ -93,9 +90,6 @@ class SafeOutputPropertiesBindingTest {
                     assertEquals("#", properties.getMaskChar());
                     assertEquals(4, properties.getMaxDepth());
                     assertEquals(25, properties.getMaxCollectionSize());
-                    assertEquals(SafeOutputProperties.UnknownTypePolicy.SKIP,
-                            properties.getStrategy().getUnknownTypePolicy());
-
                     assertEquals("customerMobile", properties.getRules().get(0).getName());
                     assertEquals(MaskTypes.MOBILE, properties.getRules().get(0).getType());
                     assertFalse(properties.getRules().get(0).isEnabled());

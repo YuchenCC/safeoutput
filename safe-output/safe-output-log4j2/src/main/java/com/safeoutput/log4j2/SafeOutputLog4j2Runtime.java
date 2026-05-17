@@ -2,6 +2,7 @@ package com.safeoutput.log4j2;
 
 import com.safeoutput.core.MaskRuleMatcher;
 import com.safeoutput.core.MaskStrategyRegistry;
+import com.safeoutput.core.UnknownTypeRecorder;
 
 /**
  * Runtime bridge used by the Spring Boot starter to supply configured log masking dependencies.
@@ -16,12 +17,20 @@ public final class SafeOutputLog4j2Runtime {
     public static void configure(MaskRuleMatcher ruleMatcher, MaskStrategyRegistry strategyRegistry,
             boolean enabled, int maxMessageLength, int maxValueLength, boolean regexFallbackEnabled,
             boolean idCardCheckCodeEnabled, boolean keyValueRuleEnabled, int maxRuleKeys) {
+        configure(ruleMatcher, strategyRegistry, enabled, maxMessageLength, maxValueLength, regexFallbackEnabled,
+                idCardCheckCodeEnabled, keyValueRuleEnabled, maxRuleKeys, null);
+    }
+
+    public static void configure(MaskRuleMatcher ruleMatcher, MaskStrategyRegistry strategyRegistry,
+            boolean enabled, int maxMessageLength, int maxValueLength, boolean regexFallbackEnabled,
+            boolean idCardCheckCodeEnabled, boolean keyValueRuleEnabled, int maxRuleKeys,
+            UnknownTypeRecorder unknownTypeRecorder) {
         if (ruleMatcher == null || strategyRegistry == null) {
             reset();
             return;
         }
         configuration = new Configuration(ruleMatcher, strategyRegistry, enabled, maxMessageLength, maxValueLength,
-                regexFallbackEnabled, idCardCheckCodeEnabled, keyValueRuleEnabled, maxRuleKeys);
+                regexFallbackEnabled, idCardCheckCodeEnabled, keyValueRuleEnabled, maxRuleKeys, unknownTypeRecorder);
     }
 
     public static void reset() {
@@ -42,7 +51,8 @@ public final class SafeOutputLog4j2Runtime {
         }
         return new SafeOutputLogMessageMasker(current.ruleMatcher, current.strategyRegistry,
                 current.maxMessageLength, current.maxValueLength, current.regexFallbackEnabled,
-                current.idCardCheckCodeEnabled, current.keyValueRuleEnabled, current.maxRuleKeys);
+                current.idCardCheckCodeEnabled, current.keyValueRuleEnabled, current.maxRuleKeys,
+                current.unknownTypeRecorder);
     }
 
     private static final class Configuration {
@@ -65,9 +75,12 @@ public final class SafeOutputLog4j2Runtime {
 
         private final int maxRuleKeys;
 
+        private final UnknownTypeRecorder unknownTypeRecorder;
+
         private Configuration(MaskRuleMatcher ruleMatcher, MaskStrategyRegistry strategyRegistry, boolean enabled,
                 int maxMessageLength, int maxValueLength, boolean regexFallbackEnabled,
-                boolean idCardCheckCodeEnabled, boolean keyValueRuleEnabled, int maxRuleKeys) {
+                boolean idCardCheckCodeEnabled, boolean keyValueRuleEnabled, int maxRuleKeys,
+                UnknownTypeRecorder unknownTypeRecorder) {
             this.ruleMatcher = ruleMatcher;
             this.strategyRegistry = strategyRegistry;
             this.enabled = enabled;
@@ -77,6 +90,7 @@ public final class SafeOutputLog4j2Runtime {
             this.idCardCheckCodeEnabled = idCardCheckCodeEnabled;
             this.keyValueRuleEnabled = keyValueRuleEnabled;
             this.maxRuleKeys = maxRuleKeys;
+            this.unknownTypeRecorder = unknownTypeRecorder;
         }
     }
 }

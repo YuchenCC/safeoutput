@@ -29,12 +29,22 @@ class SafeOutputMaskServiceTest {
     }
 
     @Test
-    void unknownTypeAndStrategyFailureReturnOriginalValue() {
-        SafeOutputMaskService unknown = new DefaultSafeOutputMaskService(MaskStrategyRegistry.withBuiltIns());
+    void unknownTypeFallsBackToDefaultAndStrategyFailureReturnsOriginalValue() {
+        AtomicInteger unknownCount = new AtomicInteger();
+        SafeOutputMaskService unknown = new DefaultSafeOutputMaskService(MaskStrategyRegistry.withBuiltIns(),
+                null, null, null, new UnknownTypeRecorder() {
+                    @Override
+                    public void recordUnknownType(String type, MaskScene scene) {
+                        if ("mobilem".equals(type) && scene == MaskScene.MANUAL) {
+                            unknownCount.incrementAndGet();
+                        }
+                    }
+                });
         SafeOutputMaskService broken = new DefaultSafeOutputMaskService(MaskStrategyRegistry.withBuiltIns(
                 Arrays.asList(new BrokenStrategy())));
 
-        assertEquals("13812345678", unknown.mask("13812345678", "mobileM"));
+        assertEquals("****", unknown.mask("13812345678", "mobileM"));
+        assertEquals(1, unknownCount.get());
         assertEquals("secret", broken.mask("secret", "BROKEN"));
     }
 

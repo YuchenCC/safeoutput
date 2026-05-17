@@ -121,10 +121,10 @@ public final class BuiltInMaskStrategies {
     }
 
     private static String maskDefault(String rawValue) {
-        if (rawValue.length() <= 4) {
+        if (rawValue.isEmpty()) {
             return rawValue;
         }
-        return rawValue.substring(0, 2) + "****" + rawValue.substring(rawValue.length() - 2);
+        return "****";
     }
 
     private static boolean startsWithChinese(String value) {

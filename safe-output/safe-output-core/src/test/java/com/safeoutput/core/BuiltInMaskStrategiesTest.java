@@ -124,11 +124,11 @@ class BuiltInMaskStrategiesTest {
     }
 
     @Test
-    void masksDefaultByKeepingEdgesForReadableContext() {
-        assertMasked(MaskType.DEFAULT, "abcdef", "ab****ef");
+    void masksDefaultByReplacingWholeContent() {
+        assertMasked(MaskType.DEFAULT, "abcdef", "****");
         assertUnchanged(MaskType.DEFAULT, null);
         assertUnchanged(MaskType.DEFAULT, "");
-        assertUnchanged(MaskType.DEFAULT, "abc");
+        assertMasked(MaskType.DEFAULT, "abc", "****");
     }
 
     private static void assertMasked(MaskType type, String rawValue, String expectedValue) {

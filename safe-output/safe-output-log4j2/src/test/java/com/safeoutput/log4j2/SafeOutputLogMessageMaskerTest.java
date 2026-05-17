@@ -6,15 +6,18 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import com.safeoutput.core.MaskRule;
 import com.safeoutput.core.MaskRuleMatcher;
 import com.safeoutput.core.MaskContext;
+import com.safeoutput.core.MaskScene;
 import com.safeoutput.core.InMemoryLogRuleSuggestionCollector;
 import com.safeoutput.core.LogRuleSuggestionMetric;
 import com.safeoutput.core.MaskStrategy;
 import com.safeoutput.core.MaskStrategyRegistry;
 import com.safeoutput.core.MaskTypes;
+import com.safeoutput.core.UnknownTypeRecorder;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.jupiter.api.Test;
 
@@ -97,15 +100,24 @@ class SafeOutputLogMessageMaskerTest {
     }
 
     @Test
-    void unknownKeyValueTypeSkipsWithoutDefaultFallback() {
+    void unknownKeyValueTypeFallsBackToDefault() {
+        AtomicInteger unknownCount = new AtomicInteger();
         SafeOutputLogMessageMasker custom = new SafeOutputLogMessageMasker(
                 MaskRuleMatcher.withConfiguredRules(Arrays.asList(MaskRule.configured("custom")
                         .keys(Arrays.asList("customToken"))
                         .type("mobileM")
                         .build())),
-                MaskStrategyRegistry.withBuiltIns());
+                MaskStrategyRegistry.withBuiltIns(), new UnknownTypeRecorder() {
+                    @Override
+                    public void recordUnknownType(String type, MaskScene scene) {
+                        if ("mobilem".equals(type) && scene == MaskScene.LOG) {
+                            unknownCount.incrementAndGet();
+                        }
+                    }
+                });
 
-        assertEquals("customToken=abcdef123456", custom.mask("customToken=abcdef123456"));
+        assertEquals("customToken=****", custom.mask("customToken=abcdef123456"));
+        assertEquals(1, unknownCount.get());
     }
 
     @Test

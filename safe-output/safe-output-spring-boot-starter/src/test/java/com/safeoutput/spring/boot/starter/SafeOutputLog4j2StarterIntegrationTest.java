@@ -1,11 +1,13 @@
 package com.safeoutput.spring.boot.starter;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.safeoutput.core.MaskContext;
 import com.safeoutput.core.MaskStrategy;
 import com.safeoutput.log4j2.SafeOutputLog4j2Runtime;
+import com.safeoutput.report.MaskMetricsCollector;
 import com.safeoutput.spring.boot.autoconfigure.SafeOutputAutoConfiguration;
 
 import org.apache.logging.log4j.core.LogEvent;
@@ -114,18 +116,21 @@ class SafeOutputLog4j2StarterIntegrationTest {
     }
 
     @Test
-    void unknownSpringCustomTypeSkipsRealLog4j2ConverterValue() {
+    void unknownSpringCustomTypeFallsBackToDefaultInRealLog4j2ConverterValue() {
         contextRunner
                 .withPropertyValues(
                         "safe-output.rules[0].name=customToken",
                         "safe-output.rules[0].keys[0]=customToken",
-                        "safe-output.rules[0].type=mobileM")
+                        "safe-output.rules[0].type=mobileM",
+                        "safe-output.report.enabled=true")
                 .run(context -> {
                     PatternLayout layout = safeOutputLayout();
 
                     String formatted = layout.toSerializable(event("customToken=abcdef123456"));
 
-                    assertTrue(formatted.contains("customToken=abcdef123456"));
+                    assertTrue(formatted.contains("customToken=****"));
+                    assertEquals(Long.valueOf(1L), context.getBean(MaskMetricsCollector.class)
+                            .snapshot().getUnknownTypeCounts().get("mobilem"));
                 });
     }
 

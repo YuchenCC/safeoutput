@@ -122,7 +122,7 @@ class ObjectMaskerTest {
     }
 
     @Test
-    void skipsUnknownRuleTypeWithoutFallingBackToDefaultAndRecordsIt() {
+    void fallsBackToDefaultForUnknownRuleTypeAndRecordsIt() {
         AtomicInteger unknownCount = new AtomicInteger();
         ObjectMasker masker = new ObjectMasker(MaskStrategyRegistry.withBuiltIns(),
                 MaskRuleMatcher.withConfiguredRules(Arrays.asList(MaskRule.configured("custom")
@@ -144,7 +144,7 @@ class ObjectMaskerTest {
 
         Map<?, ?> masked = (Map<?, ?>) masker.mask(payload);
 
-        assertEquals("abcdef123456", masked.get("customToken"));
+        assertEquals("****", masked.get("customToken"));
         assertEquals(1, unknownCount.get());
     }
 

@@ -18,6 +18,8 @@ public final class DefaultSafeOutputMaskService implements SafeOutputMaskService
 
     private final MaskEventRecorder maskEventRecorder;
 
+    private final UnknownTypeRecorder unknownTypeRecorder;
+
     public DefaultSafeOutputMaskService(MaskStrategyRegistry strategyRegistry) {
         this(strategyRegistry, null);
     }
@@ -33,8 +35,15 @@ public final class DefaultSafeOutputMaskService implements SafeOutputMaskService
 
     public DefaultSafeOutputMaskService(MaskStrategyRegistry strategyRegistry, ObjectMasker objectMasker,
             Collection<String> strongFallbackTypes, MaskEventRecorder maskEventRecorder) {
+        this(strategyRegistry, objectMasker, strongFallbackTypes, maskEventRecorder, null);
+    }
+
+    public DefaultSafeOutputMaskService(MaskStrategyRegistry strategyRegistry, ObjectMasker objectMasker,
+            Collection<String> strongFallbackTypes, MaskEventRecorder maskEventRecorder,
+            UnknownTypeRecorder unknownTypeRecorder) {
         this.strategyRegistry = strategyRegistry == null ? MaskStrategyRegistry.withBuiltIns() : strategyRegistry;
         this.maskEventRecorder = maskEventRecorder;
+        this.unknownTypeRecorder = unknownTypeRecorder;
         this.objectMasker = objectMasker == null
                 ? new ObjectMasker(this.strategyRegistry, MaskRuleMatcher.withDefaultRules(),
                         ObjectMaskerOptions.defaults())
@@ -52,20 +61,23 @@ public final class DefaultSafeOutputMaskService implements SafeOutputMaskService
         }
         try {
             Optional<MaskStrategy> strategy = strategyRegistry.find(type);
+            String effectiveType = type;
             if (!strategy.isPresent()) {
-                LOGGER.warning("Skip manual masking because no strategy registered for type "
+                LOGGER.warning("Fallback manual masking to default because no strategy registered for type "
                         + MaskTypes.normalize(type));
-                return value;
+                recordUnknownType(type);
+                strategy = defaultStrategy();
+                effectiveType = MaskTypes.DEFAULT;
             }
             long startedAt = System.nanoTime();
             // 指定 type 主动脱敏只按类型标签找策略，不做字段规则匹配或 regex 扫描。
             String masked = strategy.get().mask(value, MaskContext.builder()
-                    .maskType(type)
+                    .maskType(effectiveType)
                     .scene(MaskScene.MANUAL)
                     .rawValue(value)
                     .build());
             if (!value.equals(masked)) {
-                recordManualMask(type, System.nanoTime() - startedAt);
+                recordManualMask(effectiveType, System.nanoTime() - startedAt);
             }
             return masked;
         } catch (RuntimeException ex) {
@@ -102,5 +114,19 @@ public final class DefaultSafeOutputMaskService implements SafeOutputMaskService
         if (maskEventRecorder != null) {
             maskEventRecorder.recordMask(MaskScene.MANUAL, type, elapsedNanos);
         }
+    }
+
+    private void recordUnknownType(String type) {
+        if (unknownTypeRecorder != null) {
+            unknownTypeRecorder.recordUnknownType(MaskTypes.normalize(type), MaskScene.MANUAL);
+        }
+    }
+
+    private Optional<MaskStrategy> defaultStrategy() {
+        Optional<MaskStrategy> strategy = strategyRegistry.find(MaskTypes.DEFAULT);
+        if (strategy.isPresent()) {
+            return strategy;
+        }
+        return Optional.of(BuiltInMaskStrategies.get(MaskTypes.DEFAULT));
     }
 }

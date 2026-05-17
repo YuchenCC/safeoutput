@@ -89,16 +89,19 @@ public class SafeOutputAutoConfiguration {
     @ConditionalOnMissingBean
     public SafeOutputMaskService safeOutputMaskService(MaskStrategyRegistry maskStrategyRegistry,
             ObjectMasker objectMasker, SafeOutputProperties properties,
-            ObjectProvider<MaskEventRecorder> maskEventRecorders) {
+            ObjectProvider<MaskEventRecorder> maskEventRecorders,
+            ObjectProvider<UnknownTypeRecorder> unknownTypeRecorders) {
         return new DefaultSafeOutputMaskService(maskStrategyRegistry, objectMasker,
-                properties.getManual().getStrongScan().getTypes(), maskEventRecorders.getIfAvailable());
+                properties.getManual().getStrongScan().getTypes(), maskEventRecorders.getIfAvailable(),
+                unknownTypeRecorders.getIfAvailable());
     }
 
     @Bean(destroyMethod = "close")
     public SafeOutputLog4j2RuntimeRegistration safeOutputLog4j2RuntimeRegistration(
             MaskRuleMatcher maskRuleMatcher, MaskStrategyRegistry maskStrategyRegistry,
-            SafeOutputProperties properties) {
-        return new SafeOutputLog4j2RuntimeRegistration(maskRuleMatcher, maskStrategyRegistry, properties);
+            SafeOutputProperties properties, ObjectProvider<UnknownTypeRecorder> unknownTypeRecorders) {
+        return new SafeOutputLog4j2RuntimeRegistration(maskRuleMatcher, maskStrategyRegistry, properties,
+                unknownTypeRecorders);
     }
 
     @Bean
@@ -126,12 +129,13 @@ public class SafeOutputAutoConfiguration {
     public static final class SafeOutputLog4j2RuntimeRegistration implements AutoCloseable {
 
         public SafeOutputLog4j2RuntimeRegistration(MaskRuleMatcher maskRuleMatcher,
-                MaskStrategyRegistry maskStrategyRegistry, SafeOutputProperties properties) {
+                MaskStrategyRegistry maskStrategyRegistry, SafeOutputProperties properties,
+                ObjectProvider<UnknownTypeRecorder> unknownTypeRecorders) {
             SafeOutputProperties.LogProperties log = properties.getLog();
             SafeOutputLog4j2Runtime.configure(maskRuleMatcher, maskStrategyRegistry, log.isEnabled(),
                     log.getMaxMessageLength(), log.getMaxValueLength(), log.getRegexFallback().isEnabled(),
                     log.getRegexFallback().isIdCardCheckCodeEnabled(), log.isKeyValueRuleEnabled(),
-                    log.getMaxRuleKeys());
+                    log.getMaxRuleKeys(), unknownTypeRecorders.getIfAvailable());
         }
 
         @Override
