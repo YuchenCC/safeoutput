@@ -6,11 +6,11 @@
 
 ## 日志脱敏完整调用链
 
-Log4j2 PatternLayout `%safeOutputMsg{...}` -> `SafeOutputMessagePatternConverter.newInstance` -> 优先从 `SafeOutputLog4j2Runtime` 读取 starter 注册的 `MaskRuleMatcher` / `MaskStrategyRegistry` / log 选项，无 Spring 注册时回退默认规则 -> `SafeOutputLogMessageMasker.mask` -> key-value/JSON-like 正则匹配 -> `keyValueMatches` 查规则 -> 策略脱敏 -> `maskFallback` 扫 mobile/email/idCard -> 输出日志 message。风险点：runtime bridge 是进程级静态配置，适合单应用上下文；超过 `maxMessageLength` 的日志整条 fail-open。
+Log4j2 PatternLayout `%safeOutputMsg{...}` -> `SafeOutputMessagePatternConverter.newInstance` -> 优先从 `SafeOutputLog4j2Runtime` 读取 starter 注册的 `MaskRuleMatcher` / `MaskStrategyRegistry` / log 选项，无 Spring 注册时回退默认规则 -> `SafeOutputLogMessageMasker.mask` -> key-value/JSON-like 正则匹配 -> `keyValueMatches` 查规则 -> 策略脱敏 -> `maskFallback` 扫 mobile/email/idCard -> 输出日志 message。风险点：runtime bridge 是进程级静态配置，适合单应用上下文；starter 中 `safe-output.rules.default-enabled=false` 会让默认 key 不进入日志 key-value 匹配；超过 `maxMessageLength` 的日志整条 fail-open。
 
 ## 配置加载与规则匹配链路
 
-`SafeOutputProperties` 绑定 `safe-output.rules[]` / `ignore.*` -> `SafeOutputAutoConfiguration.maskRuleMatcher` 构造 `MaskRule.configured` -> `MaskRuleMatcher.builder` -> `decide` 固定优先级 -> 输出 `RuleMatch` 或 empty。风险点：配置规则目前低于字段注解；path 只支持精确等值匹配。
+`SafeOutputProperties` 绑定 `safe-output.rules[]` / `ignore.*`，`SafeOutputAutoConfiguration.maskRuleMatcher` 从 Environment 读取 `safe-output.rules.default-enabled` -> 构造 `MaskRule.configured` -> `MaskRuleMatcher.builder` -> `decide` 固定优先级 -> 输出 `RuleMatch` 或 empty。风险点：配置规则目前低于字段注解；path 只支持精确等值匹配；默认规则开关只影响内置默认规则，不影响配置规则和注解。
 
 ## 注解解析链路
 

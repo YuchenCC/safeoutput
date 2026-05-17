@@ -10,7 +10,7 @@
 
 ## What to build
 
-实现 Rule 匹配能力，支持默认规则库、用户配置 rules、字段名 key 匹配和字段路径 path 匹配。
+实现 Rule 匹配能力，支持默认规则库、用户配置 rules、字段名 key 匹配和字段路径 path 匹配。默认规则库需要支持总开关，允许老系统通过配置关闭全部默认字段规则，避免字段名历史混乱导致误脱敏。
 
 ## Acceptance criteria
 
@@ -18,8 +18,14 @@
 - [x] 用户配置可补充或覆盖默认规则。
 - [x] 支持 rule enabled 开关。
 - [x] 输出匹配结果包含命中的 MaskType 和规则来源。
+- [x] 默认规则库开关默认开启，保持现有默认字段规则行为。
+- [x] 配置 `safe-output.rules.default-enabled=false` 后，默认规则不再命中。
+- [x] 关闭默认规则不影响用户配置 rules、注解规则、ignore 和匹配结果中的规则来源。
 
 ## Test requirements
 
 - 测试 key/path/default rule 命中。
 - 测试用户配置覆盖默认规则和禁用规则。
+- 测试默认规则开关默认开启。
+- 测试关闭默认规则后 `mobile`、`email`、`password` 等默认 key 不命中。
+- 测试关闭默认规则后用户配置 key/path 仍命中。

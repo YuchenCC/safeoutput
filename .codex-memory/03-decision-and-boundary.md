@@ -9,12 +9,13 @@
 - 脱敏异常不能影响主业务：Response、Object、Log、Manual、Report 均采用 fail-open 或记录失败指标。
 - 老项目即插即用优先：Java 8、Spring Boot 2.7.18、`spring.factories`、starter 聚合内部模块，支持 `single-jar` profile。
 - 脱敏规则优先级：`MaskRuleMatcher.decide` 当前确认顺序为 API ignore / 字段 ignore > 注解 > 配置/默认规则 > regex fallback；后续改动需同步测试该优先级边界。
+- 默认规则库可通过 starter 配置 `safe-output.rules.default-enabled=false` 关闭；关闭后只移除内置默认规则，不影响注解、用户配置 rules、ignore 或 regex fallback。
 - Spring Boot 2.x 兼容优先：使用 `spring.factories` 和 `spring-boot-autoconfigure`，未迁移 Boot 3 `AutoConfiguration.imports`。
 
 ## 额外边界
 
 - 未知脱敏类型默认 `warn + skip`，不自动回退到 `DEFAULT`。
-- 默认字段规则只覆盖语义明确字段名，`name/id/code/no` 这类歧义字段需配置或注解。
+- 默认字段规则只覆盖语义明确字段名，`name/id/code/no` 这类歧义字段需配置或注解；老系统担心默认 key 误伤时应关闭默认规则库并显式配置。
 - Log4j2 converter 由日志系统创建，starter 通过 `SafeOutputLog4j2Runtime` 做进程级桥接，把 Spring 规则、策略和 log 选项提供给真实 `%safeOutputMsg`；无 Spring 注册时仍使用 `%safeOutputMsg{...}` options 和默认规则。
 - 日志长文本只在 `maxMessageLength` 限制内完整处理多个 key-value 和 fallback；超过限制整条 fail-open，避免不可控扫描成本。
 - 报告只做聚合快照和建议生成，不做自动治理决策。

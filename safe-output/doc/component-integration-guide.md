@@ -44,7 +44,38 @@ class CustomerController {
 }
 ```
 
-常见字段名会按默认规则脱敏，例如 `mobile`、`phone`、`email`、`idCard`、`bankCard`、`password`、`address`。`name`、`id`、`code`、`no` 等歧义字段不会仅凭字段名默认脱敏，需要使用注解或配置规则明确声明。
+默认规则按字段名精确匹配，当前内置明细如下：
+
+| 默认规则 | 字段名 | 脱敏类型 |
+|---|---|---|
+| `default.mobile` | `mobile`、`phone`、`telephone`、`tel`、`userMobile` | `MOBILE` |
+| `default.id-card` | `idCard`、`certNo`、`identityNo`、`certificateNo` | `ID_CARD` |
+| `default.bank-card` | `bankCard`、`cardNo`、`bankNo` | `BANK_CARD` |
+| `default.email` | `email`、`mail` | `EMAIL` |
+| `default.password` | `password`、`secret`、`token` | `PASSWORD` |
+
+`name`、`id`、`code`、`no`、`address` 等字段不会仅凭字段名默认脱敏，需要使用注解或配置规则明确声明。
+
+老系统如果存在字段名历史混乱、默认 key 容易误伤的情况，可以关闭默认规则库。关闭后只保留注解规则和 `safe-output.rules[]` 中显式声明的用户规则。
+
+```yaml
+safe-output:
+  rules:
+    default-enabled: false
+```
+
+如果在同一个 YAML 文件中还要声明自定义规则，可以使用带引号的索引 key，避免 `rules` 同时写成对象和数组：
+
+```yaml
+safe-output:
+  rules:
+    default-enabled: false
+    "[0]":
+      name: customerMobile
+      keys:
+        - customerMobile
+      type: MOBILE
+```
 
 全局开关：
 
@@ -455,6 +486,7 @@ safe-output:
 | `log.regex-fallback.types` | 空 | 日志兜底正则类型 |
 | `manual.strong-scan.types` | 空 | 追加强扫描类型 |
 | `strategy.unknown-type-policy` | `SKIP` | 未知 type 处理策略 |
+| `rules.default-enabled` | `true` | 是否启用内置默认字段规则 |
 
 ## 9. 安全边界
 
@@ -475,7 +507,7 @@ safe-output:
 
 ### 10.2 字段没有命中默认规则
 
-默认规则只覆盖语义明确的字段名。对 `name`、`id`、`code`、`no` 等字段，需要使用 `@Desensitize` 或 `safe-output.rules[]` 显式声明。
+默认规则只覆盖第 2 节列出的字段名。对 `name`、`id`、`code`、`no`、`address` 等字段，需要使用 `@Desensitize` 或 `safe-output.rules[]` 显式声明。如果已配置 `safe-output.rules.default-enabled=false`，所有默认字段规则都会关闭。
 
 ### 10.3 配置规则没有生效
 
@@ -487,7 +519,7 @@ safe-output:
 
 ### 10.5 日志没有脱敏
 
-确认业务日志 pattern 中使用了 `%safeOutputMsg` 或 `%safeOutputMessage`，并且 `safe-output.log.enabled=true`。如果日志字段只配置在 `rules[].paths` 中，不会参与日志文本匹配；日志 key-value 脱敏需要配置 `rules[].keys` 或命中默认字段名。
+确认业务日志 pattern 中使用了 `%safeOutputMsg` 或 `%safeOutputMessage`，并且 `safe-output.log.enabled=true`。如果日志字段只配置在 `rules[].paths` 中，不会参与日志文本匹配；日志 key-value 脱敏需要配置 `rules[].keys` 或命中默认字段名。若 `safe-output.rules.default-enabled=false`，默认字段名不会参与日志 key-value 脱敏。
 
 ### 10.6 日志中孤立手机号或邮箱没有脱敏
 
