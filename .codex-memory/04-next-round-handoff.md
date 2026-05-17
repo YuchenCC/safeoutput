@@ -23,6 +23,7 @@
 
 ## 第三轮切入建议
 
+- 日志长度策略增强：新增 R3 PRD `doc/prd/safe-output-r3-prd.md`，要求支持 `maxMessageLength` 整条超限跳过模式与 `max-scan-length` 前缀扫描窗口模式切换；默认应兼容 R2，不截断最终日志输出，不保存原始日志。
 - 增强 Demo：从 `safe-output-demo/src/main/resources/static/index.html`、`DemoReportController`、`DemoManualMaskController` 切入。
 - 增强风险画像：从 `ResponseRiskAnalyzer`、`ApiMaskMetrics`、`ResponseRiskApiProfile`、`MaskReportExporter.toJson` 切入。
 - 增强统计图表：优先扩展 `DemoReportController.dashboard` 返回结构，再更新 `static/index.html`。
@@ -48,4 +49,3 @@
 - 指定 demo：`cd safe-output && mvn -pl safe-output-demo -am test`
 - 指定 starter：`cd safe-output && mvn -pl safe-output-spring-boot-starter -am test`
 - 发布前完整验证：`cd safe-output && mvn verify`
-
