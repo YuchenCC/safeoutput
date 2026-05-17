@@ -63,6 +63,24 @@ class MaskRuleMatcherTest {
     }
 
     @Test
+    void pathRulesSupportAnyNumericCollectionIndexWildcard() {
+        MaskRuleMatcher matcher = MaskRuleMatcher.withConfiguredRules(Arrays.asList(
+                MaskRule.configured("itemTitle")
+                        .paths(Arrays.asList("$.items[*].title"))
+                        .type(MaskType.DEFAULT)
+                        .build()));
+
+        assertMatch(matcher.match("title", "$.items[0].title"), MaskType.DEFAULT, "itemTitle",
+                RuleSource.CONFIGURED);
+        assertMatch(matcher.match("title", "$.items[12].title"), MaskType.DEFAULT, "itemTitle",
+                RuleSource.CONFIGURED);
+
+        assertFalse(matcher.match("title", "$.items.title").isPresent());
+        assertFalse(matcher.match("title", "$.orders[0].title").isPresent());
+        assertFalse(matcher.match("title", "$.items[abc].title").isPresent());
+    }
+
+    @Test
     void defaultRulesCanBeDisabledWithoutDisablingConfiguredRules() {
         MaskRuleMatcher matcher = MaskRuleMatcher.builder()
                 .defaultRulesEnabled(false)
@@ -120,6 +138,17 @@ class MaskRuleMatcherTest {
                 .build()).get();
         assertEquals(RuleAction.IGNORE, fieldIgnored.getAction());
         assertEquals(RuleSource.FIELD_IGNORE, fieldIgnored.getSource());
+
+        MaskRuleMatcher wildcardIgnoreMatcher = MaskRuleMatcher.builder()
+                .ignorePaths(Arrays.asList("$.items[*].title"))
+                .build();
+        RuleMatch wildcardFieldIgnored = wildcardIgnoreMatcher.decide(MaskRuleRequest.builder()
+                .key("title")
+                .path("$.items[0].title")
+                .annotationType(MaskType.DEFAULT)
+                .build()).get();
+        assertEquals(RuleAction.IGNORE, wildcardFieldIgnored.getAction());
+        assertEquals(RuleSource.FIELD_IGNORE, wildcardFieldIgnored.getSource());
 
         RuleMatch annotated = matcher.decide(MaskRuleRequest.builder()
                 .key("plainName")

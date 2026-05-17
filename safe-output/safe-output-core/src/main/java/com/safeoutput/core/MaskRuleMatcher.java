@@ -108,7 +108,7 @@ public final class MaskRuleMatcher {
         if (normalizedKey != null && ignoreKeys.contains(normalizedKey)) {
             return Optional.of(ignore("field-ignore-key", RuleSource.FIELD_IGNORE));
         }
-        if (path != null && ignorePaths.contains(path)) {
+        if (matchesPath(ignorePaths, path)) {
             return Optional.of(ignore("field-ignore-path", RuleSource.FIELD_IGNORE));
         }
         return Optional.empty();
@@ -163,12 +163,68 @@ public final class MaskRuleMatcher {
         }
         for (MaskRule rule : rules) {
             for (String candidate : rule.getPaths()) {
-                if (path.equals(candidate)) {
+                if (pathMatches(candidate, path)) {
                     return Optional.of(toMatch(rule));
                 }
             }
         }
         return Optional.empty();
+    }
+
+    private static boolean matchesPath(Collection<String> candidates, String path) {
+        if (path == null || path.trim().isEmpty()) {
+            return false;
+        }
+        for (String candidate : candidates) {
+            if (pathMatches(candidate, path)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean pathMatches(String candidate, String path) {
+        if (candidate == null) {
+            return false;
+        }
+        if (path.equals(candidate)) {
+            return true;
+        }
+        if (candidate.indexOf("[*]") < 0) {
+            return false;
+        }
+        return wildcardPathMatches(candidate, path);
+    }
+
+    private static boolean wildcardPathMatches(String candidate, String path) {
+        int candidateIndex = 0;
+        int pathIndex = 0;
+        while (candidateIndex < candidate.length()) {
+            int wildcardIndex = candidate.indexOf("[*]", candidateIndex);
+            if (wildcardIndex < 0) {
+                return path.regionMatches(pathIndex, candidate, candidateIndex,
+                        candidate.length() - candidateIndex) && pathIndex + candidate.length() - candidateIndex
+                        == path.length();
+            }
+            if (!path.regionMatches(pathIndex, candidate, candidateIndex, wildcardIndex - candidateIndex)) {
+                return false;
+            }
+            pathIndex += wildcardIndex - candidateIndex;
+            if (pathIndex >= path.length() || path.charAt(pathIndex) != '[') {
+                return false;
+            }
+            pathIndex++;
+            int digitStart = pathIndex;
+            while (pathIndex < path.length() && Character.isDigit(path.charAt(pathIndex))) {
+                pathIndex++;
+            }
+            if (pathIndex == digitStart || pathIndex >= path.length() || path.charAt(pathIndex) != ']') {
+                return false;
+            }
+            pathIndex++;
+            candidateIndex = wildcardIndex + 3;
+        }
+        return pathIndex == path.length();
     }
 
     private static Optional<RuleMatch> matchKey(List<MaskRule> rules, String key) {

@@ -60,6 +60,26 @@ class ObjectMaskerTest {
     }
 
     @Test
+    void pathWildcardMasksTitlesInListsAndArrays() {
+        ObjectMasker masker = new ObjectMasker(MaskStrategyRegistry.withBuiltIns(),
+                MaskRuleMatcher.withConfiguredRules(Arrays.asList(MaskRule.configured("itemTitle")
+                        .paths(Arrays.asList("$.items[*].title", "$.arrayItems[*].title"))
+                        .type(MaskType.DEFAULT)
+                        .build())),
+                ObjectMaskerOptions.defaults());
+        ItemsPayload payload = new ItemsPayload();
+        payload.items = Arrays.asList(title("alpha"), title("beta"));
+        payload.arrayItems = new TitlePayload[] {title("gamma"), title("delta")};
+
+        ItemsPayload masked = (ItemsPayload) masker.mask(payload);
+
+        assertEquals("****", masked.items.get(0).title);
+        assertEquals("****", masked.items.get(1).title);
+        assertEquals("****", masked.arrayItems[0].title);
+        assertEquals("****", masked.arrayItems[1].title);
+    }
+
+    @Test
     void honorsDepthCycleProtectionAndUnsupportedTypes() {
         ObjectMasker masker = new ObjectMasker(MaskStrategyRegistry.withBuiltIns(),
                 MaskRuleMatcher.withDefaultRules(), ObjectMaskerOptions.builder()
@@ -159,6 +179,12 @@ class ObjectMaskerTest {
         return payload;
     }
 
+    private static TitlePayload title(String title) {
+        TitlePayload payload = new TitlePayload();
+        payload.title = title;
+        return payload;
+    }
+
     private static final class CustomerPayload {
 
         private String mobile;
@@ -184,5 +210,17 @@ class ObjectMaskerTest {
     private static final class ContactPayload {
 
         private String mobile;
+    }
+
+    private static final class ItemsPayload {
+
+        private List<TitlePayload> items;
+
+        private TitlePayload[] arrayItems;
+    }
+
+    private static final class TitlePayload {
+
+        private String title;
     }
 }
