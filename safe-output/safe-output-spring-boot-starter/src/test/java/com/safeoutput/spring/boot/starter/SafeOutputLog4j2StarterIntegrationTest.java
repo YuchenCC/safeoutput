@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.safeoutput.core.MaskContext;
 import com.safeoutput.core.MaskStrategy;
+import com.safeoutput.core.MaskTypes;
 import com.safeoutput.log4j2.SafeOutputLog4j2Runtime;
 import com.safeoutput.report.MaskMetricsCollector;
 import com.safeoutput.spring.boot.autoconfigure.SafeOutputAutoConfiguration;
@@ -131,6 +132,35 @@ class SafeOutputLog4j2StarterIntegrationTest {
                     assertTrue(formatted.contains("customToken=****"));
                     assertEquals(Long.valueOf(1L), context.getBean(MaskMetricsCollector.class)
                             .snapshot().getUnknownTypeCounts().get("mobilem"));
+                });
+    }
+
+    @Test
+    void reportCollectorReceivesRealLog4j2FallbackSuggestionsAndLogMetrics() {
+        contextRunner
+                .withPropertyValues(
+                        "safe-output.report.enabled=true",
+                        "safe-output.log.regex-fallback.enabled=true",
+                        "safe-output.rules[0].name=logName",
+                        "safe-output.rules[0].keys[0]=chineseName",
+                        "safe-output.rules[0].type=CHINESE_NAME")
+                .run(context -> {
+                    PatternLayout layout = safeOutputLayout();
+
+                    String formatted = layout.toSerializable(event("chineseName=张三 phoneNo=13812345678"));
+
+                    assertTrue(formatted.contains("chineseName=张*"));
+                    assertTrue(formatted.contains("phoneNo=138****5678"));
+                    assertFalse(formatted.contains("张三"));
+                    assertFalse(formatted.contains("13812345678"));
+                    MaskMetricsCollector collector = context.getBean(MaskMetricsCollector.class);
+                    assertEquals(2L, collector.snapshot().getLogCount());
+                    assertEquals(Long.valueOf(1L), collector.snapshot().getMaskTypeCounts().get("chinese_name"));
+                    assertEquals(Long.valueOf(1L), collector.snapshot().getMaskTypeCounts().get(MaskTypes.MOBILE));
+                    assertEquals(1, collector.snapshotSuggestions().size());
+                    assertEquals("phoneno", collector.snapshotSuggestions().get(0).getKey());
+                    assertEquals(MaskTypes.MOBILE, collector.snapshotSuggestions().get(0).getType());
+                    assertEquals("phoneno=<mobile>", collector.snapshotSuggestions().get(0).getEvidence());
                 });
     }
 

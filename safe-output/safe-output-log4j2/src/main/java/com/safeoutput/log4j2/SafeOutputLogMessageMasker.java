@@ -5,6 +5,7 @@ import com.safeoutput.core.MaskContext;
 import com.safeoutput.core.MainlandIdCards;
 import com.safeoutput.core.LogRuleSuggestionCollector;
 import com.safeoutput.core.LogRuleSuggestionEvent;
+import com.safeoutput.core.MaskEventRecorder;
 import com.safeoutput.core.MaskRuleMatcher;
 import com.safeoutput.core.MaskScene;
 import com.safeoutput.core.MaskStrategy;
@@ -61,6 +62,8 @@ final class SafeOutputLogMessageMasker {
     private final LogRuleSuggestionCollector suggestionCollector;
 
     private final UnknownTypeRecorder unknownTypeRecorder;
+
+    private final MaskEventRecorder maskEventRecorder;
 
     SafeOutputLogMessageMasker() {
         this(DEFAULT_MAX_MESSAGE_LENGTH, DEFAULT_MAX_VALUE_LENGTH, true);
@@ -125,9 +128,18 @@ final class SafeOutputLogMessageMasker {
             int maxMessageLength, int maxValueLength, boolean regexFallbackEnabled, boolean idCardCheckCodeEnabled,
             boolean keyValueRuleEnabled, int maxRuleKeys, LogRuleSuggestionCollector suggestionCollector,
             UnknownTypeRecorder unknownTypeRecorder) {
+        this(ruleMatcher, strategyRegistry, maxMessageLength, maxValueLength, regexFallbackEnabled,
+                idCardCheckCodeEnabled, keyValueRuleEnabled, maxRuleKeys, suggestionCollector, unknownTypeRecorder,
+                null);
+    }
+
+    SafeOutputLogMessageMasker(MaskRuleMatcher ruleMatcher, MaskStrategyRegistry strategyRegistry,
+            int maxMessageLength, int maxValueLength, boolean regexFallbackEnabled, boolean idCardCheckCodeEnabled,
+            boolean keyValueRuleEnabled, int maxRuleKeys, LogRuleSuggestionCollector suggestionCollector,
+            UnknownTypeRecorder unknownTypeRecorder, MaskEventRecorder maskEventRecorder) {
         this(strategyRegistry, maxMessageLength, maxValueLength, regexFallbackEnabled, idCardCheckCodeEnabled,
                 keyValueRuleEnabled, ruleMatcher.logKeyMatches(Math.max(1, maxRuleKeys)), suggestionCollector,
-                unknownTypeRecorder);
+                unknownTypeRecorder, maskEventRecorder);
     }
 
     private SafeOutputLogMessageMasker(MaskRuleMatcher ruleMatcher, MaskStrategyRegistry strategyRegistry,
@@ -139,7 +151,7 @@ final class SafeOutputLogMessageMasker {
     private SafeOutputLogMessageMasker(MaskStrategyRegistry strategyRegistry, int maxMessageLength, int maxValueLength,
             boolean regexFallbackEnabled, boolean idCardCheckCodeEnabled, boolean keyValueRuleEnabled,
             Map<String, RuleMatch> keyValueMatches, LogRuleSuggestionCollector suggestionCollector,
-            UnknownTypeRecorder unknownTypeRecorder) {
+            UnknownTypeRecorder unknownTypeRecorder, MaskEventRecorder maskEventRecorder) {
         this.strategyRegistry = strategyRegistry;
         this.maxMessageLength = Math.max(1, maxMessageLength);
         this.maxValueLength = Math.max(1, maxValueLength);
@@ -150,6 +162,7 @@ final class SafeOutputLogMessageMasker {
                 : java.util.Collections.<String, RuleMatch>emptyMap();
         this.suggestionCollector = suggestionCollector;
         this.unknownTypeRecorder = unknownTypeRecorder;
+        this.maskEventRecorder = maskEventRecorder;
     }
 
     String mask(String message) {
@@ -202,12 +215,16 @@ final class SafeOutputLogMessageMasker {
             effectiveType = MaskTypes.DEFAULT;
         }
         // key-value 命中时只脱敏 value，保留原始 key 和引号形态，降低日志格式兼容风险。
+        long started = System.nanoTime();
         String masked = strategy.get().mask(rawValue, MaskContext.builder()
                 .maskType(effectiveType)
                 .scene(MaskScene.LOG)
                 .fieldName(key)
                 .rawValue(rawValue)
                 .build());
+        if (!rawValue.equals(masked)) {
+            recordLogMask(effectiveType, started);
+        }
         return requote(value, masked);
     }
 
@@ -241,8 +258,10 @@ final class SafeOutputLogMessageMasker {
             if (MaskTypes.ID_CARD.equals(type)) {
                 contextBuilder.path("regex-fallback");
             }
+            long started = System.nanoTime();
             String replacement = strategy.get().mask(rawValue, contextBuilder.build());
             if (!rawValue.equals(replacement)) {
+                recordLogMask(type, started);
                 recordSuggestion(message, matcher.start(), type);
                 matcher.appendReplacement(masked, Matcher.quoteReplacement(replacement));
             }
@@ -299,6 +318,18 @@ final class SafeOutputLogMessageMasker {
     private void recordUnknownType(String type) {
         if (unknownTypeRecorder != null) {
             unknownTypeRecorder.recordUnknownType(MaskTypes.normalize(type), MaskScene.LOG);
+        }
+    }
+
+    private void recordLogMask(String type, long startedNanos) {
+        if (maskEventRecorder == null) {
+            return;
+        }
+        try {
+            maskEventRecorder.recordMask(MaskScene.LOG, MaskTypes.normalize(type),
+                    Math.max(0L, System.nanoTime() - startedNanos));
+        } catch (RuntimeException ex) {
+            // 日志指标采集失败不能影响日志输出。
         }
     }
 

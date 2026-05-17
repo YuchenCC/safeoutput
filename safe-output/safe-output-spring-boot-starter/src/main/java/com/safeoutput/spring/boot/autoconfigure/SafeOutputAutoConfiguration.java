@@ -99,9 +99,10 @@ public class SafeOutputAutoConfiguration {
     @Bean(destroyMethod = "close")
     public SafeOutputLog4j2RuntimeRegistration safeOutputLog4j2RuntimeRegistration(
             MaskRuleMatcher maskRuleMatcher, MaskStrategyRegistry maskStrategyRegistry,
-            SafeOutputProperties properties, ObjectProvider<UnknownTypeRecorder> unknownTypeRecorders) {
+            SafeOutputProperties properties, ObjectProvider<UnknownTypeRecorder> unknownTypeRecorders,
+            ObjectProvider<MaskMetricsCollector> metricsCollectors) {
         return new SafeOutputLog4j2RuntimeRegistration(maskRuleMatcher, maskStrategyRegistry, properties,
-                unknownTypeRecorders);
+                unknownTypeRecorders, metricsCollectors);
     }
 
     @Bean
@@ -130,12 +131,15 @@ public class SafeOutputAutoConfiguration {
 
         public SafeOutputLog4j2RuntimeRegistration(MaskRuleMatcher maskRuleMatcher,
                 MaskStrategyRegistry maskStrategyRegistry, SafeOutputProperties properties,
-                ObjectProvider<UnknownTypeRecorder> unknownTypeRecorders) {
+                ObjectProvider<UnknownTypeRecorder> unknownTypeRecorders,
+                ObjectProvider<MaskMetricsCollector> metricsCollectors) {
             SafeOutputProperties.LogProperties log = properties.getLog();
+            MaskMetricsCollector metricsCollector = metricsCollectors.getIfAvailable();
             SafeOutputLog4j2Runtime.configure(maskRuleMatcher, maskStrategyRegistry, log.isEnabled(),
                     log.getMaxMessageLength(), log.getMaxValueLength(), log.getRegexFallback().isEnabled(),
                     log.getRegexFallback().isIdCardCheckCodeEnabled(), log.isKeyValueRuleEnabled(),
-                    log.getMaxRuleKeys(), unknownTypeRecorders.getIfAvailable());
+                    log.getMaxRuleKeys(), unknownTypeRecorders.getIfAvailable(), metricsCollector,
+                    metricsCollector);
         }
 
         @Override

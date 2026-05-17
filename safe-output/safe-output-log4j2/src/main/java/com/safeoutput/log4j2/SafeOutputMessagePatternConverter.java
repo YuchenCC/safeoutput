@@ -12,24 +12,27 @@ public final class SafeOutputMessagePatternConverter extends LogEventPatternConv
 
     private final boolean enabled;
 
-    private final SafeOutputLogMessageMasker masker;
+    private final ConverterOptions options;
 
-    private SafeOutputMessagePatternConverter(boolean enabled, SafeOutputLogMessageMasker masker) {
+    private volatile SafeOutputLogMessageMasker cachedMasker;
+
+    private volatile long cachedRuntimeVersion = Long.MIN_VALUE;
+
+    private volatile boolean cachedMaskerResolved;
+
+    private SafeOutputMessagePatternConverter(boolean enabled, ConverterOptions options) {
         super("safeOutputMsg", "safeOutputMsg");
         this.enabled = enabled;
-        this.masker = masker;
+        this.options = options;
     }
 
     public static SafeOutputMessagePatternConverter newInstance(String[] options) {
         try {
             ConverterOptions parsedOptions = ConverterOptions.parse(options);
-            SafeOutputLogMessageMasker masker = SafeOutputLog4j2Runtime.createMasker(parsedOptions.enabled,
-                    parsedOptions.maxMessageLength, parsedOptions.maxValueLength, parsedOptions.regexFallback,
-                    parsedOptions.idCardCheckCode, parsedOptions.keyValueRuleEnabled, parsedOptions.maxRuleKeys);
-            return new SafeOutputMessagePatternConverter(parsedOptions.enabled && masker != null, masker);
+            return new SafeOutputMessagePatternConverter(parsedOptions.enabled, parsedOptions);
         } catch (RuntimeException ex) {
             // converter 初始化失败时禁用脱敏，避免日志配置问题影响业务启动或日志输出。
-            return new SafeOutputMessagePatternConverter(false, null);
+            return new SafeOutputMessagePatternConverter(false, new ConverterOptions());
         }
     }
 
@@ -38,14 +41,38 @@ public final class SafeOutputMessagePatternConverter extends LogEventPatternConv
         String message = event == null || event.getMessage() == null
                 ? ""
                 : event.getMessage().getFormattedMessage();
-        if (!enabled || masker == null) {
+        if (!enabled) {
             toAppendTo.append(message);
             return;
         }
         try {
+            SafeOutputLogMessageMasker masker = currentMasker();
+            if (masker == null) {
+                toAppendTo.append(message);
+                return;
+            }
             toAppendTo.append(masker.mask(message));
         } catch (RuntimeException ex) {
             toAppendTo.append(message);
+        }
+    }
+
+    private SafeOutputLogMessageMasker currentMasker() {
+        long runtimeVersion = SafeOutputLog4j2Runtime.version();
+        if (cachedMaskerResolved && cachedRuntimeVersion == runtimeVersion) {
+            return cachedMasker;
+        }
+        synchronized (this) {
+            runtimeVersion = SafeOutputLog4j2Runtime.version();
+            if (cachedMaskerResolved && cachedRuntimeVersion == runtimeVersion) {
+                return cachedMasker;
+            }
+            cachedMasker = SafeOutputLog4j2Runtime.createMasker(options.enabled,
+                    options.maxMessageLength, options.maxValueLength, options.regexFallback,
+                    options.idCardCheckCode, options.keyValueRuleEnabled, options.maxRuleKeys);
+            cachedRuntimeVersion = runtimeVersion;
+            cachedMaskerResolved = true;
+            return cachedMasker;
         }
     }
 
