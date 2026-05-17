@@ -10,7 +10,7 @@ Log4j2 PatternLayout `%safeOutputMsg{...}` -> `SafeOutputMessagePatternConverter
 
 ## 配置加载与规则匹配链路
 
-`SafeOutputProperties` 绑定 `safe-output.rules[]` / `ignore.*`，`SafeOutputAutoConfiguration.maskRuleMatcher` 从 Environment 读取 `safe-output.rules.default-enabled` -> 构造 `MaskRule.configured` -> `MaskRuleMatcher.builder` -> `decide` 固定优先级 -> 输出 `RuleMatch` 或 empty。风险点：配置规则目前低于字段注解；path 只支持精确等值匹配；默认规则开关只影响内置默认规则，不影响配置规则和注解。
+`SafeOutputProperties` 绑定 `safe-output.rules[]` / `ignore.*`，`SafeOutputAutoConfiguration.maskRuleMatcher` 从 Environment 读取 `safe-output.rules.default-enabled` -> 构造 `MaskRule.configured` -> `MaskRuleMatcher.builder` -> `decide` 固定优先级 -> 输出 `RuleMatch` 或 empty。风险点：配置规则目前低于字段注解；path 只支持精确等值匹配和 `[*]` 数字下标段通配，不是完整 JSONPath；默认规则开关只影响内置默认规则，不影响配置规则和注解。
 
 ## 注解解析链路
 
@@ -26,7 +26,7 @@ Log4j2 PatternLayout `%safeOutputMsg{...}` -> `SafeOutputMessagePatternConverter
 
 ## ignore 生效链路
 
-字段级：`safe-output.ignore.keys/paths` -> `MaskRuleMatcher.matchFieldIgnore` -> `RuleAction.IGNORE` -> `ObjectMasker` 不脱敏该字段。接口级：`safe-output.ignore.apis` -> `ApiIgnoreMatcher.match(method,path,RESPONSE)` -> `beforeBodyWrite` 直接返回原 body -> `recordRisk(ignored=true)`。风险点：字段 path 是精确匹配；API ignore 缺少 path/pattern 不会扩大成全局豁免。
+字段级：`safe-output.ignore.keys/paths` -> `MaskRuleMatcher.matchFieldIgnore` -> `RuleAction.IGNORE` -> `ObjectMasker` 不脱敏该字段。接口级：`safe-output.ignore.apis` -> `ApiIgnoreMatcher.match(method,path,RESPONSE)` -> `beforeBodyWrite` 直接返回原 body -> `recordRisk(ignored=true)`。风险点：字段 path 是精确匹配加 `[*]` 数字下标段通配；API ignore 缺少 path/pattern 不会扩大成全局豁免。
 
 ## 异常兜底链路
 

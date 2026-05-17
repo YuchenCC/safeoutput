@@ -103,6 +103,8 @@ public class CustomerResponse {
 
 字段级 ignore 通过 `safe-output.ignore.keys` 或 `safe-output.ignore.paths` 配置。接口级 ignore 通过 `safe-output.ignore.apis` 配置；命中后 response 明文返回，但会记录 ignored 风险统计。
 
+`rules[].paths` 和 `ignore.paths` 使用 Safe Output 的递归路径格式，不是完整 JSONPath：`$` 表示本次被脱敏对象的根节点，`.` 表示字段或 Map key 层级，`[0]`、`[1]` 是集合或数组的实际数字下标，`[*]` 只表示任意数字下标段。示例 `$.items[*].title` 可匹配 `$.items[0].title` 和 `$.items[12].title`，不会匹配 `$.items.title`、`$.orders[0].title` 或 `$.items[abc].title`。不支持 `**`、条件表达式、字段通配或模糊匹配。
+
 ## Log4j2
 
 业务系统使用 Log4j2 时，在 `log4j2.xml` 中使用 `%safeOutputMsg`:

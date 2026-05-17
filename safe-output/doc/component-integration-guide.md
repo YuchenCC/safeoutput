@@ -150,9 +150,17 @@ safe-output:
 |---|---|
 | `name` | 规则名称，用于识别和排查 |
 | `keys` | 按字段名匹配，适合 DTO 字段、Map key |
-| `paths` | 按字段路径精确匹配 |
+| `paths` | 按字段路径匹配，支持精确匹配和 `[*]` 数字下标段通配 |
 | `type` | 脱敏类型，支持内置类型和自定义 String type |
 | `enabled` | 是否启用规则，默认 `true` |
+
+路径格式说明：
+
+- `$` 表示本次被脱敏对象的根节点。
+- `.` 表示字段或 Map key 层级。
+- `[0]`、`[1]` 是集合或数组遍历时生成的实际数字下标。
+- `[*]` 只表示集合或数组任意数字下标段，例如 `$.items[*].title` 可匹配 `$.items[0].title` 和 `$.items[12].title`。
+- `paths` 不是完整 JSONPath，不支持 `**`、条件表达式、字段通配或模糊匹配；除 `[*]` 数字下标通配外，其余部分按路径精确匹配。
 
 规则优先级固定为：字段 ignore、注解、配置规则、默认规则。未知 type 会记录 warning，并回退为 `DEFAULT` 策略兜底脱敏。
 
@@ -484,7 +492,7 @@ safe-output:
 - Response 脱敏异常会 fail-open，返回原始业务结果，避免影响接口可用性。
 - 对象递归支持 Bean、Map、Collection、数组，并带最大深度、集合上限和循环引用保护。
 - Bean 字段脱敏是原地修改；如果业务复用同一个响应对象实例，需要评估副作用。
-- 字段 path 当前按精确匹配处理，不做模糊扩大。
+- 字段 path 按 Safe Output 递归路径匹配，仅支持精确匹配和 `[*]` 数字下标段通配，不做模糊扩大。
 - 日志脱敏只做轻量 JSON-like/key-value 识别和有限 fallback，不强制依赖 JSON Parser。
 - API ignore 可以返回明文，但必须配置明确 reason，并进入风险统计。
 - 统计和报告应只保存聚合信息，不保存原始 response 或敏感字段值。
@@ -502,7 +510,7 @@ safe-output:
 
 ### 10.3 配置规则没有生效
 
-检查 `rules[].enabled` 是否为 `true`，`keys` 是否与字段名或 Map key 一致，`paths` 是否与实际递归路径精确一致。还需要确认 `type` 是否存在对应内置策略或自定义 `MaskStrategy`。
+检查 `rules[].enabled` 是否为 `true`，`keys` 是否与字段名或 Map key 一致，`paths` 是否与实际递归路径一致。集合或数组下标可用 `[*]` 匹配任意数字下标段。还需要确认 `type` 是否存在对应内置策略或自定义 `MaskStrategy`。
 
 ### 10.4 `body-data-path` 配置后仍未脱敏
 

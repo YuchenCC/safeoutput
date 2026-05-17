@@ -36,7 +36,7 @@
 
 - key-value 规则依赖字段名，例如 `mobile=13800138000` 或 `"email":"foo@example.com"`。
 - key-value 支持 `key=value`、`key: value`、`key = value`、`key : value`，key 和 value 可使用单引号、双引号或不带引号。
-- `ignore.keys` 命中时优先跳过日志 key-value 脱敏；`rules.paths` 不作为日志文本匹配依据。
+- `ignore.keys` 命中时优先跳过日志 key-value 脱敏；`rules.paths` 不作为日志文本匹配依据。path 只用于 Response/主动对象递归链路，其中 `$` 表示被脱敏对象根节点，`[*]` 表示任意数字下标段，不是完整 JSONPath。
 - 未超过 `maxMessageLength` 的日志会遍历处理多个 key-value；超过该限制时整条日志 fail-open 返回原文。
 - key-value 规则在 `SafeOutputLogMessageMasker` 初始化时构建字段名缓存；单条日志处理不动态拼接或编译规则集合。
 - regex fallback 只覆盖手机号、邮箱和通过轻量格式、日期、年份及可选校验位检查的大陆身份证号。

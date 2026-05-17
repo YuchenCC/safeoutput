@@ -21,6 +21,7 @@
 - [x] 默认规则库开关默认开启，保持现有默认字段规则行为。
 - [x] 配置 `safe-output.rules.default-enabled=false` 后，默认规则不再命中。
 - [x] 关闭默认规则不影响用户配置 rules、注解规则、ignore 和匹配结果中的规则来源。
+- [x] path 支持 `[*]` 匹配集合/数组任意数字下标。
 
 ## Test requirements
 
@@ -29,3 +30,4 @@
 - 测试默认规则开关默认开启。
 - 测试关闭默认规则后 `mobile`、`email`、`password` 等默认 key 不命中。
 - 测试关闭默认规则后用户配置 key/path 仍命中。
+- 测试 `$.items[*].title` 命中 `$.items[0].title`、`$.items[1].title`，不命中 `$.items.title`、`$.orders[0].title` 或其他字段。

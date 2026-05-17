@@ -96,7 +96,7 @@ private Object maskValue(Object value, String path, String key, int depth, Set<O
         return value;  // 深度限制
     }
     if (value instanceof String)    → maskString(...)
-    if (value instanceof Map)       → maskMap(...)      // 按 key 拼 JSONPath
+    if (value instanceof Map)       → maskMap(...)      // 按 key 拼 Safe Output 递归路径
     if (value instanceof Collection)→ maskCollection(...)
     if (value.getClass().isArray()) → maskArray(...)
     else                            → maskBean(...)     // 反射遍历字段
@@ -121,7 +121,7 @@ private Object maskBean(Object bean, String path, int depth, Set<Object> visitin
 }
 ```
 
-路径格式是 JSONPath 风格（如 `$.user.mobile`），支持 path 精准匹配。
+路径格式是 Safe Output 递归路径，不是完整 JSONPath。`$` 表示本次被脱敏对象的根节点，`.` 表示字段或 Map key 层级，`[0]`、`[1]` 是集合或数组实际数字下标；规则中的 `[*]` 只表示任意数字下标段，例如 `$.items[*].title` 可匹配 `$.items[0].title`。不支持 `**`、条件表达式、字段通配或模糊匹配；除 `[*]` 数字下标通配外，其余部分按路径精确匹配。
 
 ---
 
@@ -227,7 +227,7 @@ HTTP 请求
 | **拦截点** | `ResponseBodyAdvice.beforeBodyWrite`，序列化前，无侵入 |
 | **拦截顺序** | `@Order(Ordered.HIGHEST_PRECEDENCE)`，确保在其他 Advice 之前拿到原始 body |
 | **包装层跳过** | `bodyDataPath` 配置点分路径（如 `data`、`result.data`），只提取并脱敏业务数据，包装层原样保留 |
-| **字段识别** | 字段名 key 匹配（大小写不敏感）+ JSONPath 精准 path 匹配 |
+| **字段识别** | 字段名 key 匹配（大小写不敏感）+ Safe Output 递归 path 匹配，path 支持精确匹配和 `[*]` 数字下标段通配 |
 | **注解支持** | `@Desensitize(type = MaskType.XXX)` 标注在字段上，优先级高于规则 |
 | **循环引用** | `IdentityHashMap` 访问集防止死循环 |
 | **安全降级** | 全链路 fail-open，任何异常均返回原值，不影响业务 |

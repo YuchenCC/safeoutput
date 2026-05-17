@@ -55,10 +55,14 @@ safe-output:
     - name: customMobile
       keys:
         - mobileM
+      paths:
+        - $.items[*].mobileM
       type: mobileM
   ignore:
     keys:
       - plainNote
+    paths:
+      - $.items[*].title
     apis:
       - method: GET
         path: /demo/ignored
@@ -67,6 +71,8 @@ safe-output:
     enabled: true
     directory: target/safe-output-reports
 ```
+
+`rules[].paths` 和 `ignore.paths` 使用 Safe Output 递归路径，不是完整 JSONPath。`$` 表示本次被脱敏对象的根节点，`.` 表示字段或 Map key 层级，`[0]`、`[1]` 是集合或数组实际数字下标，`[*]` 只表示任意数字下标段。除 `[*]` 外按路径精确匹配，不支持 `**`、条件表达式、字段通配或模糊匹配。
 
 ## single-jar profile
 
