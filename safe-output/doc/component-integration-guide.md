@@ -242,6 +242,8 @@ safe-output:
 
 通过 `safe-output-spring-boot-starter` 接入时，Log4j2 converter 会复用 Spring 中的 `safe-output.rules[].keys`、`safe-output.ignore.keys`、自定义 `MaskStrategy` Bean 和 `safe-output.log.*` 选项。业务系统通常不需要单独依赖 `safe-output-log4j2`。
 
+配置优先级需要注意：Spring Boot 应用启动后，starter 会把 `safe-output.log.*` 注册到 Log4j2 runtime bridge。此时 `%safeOutputMsg{maxMessageLength=5000,maxValueLength=300}` 中的长度、fallback、key-value 等局部选项不再作为最终运行值，最终以 YAML / properties 中的 `safe-output.log.*` 为准。XML 中的局部选项主要用于无 Spring runtime bridge、只直接使用 `safe-output-log4j2` 模块的场景；另外，XML 中 `enabled=false` 仍可在 converter 初始化时直接关闭本 pattern 的脱敏。
+
 日志 key-value 脱敏依赖字段名上下文，例如：
 
 ```text
@@ -294,7 +296,7 @@ safe-output:
 - 带字段名上下文的日志 key-value 脱敏不受该配置影响，例如 `idCard=350102199001011234` 命中 `idCard` 规则后仍会按 `ID_CARD` 脱敏，即使末位校验码不合法。
 - converter 初始化或脱敏过程异常时返回原日志消息，避免影响业务日志输出。
 
-无 Spring runtime bridge、只直接使用 log4j2 模块时，也可以在 pattern 中写局部选项：
+无 Spring runtime bridge、只直接使用 log4j2 模块时，也可以在 pattern 中写局部选项；这些局部选项只在未接入 starter runtime bridge 时作为最终配置生效：
 
 ```xml
 <PatternLayout pattern="%safeOutputMsg{enabled=true,regexFallback=false,maxMessageLength=5000,maxValueLength=300}%n"/>
