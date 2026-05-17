@@ -14,7 +14,7 @@
 
 ## 额外边界
 
-- 未知脱敏类型默认 `warn + skip`，不自动回退到 `DEFAULT`。
+- 未知脱敏类型默认 `warn + DEFAULT fallback`，并进入未知类型聚合统计；`DEFAULT` 对非空字符串统一输出 `****`。
 - 默认字段规则只覆盖语义明确字段名，`name/id/code/no` 这类歧义字段需配置或注解；老系统担心默认 key 误伤时应关闭默认规则库并显式配置。
 - Log4j2 converter 由日志系统创建，starter 通过 `SafeOutputLog4j2Runtime` 做进程级桥接，把 Spring 规则、策略和 log 选项提供给真实 `%safeOutputMsg`；无 Spring 注册时仍使用 `%safeOutputMsg{...}` options 和默认规则。
 - 日志长文本只在 `maxMessageLength` 限制内完整处理多个 key-value 和 fallback；超过限制整条 fail-open，避免不可控扫描成本。

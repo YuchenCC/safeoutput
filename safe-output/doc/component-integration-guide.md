@@ -154,7 +154,7 @@ safe-output:
 | `type` | 脱敏类型，支持内置类型和自定义 String type |
 | `enabled` | 是否启用规则，默认 `true` |
 
-规则优先级固定为：字段 ignore、注解、配置规则、默认规则。未知 type 默认跳过当前字段，不会回退为 `DEFAULT`。
+规则优先级固定为：字段 ignore、注解、配置规则、默认规则。未知 type 会记录 warning，并回退为 `DEFAULT` 策略兜底脱敏。
 
 ### 3.3 包装响应体
 
@@ -381,13 +381,7 @@ public class EmployeeResponse {
 }
 ```
 
-未知 type 的当前策略为 `SKIP`，只跳过当前字段并记录未知类型统计，不自动使用 `DEFAULT`。
-
-```yaml
-safe-output:
-  strategy:
-    unknown-type-policy: SKIP
-```
+未知 type 的当前策略为 `DEFAULT fallback`：记录 warning 和未知类型统计后，使用 `DEFAULT` 策略兜底脱敏。
 
 ## 7. 聚合报告
 
@@ -442,8 +436,6 @@ safe-output:
     strong-scan:
       types:
         - BANK_CARD
-  strategy:
-    unknown-type-policy: SKIP
   rules:
     - name: customerMobile
       keys:
@@ -485,7 +477,6 @@ safe-output:
 | `log.regex-fallback.id-card-check-code-enabled` | `true` | 身份证兜底识别是否校验校验位 |
 | `log.regex-fallback.types` | 空 | 日志兜底正则类型 |
 | `manual.strong-scan.types` | 空 | 追加强扫描类型 |
-| `strategy.unknown-type-policy` | `SKIP` | 未知 type 处理策略 |
 | `rules.default-enabled` | `true` | 是否启用内置默认字段规则 |
 
 ## 9. 安全边界
@@ -497,7 +488,7 @@ safe-output:
 - 日志脱敏只做轻量 JSON-like/key-value 识别和有限 fallback，不强制依赖 JSON Parser。
 - API ignore 可以返回明文，但必须配置明确 reason，并进入风险统计。
 - 统计和报告应只保存聚合信息，不保存原始 response 或敏感字段值。
-- 未知 type 默认跳过，不回退到 `DEFAULT`，避免把配置错误伪装成成功脱敏。
+- 未知 type 默认回退到 `DEFAULT`，同时记录 warning 和未知类型聚合统计，避免配置错误静默丢失。
 
 ## 10. 常见问题排查
 

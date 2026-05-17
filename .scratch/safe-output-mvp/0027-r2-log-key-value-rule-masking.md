@@ -38,6 +38,6 @@
 
 - 覆盖 PRD 列出的 key-value 格式。
 - 覆盖 ignore.keys 高于日志 key-value 规则。
-- 覆盖自定义 type 命中和 unknown type 跳过。
+- 覆盖自定义 type 命中和 unknown type 回退 `DEFAULT`。
 - 覆盖真实 `%safeOutputMsg` starter 集成路径，而不是只测底层 masker。
 - 覆盖限制内长日志多 key-value 与 fallback 共存。

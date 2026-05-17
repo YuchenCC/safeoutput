@@ -52,7 +52,7 @@
 | 0022 | 优化身份证上下文识别策略 | 7 | ALL PASS |
 | 0023 | 将核心脱敏类型标签改为 String | 7 | ALL PASS |
 | 0024 | 放行自定义 type 配置绑定 | 6 | ALL PASS |
-| 0025 | 实现 unknown type warn + skip 与统计 | 7 | ALL PASS |
+| 0025 | 实现 unknown type fallback DEFAULT 与统计 | 7 | ALL PASS |
 | 0026 | 验证自定义策略端到端贯穿 | 6 | ALL PASS |
 | 0027 | 日志复用 rules.keys 做 key-value 脱敏 | 8 | ALL PASS |
 | 0028 | 增加日志 key-value 匹配性能保护 | 8 | ALL PASS |

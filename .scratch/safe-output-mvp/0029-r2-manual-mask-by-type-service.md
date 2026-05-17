@@ -18,7 +18,7 @@
 - [x] 调用 `mask("13812345678", "MOBILE")` 返回手机号脱敏结果。
 - [x] 调用 `mask("张三", "CHINESE_NAME")` 返回姓名脱敏结果。
 - [x] 调用 `mask("13812345678", "mobileM")` 可命中自定义策略。
-- [x] 未知 type 按 unknown type 策略 warn + skip。
+- [x] 未知 type 按 unknown type 策略 warn + DEFAULT fallback。
 - [x] 主动调用异常不影响宿主业务主流程。
 - [x] 核心逻辑通过 Spring Bean 和统一服务实现，不以纯 static 工具类作为核心实现。
 

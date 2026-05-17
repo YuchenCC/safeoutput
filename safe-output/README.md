@@ -56,7 +56,7 @@ class CustomerController {
 
 常见字段名如 `mobile`、`phone`、`email`、`idCard`、`bankCard`、`password` 会按默认规则脱敏。
 
-类型识别使用 String 类型标签贯穿规则、策略和统计链路。内置类型可使用 `MaskTypes` 常量；业务自定义类型只需要提供同名 `MaskStrategy` Bean，并在 `rules[].type` 或 `@Desensitize(type = "...")` 中引用。未知 type 当前默认行为是 `warn + skip`：记录 warning 和未知类型聚合统计，不回退到 `DEFAULT`。
+类型识别使用 String 类型标签贯穿规则、策略和统计链路。内置类型可使用 `MaskTypes` 常量；业务自定义类型只需要提供同名 `MaskStrategy` Bean，并在 `rules[].type` 或 `@Desensitize(type = "...")` 中引用。未知 type 当前默认行为是 `warn + DEFAULT fallback`：记录 warning 和未知类型聚合统计，并使用 `DEFAULT` 策略兜底脱敏。
 
 ## 配置示例
 

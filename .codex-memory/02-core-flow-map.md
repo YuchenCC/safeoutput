@@ -18,7 +18,7 @@ Log4j2 PatternLayout `%safeOutputMsg{...}` -> `SafeOutputMessagePatternConverter
 
 ## 脱敏策略选择链路
 
-`RuleMatch.maskType` -> `MaskStrategyRegistry.find(type)` -> 内置策略或 Spring 注入的自定义 `MaskStrategy` -> `MaskContext` 携带 scene/path/field/rawValue -> `MaskResult` -> 计数。风险点：未知 type 默认 warn + skip，不回退 `DEFAULT`。
+`RuleMatch.maskType` -> `MaskStrategyRegistry.find(type)` -> 内置策略或 Spring 注入的自定义 `MaskStrategy` -> 未知 type 记录 warning 和统计后回退 `DEFAULT` -> `MaskContext` 携带 scene/path/field/rawValue -> `MaskResult` -> 计数。风险点：未知 type 会被兜底脱敏，但仍需通过 unknown type 统计发现配置错误。
 
 ## 统计指标采集与报告生成链路
 

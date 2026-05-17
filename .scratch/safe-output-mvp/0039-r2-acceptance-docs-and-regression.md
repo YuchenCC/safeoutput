@@ -18,7 +18,7 @@
 - [x] R2-01 至 R2-08 的验收标准有测试或 Demo 验证路径。
 - [x] README 或接入说明更新 String type、自定义策略、主动脱敏和新增配置。
 - [x] 文档说明报告不会保存敏感原文、完整 response 或完整日志。
-- [x] 文档说明 unknown type 默认 `warn + skip`。
+- [x] 文档说明 unknown type 默认 `warn + DEFAULT fallback`。
 - [x] 文档说明 MANUAL 场景统计和 Response 风险统计的边界。
 - [x] Demo 验证路径可复现 R2 新增能力。
 - [x] 明确 R3-01 竞赛展示看板不纳入 R2 实现。

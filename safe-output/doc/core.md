@@ -3,7 +3,7 @@
 
 整个方案分两层：**Spring MVC 拦截层**（`safe-output-spring-boot-starter`）负责"在哪里拦截"，**Core 引擎**（`safe-output-core`）负责"如何脱敏"。
 
-R2 起，脱敏类型使用 String 类型标签贯穿规则、策略、上下文和统计链路。`MaskType` 仍保留为内置清单和兼容入口；业务自定义类型通过 `MaskStrategy.type()` 与配置中的 `rules[].type` 对齐。未知 type 的默认处理是 `warn + skip`，不会回退到 `DEFAULT`。
+R2 起，脱敏类型使用 String 类型标签贯穿规则、策略、上下文和统计链路。`MaskType` 仍保留为内置清单和兼容入口；业务自定义类型通过 `MaskStrategy.type()` 与配置中的 `rules[].type` 对齐。未知 type 的默认处理是 `warn + DEFAULT fallback`，会记录 warning 和未知类型统计，并使用 `DEFAULT` 策略兜底脱敏。
 
 ---
 
@@ -179,8 +179,8 @@ return rawValue.substring(0, 3) + "****" + rawValue.substring(atIndex);
 // 密码：固定 ********
 return "********";
 
-// DEFAULT：保留首 2 + 尾 2
-return rawValue.substring(0, 2) + "****" + rawValue.substring(len - 2);
+// DEFAULT：全内容脱敏
+return "****";
 ```
 
 策略遵循 **fail-open**：格式校验不通过（如不是合法手机号）时返回原值而非报错。自定义策略可通过 `MaskStrategyRegistry.withBuiltIns(customList)` 注入。
