@@ -279,7 +279,7 @@ safe-output:
 | `log.max-value-length` | `300` | 超过该长度的单个值不处理 |
 | `log.max-rule-keys` | `128` | 参与日志 key-value 匹配的字段名上限 |
 | `log.regex-fallback.enabled` | `false` | 是否启用无字段名上下文的兜底正则 |
-| `log.regex-fallback.id-card-check-code-enabled` | `true` | 识别孤立身份证号时是否校验末位校验码 |
+| `log.regex-fallback.id-card-check-code-enabled` | `true` | 识别孤立身份证号时是否校验末位校验码，默认开启以降低普通 18 位编号误伤 |
 | `log.regex-fallback.types` | 空 | 兜底正则类型清单 |
 
 边界说明：
@@ -290,6 +290,8 @@ safe-output:
 - 超过 `max-message-length` 的日志整条 fail-open 返回原文。
 - 超过 `max-value-length` 的单个值不会处理。
 - regex fallback 只适合手机号、邮箱、合法大陆身份证号这类边界明确的类型；不建议对银行卡号做无上下文全局兜底。
+- `log.regex-fallback.id-card-check-code-enabled` 默认开启，只影响无字段名上下文的孤立身份证号识别。开启时需要同时通过格式、出生日期、年份范围和末位校验码；关闭后仍会校验格式、出生日期和年份范围，但不再校验第 18 位校验码。
+- 带字段名上下文的日志 key-value 脱敏不受该配置影响，例如 `idCard=350102199001011234` 命中 `idCard` 规则后仍会按 `ID_CARD` 脱敏，即使末位校验码不合法。
 - converter 初始化或脱敏过程异常时返回原日志消息，避免影响业务日志输出。
 
 无 Spring runtime bridge、只直接使用 log4j2 模块时，也可以在 pattern 中写局部选项：
@@ -482,7 +484,7 @@ safe-output:
 | `log.max-value-length` | `300` | 日志单值处理长度上限 |
 | `log.max-rule-keys` | `128` | 日志字段名规则数量上限 |
 | `log.regex-fallback.enabled` | `false` | 日志兜底正则开关 |
-| `log.regex-fallback.id-card-check-code-enabled` | `true` | 身份证兜底识别是否校验校验位 |
+| `log.regex-fallback.id-card-check-code-enabled` | `true` | 身份证兜底识别是否校验校验位，默认开启，只影响无字段名上下文的孤立身份证号 |
 | `log.regex-fallback.types` | 空 | 日志兜底正则类型 |
 | `manual.strong-scan.types` | 空 | 追加强扫描类型 |
 | `rules.default-enabled` | `true` | 是否启用内置默认字段规则 |
@@ -520,9 +522,11 @@ safe-output:
 
 确认业务日志 pattern 中使用了 `%safeOutputMsg` 或 `%safeOutputMessage`，并且 `safe-output.log.enabled=true`。如果日志字段只配置在 `rules[].paths` 中，不会参与日志文本匹配；日志 key-value 脱敏需要配置 `rules[].keys` 或命中默认字段名。若 `safe-output.rules.default-enabled=false`，默认字段名不会参与日志 key-value 脱敏。
 
-### 10.6 日志中孤立手机号或邮箱没有脱敏
+### 10.6 日志中孤立手机号、邮箱或身份证没有脱敏
 
 确认是否启用了 `safe-output.log.regex-fallback.enabled=true`。默认推荐依赖字段名上下文处理 key-value 日志，fallback 应只用于边界明确的类型。
+
+孤立身份证号还会额外经过大陆身份证轻量校验：格式、出生日期和年份范围始终校验；`safe-output.log.regex-fallback.id-card-check-code-enabled` 默认值为 `true`，默认还会校验第 18 位校验码。只有在明确需要兼容历史脏数据或测试数据、并能接受更多 18 位编号被识别为身份证时，才建议改为 `false`。
 
 ### 10.7 接口返回了明文
 
