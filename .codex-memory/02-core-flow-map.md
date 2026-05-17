@@ -6,7 +6,7 @@
 
 ## 日志脱敏完整调用链
 
-Log4j2 PatternLayout `%safeOutputMsg{...}` -> `SafeOutputMessagePatternConverter.newInstance` -> 优先从 `SafeOutputLog4j2Runtime` 读取 starter 注册的 `MaskRuleMatcher` / `MaskStrategyRegistry` / log 选项，无 Spring 注册时回退默认规则 -> `SafeOutputLogMessageMasker.mask` -> key-value/JSON-like 正则匹配 -> `keyValueMatches` 查规则 -> 策略脱敏 -> `maskFallback` 扫 mobile/email/idCard -> 输出日志 message。风险点：runtime bridge 是进程级静态配置，适合单应用上下文；starter 中 `safe-output.rules.default-enabled=false` 会让默认 key 不进入日志 key-value 匹配；超过 `maxMessageLength` 的日志整条 fail-open。
+Log4j2 PatternLayout `%safeOutputMsg{...}` -> `SafeOutputMessagePatternConverter.newInstance` -> format 时从 `SafeOutputLog4j2Runtime` 读取 starter 注册的 `MaskRuleMatcher` / `MaskStrategyRegistry` / log 选项 / report collector，无 Spring 注册时回退默认规则 -> `SafeOutputLogMessageMasker.mask` -> key-value/JSON-like 正则匹配 -> `keyValueMatches` 查规则 -> 策略脱敏并记录 `LOG` 计数 -> `maskFallback` 扫 mobile/email/idCard，提取未配置 nearby key 规则线索 -> 输出日志 message。风险点：runtime bridge 是进程级静态配置，适合单应用上下文；starter 中 `safe-output.rules.default-enabled=false` 会让默认 key 不进入日志 key-value 匹配；超过 `maxMessageLength` 的日志整条 fail-open且不记录成功计数。
 
 ## 配置加载与规则匹配链路
 
@@ -22,7 +22,7 @@ Log4j2 PatternLayout `%safeOutputMsg{...}` -> `SafeOutputMessagePatternConverter
 
 ## 统计指标采集与报告生成链路
 
-`ObjectMasker.applyStrategy` / `DefaultSafeOutputMaskService` -> `MaskEventRecorder.recordMask` -> `MaskMetricsCollector` 聚合总量、场景、类型、耗时 -> `SafeOutputResponseBodyAdvice.recordRisk` -> `ResponseRiskRecorder.record` -> API 维度指标 -> `MaskReportExporter.exportNow` -> `MaskReport.snapshot` + `ResponseRiskAnalyzer` + `LogRuleSuggestionAnalyzer` -> 本地 JSON 文件。风险点：内存聚合，无持久化；接口维度超过上限进入 overflow。
+`ObjectMasker.applyStrategy` / `DefaultSafeOutputMaskService` / `SafeOutputLogMessageMasker` -> `MaskEventRecorder.recordMask` -> `MaskMetricsCollector` 聚合总量、场景、类型、耗时 -> `SafeOutputResponseBodyAdvice.recordRisk` -> `ResponseRiskRecorder.record` -> API 维度指标 -> `MaskReportExporter.exportNow` -> `MaskReport.snapshot` + `ResponseRiskAnalyzer` + `LogRuleSuggestionAnalyzer` -> 本地 JSON 文件。风险点：内存聚合，无持久化；接口维度超过上限进入 overflow；`logCount` 统计成功脱敏的日志值次数，不是日志行数。
 
 ## ignore 生效链路
 

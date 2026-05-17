@@ -20,8 +20,8 @@ Safe Output 是面向 Spring Boot 2.x / Java 8 老项目的通用数据脱敏 st
 - ignore：字段级 `ignore.keys` / `ignore.paths`；接口级 `ignore.apis` 命中后明文返回但记录风险事件。
 - 日志接入：Log4j2 `%safeOutputMsg`，实现类 `SafeOutputMessagePatternConverter`。
 - JSON-like 日志轻量识别：`SafeOutputLogMessageMasker` 用 key-value 正则处理 `"key":"value"`、`key=value` 等片段。
-- Spring Boot starter 会把 `safe-output.rules[].keys`、`safe-output.ignore.keys`、自定义 `MaskStrategy`、默认规则开关和 `safe-output.log.*` 选项桥接给真实 `%safeOutputMsg`。
-- 统计采集、风险分析、报告输出：`MaskMetricsCollector`、`ResponseRiskAnalyzer`、`MaskReportExporter`。
+- Spring Boot starter 会把 `safe-output.rules[].keys`、`safe-output.ignore.keys`、自定义 `MaskStrategy`、默认规则开关、`safe-output.log.*` 选项和 report collector 桥接给真实 `%safeOutputMsg`。
+- 统计采集、风险分析、报告输出：`MaskMetricsCollector`、`ResponseRiskAnalyzer`、`MaskReportExporter`；开启 report 后真实 Log4j2 脱敏会记录 `LOG` 计数和 fallback 规则线索。
 - Demo：Response、Log、Manual、Report、Dashboard/风险画像/规则发现/脱敏实验室页面。
 - 测试：core、starter、log4j2、report、demo 均有单元或集成测试。
 
@@ -38,7 +38,7 @@ Safe Output 是面向 Spring Boot 2.x / Java 8 老项目的通用数据脱敏 st
 - `ObjectMasker` 对 Bean 是原地修改字段；如果调用方复用响应对象实例，需要注意副作用。
 - `MaskRuleMatcher.decide` 当前确认优先级是 API ignore / 字段 ignore > 注解 > 配置/默认规则 > regex fallback；后续改动需同步测试该优先级边界。
 - 日志和强扫描允许对 `MOBILE` / `ID_CARD` / `EMAIL` 做无上下文 regex fallback；除手机、身份证、邮箱外，不做无上下文全局兜底。
-- 日志 `%safeOutputMsg` 在 starter 场景会消费 Spring `safe-output.rules[]`、默认规则开关和自定义策略；无 Spring runtime bridge 时回退到内置默认规则。
+- 日志 `%safeOutputMsg` 在 starter 场景会消费 Spring `safe-output.rules[]`、默认规则开关、自定义策略和 report collector；无 Spring runtime bridge 时回退到内置默认规则。
 - 报告 JSON 使用手写序列化，字段较稳定但不是通用 JSON 序列化框架。
 
 ## 成熟度判断

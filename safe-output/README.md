@@ -117,7 +117,7 @@ public class CustomerResponse {
 
 通过 starter 启动时，`%safeOutputMsg` 会复用 Spring 绑定出的 `safe-output.rules[].keys`、`safe-output.ignore.keys`、自定义 `MaskStrategy` Bean 和 `safe-output.log.*` 选项。未超过 `safe-output.log.max-message-length` 的日志会处理所有匹配的 key-value；超过长度限制时整条日志 fail-open 返回原文。
 
-regex fallback 命中后可提取 nearbyKey 规则线索。线索和报告只保存 key、type、次数、时间和脱敏后的 evidence，不保存敏感原文或完整日志。生成的规则建议默认 `autoApply=false`，需要接入方人工确认。
+regex fallback 命中后可提取 nearbyKey 规则线索。开启 `safe-output.report.enabled=true` 后，真实 Log4j2 `%safeOutputMsg` 会把 `LOG` 场景脱敏计数和 fallback 规则线索写入 `MaskMetricsCollector`。线索和报告只保存 key、type、次数、时间和脱敏后的 evidence，不保存敏感原文或完整日志。生成的规则建议默认 `autoApply=false`，需要接入方人工确认。
 
 无 Spring 环境直接使用 log4j2 模块时，`%safeOutputMsg` 支持 `enabled`、`regexFallback`、`maxMessageLength`、`maxValueLength` 等 pattern 选项:
 
@@ -133,7 +133,7 @@ regex fallback 命中后可提取 nearbyKey 规则线索。线索和报告只保
 
 ## 报告
 
-启用 `safe-output.report.enabled=true` 后，starter 会创建 `MaskMetricsCollector` 和定时 `MaskReportExporter`。报告只包含聚合指标、接口风险等级、ignored 统计、失败次数、耗时、Response 风险画像、性能画像和 Log 规则建议，不保存敏感原文、完整 response 或完整日志。
+启用 `safe-output.report.enabled=true` 后，starter 会创建 `MaskMetricsCollector` 和定时 `MaskReportExporter`。报告只包含聚合指标、接口风险等级、ignored 统计、失败次数、耗时、Response 风险画像、性能画像、Log 脱敏计数和 Log 规则建议，不保存敏感原文、完整 response 或完整日志。
 
 主动脱敏调用计入 `MANUAL` 场景统计，用于评估显式调用量和类型分布；它不默认进入 Response 接口风险统计。Response 风险统计只聚合响应场景的稳定接口标识、脱敏字段数量、类型分布、耗时、ignore 和失败状态。
 

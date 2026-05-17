@@ -17,12 +17,12 @@ safe-output/safe-output-report/
 
 模块职责包括：
 
-- 聚合 response、log、manual 三类脱敏场景的命中次数，其中 report 模型支持 `LOG` 场景计数；当前 starter 自动链路主要自动写入 response 和 manual 计数。
+- 聚合 response、log、manual 三类脱敏场景的命中次数；开启报告后，starter 会把 response、log 和 manual 脱敏事件写入 `MaskMetricsCollector`。
 - 按 String 类型标签统计脱敏类型分布。
 - 统计未知类型标签，用于发现配置错误或策略未注册。
 - 聚合接口维度 response 风险事件。
 - 生成 response 风险画像、性能画像和治理建议。
-- 汇总 log regex fallback 规则线索，生成候选配置片段。当前 analyzer 和 collector 能力已实现，starter 自动日志链路尚未把真实日志 fallback 线索接入 `MaskMetricsCollector`。
+- 汇总 log regex fallback 规则线索，生成候选配置片段；开启报告后，真实 Log4j2 `%safeOutputMsg` fallback 线索会进入 `MaskMetricsCollector`。
 - 导出本地 JSON 快照并按数量保留最新报告文件。
 
 ## 核心类
@@ -55,9 +55,10 @@ safe-output/safe-output-report/
 当前自动来源：
 
 - Response 对象递归脱敏：`ObjectMasker` 记录 `RESPONSE`。
+- Log4j2 `%safeOutputMsg` 成功脱敏 key-value 或 regex fallback 值后记录 `LOG`。
 - 主动脱敏：`DefaultSafeOutputMaskService` 和 `StrongTextMasker` 记录 `MANUAL`。
 
-补充说明：`MaskMetricsCollector` 支持 `LOG` 场景计数，但当前 `SafeOutputLog4j2Runtime` 只向日志模块桥接规则、策略和未知类型 recorder，没有桥接 `MaskEventRecorder`。因此 starter 默认日志脱敏不会自动增加 `logCount`；只有直接调用 `recordMask(MaskScene.LOG, ...)` 或后续扩展日志桥接后才会产生该计数。
+补充说明：`logCount` 的统计单位是成功脱敏的日志值次数，不是日志行数。一行日志中多个字段或 fallback 值被脱敏时会累计多次；超长 message fail-open 或日志脱敏禁用时不会记录成功计数。
 
 ### 2. Response 接口风险事件
 
@@ -91,7 +92,7 @@ safe-output/safe-output-report/
 
 不会保存命中的日志原文、完整日志 message 或敏感值。
 
-当前 starter 自动装配没有把 `MaskMetricsCollector` 作为 `LogRuleSuggestionCollector` 传入 Log4j2 runtime，因此 demo 的 `/demo/report/log-suggestions` 使用脱敏后的示例线索展示该能力。若业务方要在当前代码上接入真实日志线索，需要补充一层桥接或自行把线索写入 `MaskMetricsCollector.record(LogRuleSuggestionEvent)`。
+开启 `safe-output.report.enabled=true` 后，starter 会把 `MaskMetricsCollector` 作为 `LogRuleSuggestionCollector` 传入 Log4j2 runtime。真实 `%safeOutputMsg` 的 regex fallback 命中未配置 nearby key 时，会自动写入脱敏 evidence；业务方也可以自行调用 `MaskMetricsCollector.record(LogRuleSuggestionEvent)` 补充线索。
 
 ## 当前支持的报告功能
 
@@ -101,7 +102,7 @@ safe-output/safe-output-report/
 
 - `totalCount`：总脱敏次数。
 - `responseCount`：response 场景脱敏次数。
-- `logCount`：log 场景脱敏次数。当前模型支持该字段，但 starter 默认日志链路尚未自动写入成功日志脱敏计数。
+- `logCount`：log 场景成功脱敏值次数。
 - `manualCount`：主动脱敏场景次数。
 - `failureCount`：报告导出等失败次数。
 - `averageElapsedNanos`：所有脱敏事件平均耗时。
@@ -382,7 +383,7 @@ GET /demo/report/log-suggestions
 - `logRuleSuggestions`
 - `configSnippet`
 
-Demo 中该接口会写入几条脱敏后的示例线索，用于展示建议能力。当前 starter 尚未自动把真实日志 fallback 线索写入 report collector；真实接入需要补充桥接或手动记录 `LogRuleSuggestionEvent`。
+Demo 中可先调用 `GET /demo/logs` 产生真实 Log4j2 fallback 线索，再通过该接口查看建议能力。接口只展示脱敏后的 evidence，不写入示例线索。
 
 ## JSON 快照字段
 
@@ -528,7 +529,7 @@ ResponseRiskAnalysis analysis = report.getResponseRiskAnalysis();
 - `include-api-metrics`、`include-field-path`、`include-raw-value` 当前只是属性绑定，导出逻辑尚未基于这些开关裁剪或扩展字段。
 - starter 默认 `MaskMetricsCollector(1000)`，接口维度上限当前不可通过配置调整。
 - `LogRuleSuggestionAnalyzer.analyze(metrics, configuredKeys)` 支持传入已配置 key 过滤建议，但当前 `MaskReportExporter` 调用时传入空列表。
-- Log4j2 模块内存在 `LogRuleSuggestionCollector` 扩展点，但 starter 当前没有把 report collector 传入日志 runtime；因此 demo 日志建议是展示数据，不代表真实日志线索已自动接入。
+- Log4j2 runtime bridge 是进程级静态配置，适合单应用 Spring Boot 进程；多应用上下文并发隔离仍不是当前目标。
 - 风险评分是当前内置启发式规则，不代表合规结论；应作为治理线索使用。
 - 主动脱敏计入 `MANUAL` 场景总量，但默认不进入 Response 接口风险统计。
 

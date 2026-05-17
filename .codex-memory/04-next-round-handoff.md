@@ -4,9 +4,9 @@
 
 - core 规则匹配、内置策略、自定义策略注册、对象递归脱敏。
 - starter 自动装配和 ResponseBodyAdvice 接入。
-- starter 到 Log4j2 `%safeOutputMsg` 的 runtime bridge，可复用 Spring 配置规则、自定义策略和日志选项。
+- starter 到 Log4j2 `%safeOutputMsg` 的 runtime bridge，可复用 Spring 配置规则、自定义策略、日志选项、日志脱敏计数和日志规则建议采集。
 - 默认规则库总开关：`safe-output.rules.default-enabled=false` 可关闭内置默认字段规则，配置规则和注解仍生效。
-- report 聚合指标、Response 风险画像、本地 JSON 快照。
+- report 聚合指标、Response 风险画像、真实 Log4j2 `LOG` 计数和 fallback 规则线索、本地 JSON 快照。
 - demo 端到端测试覆盖 Response、Log、Manual、Report。
 
 ## 当前最适合扩展的模块
@@ -28,6 +28,7 @@
 - 增强统计图表：优先扩展 `DemoReportController.dashboard` 返回结构，再更新 `static/index.html`。
 - 增强 Agent 分析摘要：预留 `MaskReport` / `ResponseRiskAnalysis` 到摘要 DTO 的纯函数接口；输入只用聚合指标，不传原始 response/log。
 - 增强配置建议生成：从 `LogRuleSuggestionAnalyzer` 扩展，保留 `enabled:false` 和人工确认；可增加建议来源、影响范围、置信度原因。
+- Log4j2 report bridge 已补齐：`/demo/logs` 可产生真实 `LOG` 计数和 `phoneNo` / `certNum` / `mailAddr` fallback 规则线索，后续不要再用 Demo controller 手动 seed 日志建议。
 
 ## 编码前必须阅读
 
@@ -47,3 +48,4 @@
 - 指定 demo：`cd safe-output && mvn -pl safe-output-demo -am test`
 - 指定 starter：`cd safe-output && mvn -pl safe-output-spring-boot-starter -am test`
 - 发布前完整验证：`cd safe-output && mvn verify`
+

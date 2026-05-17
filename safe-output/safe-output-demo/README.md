@@ -36,7 +36,7 @@ http://localhost:8080/index.html
 - `GET /demo/report/snapshot`: 查看内存聚合快照。
 - `GET /demo/report/export`: 手动导出本地 JSON 报告。
 - `GET /demo/report/response-risk`: 查看 R2 Response 风险画像、性能画像和 ignored 接口。
-- `GET /demo/report/log-suggestions`: 查看 R2 Log 规则建议和候选 YAML 配置片段。
+- `GET /demo/report/log-suggestions`: 查看 R2 Log 规则建议和候选 YAML 配置片段；先调用 `/demo/logs` 可产生真实 fallback 线索。
 - `GET /demo/report/dashboard`: 聚合统计接口，返回脱敏总量、场景分布、高风险接口数、配置建议数、类型分布和场景趋势，供前端 Dashboard 使用。
 - `POST /demo/mask/by-type`: 指定类型标签主动脱敏，Demo 包含自定义 `mobileM` 策略。
 - `POST /demo/mask/object`: 按对象规则主动脱敏，演示 `realName`、`mobile` 命中且商品 `name` 不误脱敏。
