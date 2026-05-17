@@ -265,10 +265,6 @@ safe-output:
     regex-fallback:
       enabled: false
       id-card-check-code-enabled: true
-      types:
-        - MOBILE
-        - EMAIL
-        - ID_CARD
 ```
 
 日志配置说明：
@@ -282,7 +278,8 @@ safe-output:
 | `log.max-rule-keys` | `128` | 参与日志 key-value 匹配的字段名上限 |
 | `log.regex-fallback.enabled` | `false` | 是否启用无字段名上下文的兜底正则 |
 | `log.regex-fallback.id-card-check-code-enabled` | `true` | 识别孤立身份证号时是否校验末位校验码，默认开启以降低普通 18 位编号误伤 |
-| `log.regex-fallback.types` | 空 | 兜底正则类型清单 |
+
+regex fallback 的实现方式：日志消息会先按 key-value / JSON-like 片段识别字段名并执行规则脱敏；如果开启 `log.regex-fallback.enabled`，第二阶段才对整条消息做有限正则扫描，固定按手机号、邮箱、身份证顺序处理无字段名上下文的敏感值。孤立身份证号会额外经过大陆身份证格式、出生日期、年份范围和可选校验位检查；银行卡号不参与日志 regex fallback。
 
 边界说明：
 
@@ -291,8 +288,9 @@ safe-output:
 - `ignore.keys` 命中时优先跳过对应 key-value 脱敏。
 - 超过 `max-message-length` 的日志整条 fail-open 返回原文。
 - 超过 `max-value-length` 的单个值不会处理。
-- regex fallback 只适合手机号、邮箱、合法大陆身份证号这类边界明确的类型；不建议对银行卡号做无上下文全局兜底。
+- regex fallback 固定覆盖手机号、邮箱、合法大陆身份证号这类边界明确的类型；银行卡号不做无字段名上下文的全局兜底。
 - `log.regex-fallback.id-card-check-code-enabled` 默认开启，只影响无字段名上下文的孤立身份证号识别。开启时需要同时通过格式、出生日期、年份范围和末位校验码；关闭后仍会校验格式、出生日期和年份范围，但不再校验第 18 位校验码。
+- 带字段名上下文的银行卡号仍可通过 `rules[].keys` 命中 `BANK_CARD` 策略脱敏。
 - 带字段名上下文的日志 key-value 脱敏不受该配置影响，例如 `idCard=350102199001011234` 命中 `idCard` 规则后仍会按 `ID_CARD` 脱敏，即使末位校验码不合法。
 - converter 初始化或脱敏过程异常时返回原日志消息，避免影响业务日志输出。
 
@@ -334,13 +332,16 @@ public class CustomerExportService {
 | `maskStrong(String value)` | 对文本执行强扫描，默认覆盖手机号、邮箱、身份证 |
 | `maskObjectStrong(Object value)` | 对对象中的字符串执行强扫描 |
 
-强扫描可通过配置追加类型：
+强扫描的无字段名上下文 fallback 类型可通过配置指定。未配置时默认扫描 `MOBILE`、`EMAIL`、`ID_CARD`；一旦配置 `types`，则以配置清单为准，不再自动追加默认三类。当前内置 fallback 识别支持 `MOBILE`、`EMAIL`、`ID_CARD`、`BANK_CARD`。
 
 ```yaml
 safe-output:
   manual:
     strong-scan:
       types:
+        - MOBILE
+        - EMAIL
+        - ID_CARD
         - BANK_CARD
 ```
 
@@ -440,10 +441,6 @@ safe-output:
     regex-fallback:
       enabled: false
       id-card-check-code-enabled: true
-      types:
-        - MOBILE
-        - EMAIL
-        - ID_CARD
   manual:
     strong-scan:
       types:
@@ -487,8 +484,7 @@ safe-output:
 | `log.max-rule-keys` | `128` | 日志字段名规则数量上限 |
 | `log.regex-fallback.enabled` | `false` | 日志兜底正则开关 |
 | `log.regex-fallback.id-card-check-code-enabled` | `true` | 身份证兜底识别是否校验校验位，默认开启，只影响无字段名上下文的孤立身份证号 |
-| `log.regex-fallback.types` | 空 | 日志兜底正则类型 |
-| `manual.strong-scan.types` | 空 | 追加强扫描类型 |
+| `manual.strong-scan.types` | 空 | 主动强扫描 fallback 类型清单；为空时默认 `MOBILE`、`EMAIL`、`ID_CARD`，配置后以清单为准 |
 | `rules.default-enabled` | `true` | 是否启用内置默认字段规则 |
 
 ## 9. 安全边界
