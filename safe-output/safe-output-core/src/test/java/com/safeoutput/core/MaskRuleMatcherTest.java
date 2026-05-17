@@ -63,6 +63,30 @@ class MaskRuleMatcherTest {
     }
 
     @Test
+    void defaultRulesCanBeDisabledWithoutDisablingConfiguredRules() {
+        MaskRuleMatcher matcher = MaskRuleMatcher.builder()
+                .defaultRulesEnabled(false)
+                .configuredRules(Arrays.asList(
+                        MaskRule.configured("realName")
+                                .keys(Arrays.asList("realName"))
+                                .type(MaskType.CHINESE_NAME)
+                                .build(),
+                        MaskRule.configured("profileMobile")
+                                .paths(Arrays.asList("$.profile.mobile"))
+                                .type(MaskType.MOBILE)
+                                .build()))
+                .build();
+
+        assertFalse(matcher.match("mobile", "$.mobile").isPresent());
+        assertFalse(matcher.match("email", "$.email").isPresent());
+        assertFalse(matcher.match("password", "$.password").isPresent());
+        assertMatch(matcher.match("realName", "$.realName"), MaskType.CHINESE_NAME, "realName",
+                RuleSource.CONFIGURED);
+        assertMatch(matcher.match("mobile", "$.profile.mobile"), MaskType.MOBILE, "profileMobile",
+                RuleSource.CONFIGURED);
+    }
+
+    @Test
     void decisionAppliesFixedPrecedenceAcrossIgnoreAnnotationRulesDefaultAndFallback() {
         MaskRuleMatcher matcher = MaskRuleMatcher.builder()
                 .ignoreKeys(Arrays.asList("email"))

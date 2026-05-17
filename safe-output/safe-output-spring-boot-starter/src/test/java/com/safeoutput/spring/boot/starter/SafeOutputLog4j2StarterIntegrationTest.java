@@ -61,6 +61,20 @@ class SafeOutputLog4j2StarterIntegrationTest {
     }
 
     @Test
+    void springDefaultRulesCanBeDisabledForRealLog4j2Converter() {
+        contextRunner
+                .withPropertyValues("safe-output.rules.default-enabled=false")
+                .run(context -> {
+                    PatternLayout layout = safeOutputLayout();
+
+                    String formatted = layout.toSerializable(event("mobile=13812345678 email=foo@example.com"));
+
+                    assertTrue(formatted.contains("mobile=13812345678"));
+                    assertTrue(formatted.contains("email=foo@example.com"));
+                });
+    }
+
+    @Test
     void springCustomStrategyDrivesRealLog4j2Converter() {
         contextRunner
                 .withUserConfiguration(CustomStrategyConfiguration.class)

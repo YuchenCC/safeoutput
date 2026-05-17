@@ -26,6 +26,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
 
 /**
  * Safe Output 面向 Spring Boot 2.x 的自动装配入口。
@@ -43,7 +44,7 @@ public class SafeOutputAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public MaskRuleMatcher maskRuleMatcher(SafeOutputProperties properties) {
+    public MaskRuleMatcher maskRuleMatcher(SafeOutputProperties properties, Environment environment) {
         List<MaskRule> rules = new ArrayList<MaskRule>();
         // 配置项只负责声明 Rule，具体优先级统一交给 core 的 MaskRuleMatcher 决策。
         for (SafeOutputProperties.RuleProperties rule : properties.getRules()) {
@@ -56,6 +57,8 @@ public class SafeOutputAutoConfiguration {
         }
         return MaskRuleMatcher.builder()
                 .configuredRules(rules)
+                .defaultRulesEnabled(environment.getProperty("safe-output.rules.default-enabled",
+                        Boolean.class, true))
                 .ignoreKeys(properties.getIgnore().getKeys())
                 .ignorePaths(properties.getIgnore().getPaths())
                 .build();
