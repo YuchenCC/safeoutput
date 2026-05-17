@@ -87,7 +87,9 @@ class DemoResponseIntegrationTest {
         assertTrue(json.contains("\"ignored\":true"));
         assertTrue(json.contains("/demo/ignored"));
         assertFalse(json.contains("13800138000"));
+        assertFalse(json.contains("13900139000"));
         assertFalse(json.contains("foo@example.com"));
+        assertFalse(json.contains("bar@example.com"));
         assertFalse(json.contains("11010519491231002X"));
         assertFalse(json.contains("6222021234567890123"));
     }
@@ -171,6 +173,7 @@ class DemoResponseIntegrationTest {
 
         String dashboard = restTemplate.getForObject("/demo/report/dashboard", String.class);
 
+        assertTrue(metricsCollector.snapshot().getLogCount() > 0);
         assertTrue(dashboard.contains("\"totalCount\""));
         assertTrue(dashboard.contains("\"responseCount\""));
         assertTrue(dashboard.contains("\"logCount\""));
@@ -202,6 +205,8 @@ class DemoResponseIntegrationTest {
 
     @Test
     void logSuggestionsEndpointReturnsYamlSnippet() {
+        restTemplate.getForObject("/demo/logs", String.class);
+
         String logSuggestions = restTemplate.getForObject("/demo/report/log-suggestions", String.class);
 
         assertTrue(logSuggestions.contains("\"configSnippet\""));
@@ -212,13 +217,19 @@ class DemoResponseIntegrationTest {
         assertTrue(logSuggestions.contains("hitCount"));
         assertTrue(logSuggestions.contains("confidence"));
         assertTrue(logSuggestions.contains("effectScopes"));
+        assertTrue(logSuggestions.contains("phoneno"));
+        assertTrue(logSuggestions.contains("certnum"));
+        assertTrue(logSuggestions.contains("mailaddr"));
         assertFalse(logSuggestions.contains("13800138000"));
+        assertFalse(logSuggestions.contains("13900139000"));
+        assertFalse(logSuggestions.contains("bar@example.com"));
     }
 
     @Test
     void r2ReportDemoEndpointsReturnRiskAndLogSuggestionsWithoutSensitiveSamples() {
         restTemplate.getForObject("/demo/nested", String.class);
         restTemplate.getForObject("/demo/ignored", String.class);
+        restTemplate.getForObject("/demo/logs", String.class);
 
         String responseRisk = restTemplate.getForObject("/demo/report/response-risk", String.class);
         String logSuggestions = restTemplate.getForObject("/demo/report/log-suggestions", String.class);
@@ -241,8 +252,10 @@ class DemoResponseIntegrationTest {
         assertFalse(responseRisk.contains("13800138000"));
         assertFalse(responseRisk.contains("6222021234567890123"));
         assertFalse(logSuggestions.contains("13800138000"));
+        assertFalse(logSuggestions.contains("13900139000"));
         assertFalse(logSuggestions.contains("11010519491231002X"));
         assertFalse(logSuggestions.contains("foo@example.com"));
+        assertFalse(logSuggestions.contains("bar@example.com"));
     }
 
     private static Path latestReport() throws Exception {

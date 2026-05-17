@@ -1,7 +1,5 @@
 package com.safeoutput.demo;
 
-import com.safeoutput.core.LogRuleSuggestionEvent;
-import com.safeoutput.core.MaskTypes;
 import com.safeoutput.report.LogRuleSuggestionAnalyzer;
 import com.safeoutput.report.LogRuleSuggestionReport;
 import com.safeoutput.report.MaskMetricsCollector;
@@ -24,8 +22,6 @@ public class DemoReportController {
 
     private final MaskMetricsCollector metricsCollector;
 
-    private boolean logSuggestionsSeeded;
-
     public DemoReportController(MaskReportExporter exporter, MaskMetricsCollector metricsCollector) {
         this.exporter = exporter;
         this.metricsCollector = metricsCollector;
@@ -38,7 +34,6 @@ public class DemoReportController {
 
     @GetMapping("/demo/report/dashboard")
     public Map<String, Object> dashboard() {
-        seedLogSuggestions();
         MaskReport report = metricsCollector.snapshot();
         ResponseRiskAnalysis riskAnalysis = report.getResponseRiskAnalysis();
         LogRuleSuggestionReport suggestionReport = new LogRuleSuggestionAnalyzer().analyze(
@@ -82,31 +77,11 @@ public class DemoReportController {
 
     @GetMapping("/demo/report/log-suggestions")
     public Map<String, Object> logSuggestions() {
-        seedLogSuggestions();
         LogRuleSuggestionReport report = new LogRuleSuggestionAnalyzer().analyze(
                 metricsCollector.snapshotSuggestions(), Collections.<String>emptyList());
         Map<String, Object> response = new LinkedHashMap<String, Object>();
         response.put("logRuleSuggestions", report.getLogRuleSuggestions());
         response.put("configSnippet", report.getConfigSnippet());
         return response;
-    }
-
-    private synchronized void seedLogSuggestions() {
-        if (logSuggestionsSeeded) {
-            return;
-        }
-        record("phoneNo", MaskTypes.MOBILE, 5);
-        record("certNum", MaskTypes.ID_CARD, 2);
-        record("mailAddr", MaskTypes.EMAIL, 2);
-        logSuggestionsSeeded = true;
-    }
-
-    private void record(String key, String type, int count) {
-        String normalizedKey = key.toLowerCase(java.util.Locale.ENGLISH);
-        for (int i = 0; i < count; i++) {
-            // Demo 只写入脱敏后的 evidence，避免报告接口携带敏感原文。
-            metricsCollector.record(new LogRuleSuggestionEvent(normalizedKey, type,
-                    normalizedKey + "=<" + MaskTypes.normalize(type) + ">", System.currentTimeMillis()));
-        }
     }
 }

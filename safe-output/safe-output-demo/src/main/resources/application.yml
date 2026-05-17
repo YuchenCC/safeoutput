@@ -16,3 +16,6 @@ safe-output:
     directory: target/safe-output-demo-reports
     file-prefix: demo-report
     interval-millis: 600000
+  log:
+    regex-fallback:
+      enabled: true
