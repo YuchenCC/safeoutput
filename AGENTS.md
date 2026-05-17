@@ -88,3 +88,4 @@ This repo uses a single-context domain layout with root `CONTEXT.md`. See `docs/
 ## 工作原则
 
 - 提交代码时，必须按语义拆分为细颗粒度 commit，并遵守commit规范
+- 对现有功能实现有疑问时，优先通过排查代码进行排查，确认无误或修订完成后应修订文档
