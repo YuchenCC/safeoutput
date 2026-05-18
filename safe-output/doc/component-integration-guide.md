@@ -4,13 +4,22 @@
 
 ## 1. 环境要求
 
+业务系统接入 Safe Output starter 的运行环境要求：
+
 | 项目 | 要求 |
 |---|---|
-| JDK | Java 8 |
-| Spring Boot | 2.x，当前基线为 2.7.18 |
-| 构建工具 | Maven multi-module |
-| 自动装配 | `spring.factories` |
-| Web 框架 | Spring MVC `ResponseBodyAdvice` |
+| JDK | Java 8+ |
+| Spring Boot | 2.x，当前验证基线为 2.7.18 |
+| Web 框架 | Spring MVC；Response 脱敏依赖 `ResponseBodyAdvice` |
+| 自动装配 | Spring Boot 2.x `spring.factories` |
+| 日志框架 | 可选；日志脱敏场景需要 Log4j2 |
+
+从源码构建、运行测试或执行本地安装时，还需要满足构建环境要求：
+
+| 项目 | 要求 |
+|---|---|
+| Maven | 3.6.3+ |
+| 工程形态 | Maven multi-module |
 
 本地开发或业务系统接入前，先在 Safe Output 工程根目录安装组件：
 
