@@ -58,6 +58,12 @@ class DemoResponseIntegrationTest {
         String payment = restTemplate.getForObject("/demo/business/payment", String.class);
         String tickets = restTemplate.getForObject("/demo/business/tickets", String.class);
         String account = restTemplate.getForObject("/demo/business/account", String.class);
+        String customers = restTemplate.getForObject("/demo/business/customers", String.class);
+        String customerDetail = restTemplate.getForObject("/demo/business/customers/C-1001", String.class);
+        String orderDetail = restTemplate.getForObject("/demo/business/orders/ORD-20260518-001", String.class);
+        String paymentDetail = restTemplate.getForObject("/demo/business/payments/PAY-8840", String.class);
+        String ticketDetail = restTemplate.getForObject("/demo/business/tickets/TK-20260518-01", String.class);
+        String accountDetail = restTemplate.getForObject("/demo/business/accounts/AC-7780", String.class);
 
         assertTrue(workbench.contains("客户档案"));
         assertTrue(workbench.contains("订单履约"));
@@ -67,28 +73,52 @@ class DemoResponseIntegrationTest {
         assertTrue(customer.contains("\"displayName\":\"张*\""));
         assertTrue(customer.contains("138****8000"));
         assertTrue(customer.contains("110105********002X"));
-        assertTrue(customer.contains("zha****@example.com"));
-        assertTrue(customer.contains("北京市朝阳区****"));
+        assertTrue(customer.contains("cus****@example.com"));
+        assertTrue(customer.contains("北京市核心区****"));
         assertTrue(customer.contains("\"plainNote\":\"demo note 13800138000\""));
         assertFalse(customer.contains("\"mobile\":\"13800138000\""));
         assertTrue(order.contains("622202*********0123"));
         assertTrue(payment.contains("\"securityAnswer\":\"****\""));
-        assertTrue(tickets.contains("\"realName\":\"李*\""));
+        assertTrue(tickets.contains("\"requesterName\":\"用*1\""));
         assertTrue(account.contains("\"password\":\"********\""));
         assertFalse(order.contains("6222021234567890123"));
         assertFalse(payment.contains("13900138001"));
-        assertFalse(tickets.contains("13700138002"));
+        assertFalse(tickets.contains("\"mobile\":\"13700138002\""));
         assertFalse(account.contains("Secret-12345"));
+        assertTrue(customers.contains("\"customerNo\":\"C-1001\""));
+        assertTrue(customerDetail.contains("138****8000"));
+        assertTrue(orderDetail.contains("622202*********0120"));
+        assertTrue(paymentDetail.contains("\"securityAnswer\":\"****\""));
+        assertTrue(ticketDetail.contains("\"requesterName\":\"用*1\""));
+        assertTrue(accountDetail.contains("\"password\":\"********\""));
+        assertFalse(customerDetail.contains("\"mobile\":\"13800138000\""));
+        assertFalse(orderDetail.contains("6222021234567890120"));
+        assertFalse(paymentDetail.contains("13900138000"));
+        assertFalse(ticketDetail.contains("\"mobile\":\"13700138000\""));
+        assertFalse(accountDetail.contains("Secret-12340"));
     }
 
     @Test
     void r25BusinessApiIgnoreKeepsPlaintextAndRecordsRiskMetric() {
         String ignored = restTemplate.getForObject("/demo/business/legacy-plaintext", String.class);
+        String rawCustomer = restTemplate.getForObject("/demo/business/customers/C-1001/raw", String.class);
+        String rawOrder = restTemplate.getForObject("/demo/business/orders/ORD-20260518-001/raw", String.class);
+        String rawPayment = restTemplate.getForObject("/demo/business/payments/PAY-8840/raw", String.class);
+        String rawTicket = restTemplate.getForObject("/demo/business/tickets/TK-20260518-01/raw", String.class);
+        String rawAccount = restTemplate.getForObject("/demo/business/accounts/AC-7780/raw", String.class);
 
         assertTrue(ignored.contains("\"mobile\":\"13800138000\""));
+        assertTrue(rawCustomer.contains("\"mobile\":\"13800138000\""));
+        assertTrue(rawOrder.contains("6222021234567890120"));
+        assertTrue(rawPayment.contains("\"securityAnswer\":\"母亲生日是19900100\""));
+        assertTrue(rawTicket.contains("13700138000"));
+        assertTrue(rawAccount.contains("Secret-12340"));
         ApiMaskMetrics metric = metricsCollector.snapshot().getApiMetric("GET", "/demo/business/legacy-plaintext");
+        ApiMaskMetrics rawMetric = metricsCollector.snapshot().getApiMetric("GET", "/demo/business/customers/{id}/raw");
         assertNotNull(metric);
+        assertNotNull(rawMetric);
         assertTrue(metric.isIgnored());
+        assertTrue(rawMetric.isIgnored());
     }
 
     @Test

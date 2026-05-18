@@ -26,6 +26,21 @@ safe-output:
       - method: GET
         path: /demo/business/legacy-plaintext
         reason: legacy plaintext integration contract
+      - method: GET
+        pattern: /demo/business/customers/*/raw
+        reason: business console reveal customer sensitive fields
+      - method: GET
+        pattern: /demo/business/orders/*/raw
+        reason: business console reveal order sensitive fields
+      - method: GET
+        pattern: /demo/business/payments/*/raw
+        reason: business console reveal payment sensitive fields
+      - method: GET
+        pattern: /demo/business/tickets/*/raw
+        reason: business console reveal ticket sensitive fields
+      - method: GET
+        pattern: /demo/business/accounts/*/raw
+        reason: business console reveal account sensitive fields
   report:
     enabled: true
     directory: target/safe-output-demo-reports

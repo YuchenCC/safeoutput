@@ -18,16 +18,16 @@ public class DemoBusinessService {
 
     public List<Map<String, Object>> scenarioMetadata() {
         List<Map<String, Object>> scenarios = new ArrayList<Map<String, Object>>();
-        scenarios.add(scenario("customer", "客户档案", "Bean", "/demo/business/customer",
-                "默认规则、注解姓名、字段 ignore"));
-        scenarios.add(scenario("order", "订单履约", "嵌套对象", "/demo/business/order",
-                "嵌套客户、银行卡、地址"));
-        scenarios.add(scenario("payment", "支付核验", "Map", "/demo/business/payment",
-                "Map 字段、DEFAULT 配置规则"));
-        scenarios.add(scenario("ticket", "工单处理", "Collection", "/demo/business/tickets",
-                "集合对象、YAML 姓名规则"));
-        scenarios.add(scenario("account", "账户安全", "Bean", "/demo/business/account",
-                "密码、邮箱、地址"));
+        scenarios.add(scenario("customers", "客户档案", "Table + Detail", "/demo/business/customers",
+                "客户列表、客户详情、敏感字段按 Response 脱敏"));
+        scenarios.add(scenario("orders", "订单履约", "Table + Detail", "/demo/business/orders",
+                "履约订单、收货地址、银行卡与联系人脱敏"));
+        scenarios.add(scenario("payments", "支付核验", "Table + Detail", "/demo/business/payments",
+                "支付流水、核验问题、卡号和邮箱脱敏"));
+        scenarios.add(scenario("tickets", "工单处理", "Table + Detail", "/demo/business/tickets",
+                "工单队列、提交人信息、字段 ignore 样例"));
+        scenarios.add(scenario("accounts", "账户安全", "Table + Detail", "/demo/business/accounts",
+                "账户状态、密码、邮箱、手机号和地址脱敏"));
         scenarios.add(scenario("legacyPlaintext", "接口豁免", "Bean", "/demo/business/legacy-plaintext",
                 "接口级 ignore 进入风险统计"));
         return scenarios;
@@ -42,6 +42,46 @@ public class DemoBusinessService {
         return summary;
     }
 
+    public List<DemoBusinessDataSource.CustomerProfile> customers() {
+        return dataSource.customerProfiles();
+    }
+
+    public DemoBusinessDataSource.CustomerProfile customerDetail(String id) {
+        return dataSource.customerProfile(id);
+    }
+
+    public List<DemoBusinessDataSource.OrderFulfillment> orders() {
+        return dataSource.orderFulfillments();
+    }
+
+    public DemoBusinessDataSource.OrderFulfillment orderDetail(String id) {
+        return dataSource.orderFulfillment(id);
+    }
+
+    public List<DemoBusinessDataSource.PaymentVerification> payments() {
+        return dataSource.paymentVerifications();
+    }
+
+    public DemoBusinessDataSource.PaymentVerification paymentDetail(String id) {
+        return dataSource.paymentVerification(id);
+    }
+
+    public List<DemoBusinessDataSource.SupportTicket> supportTickets() {
+        return dataSource.supportTickets();
+    }
+
+    public DemoBusinessDataSource.SupportTicket supportTicketDetail(String id) {
+        return dataSource.supportTicket(id);
+    }
+
+    public List<DemoBusinessDataSource.AccountSecurity> accounts() {
+        return dataSource.accountSecurities();
+    }
+
+    public DemoBusinessDataSource.AccountSecurity accountDetail(String id) {
+        return dataSource.accountSecurity(id);
+    }
+
     public DemoBusinessDataSource.DemoCustomer customer() {
         return dataSource.customer();
     }
@@ -54,8 +94,8 @@ public class DemoBusinessService {
         return dataSource.payment();
     }
 
-    public List<DemoBusinessDataSource.DemoTicket> tickets() {
-        return dataSource.tickets();
+    public List<DemoBusinessDataSource.SupportTicket> tickets() {
+        return dataSource.supportTickets();
     }
 
     public DemoBusinessDataSource.DemoAccount account() {
