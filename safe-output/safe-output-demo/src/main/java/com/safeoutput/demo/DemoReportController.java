@@ -6,6 +6,8 @@ import com.safeoutput.report.MaskMetricsCollector;
 import com.safeoutput.report.MaskReport;
 import com.safeoutput.report.MaskReportExporter;
 import com.safeoutput.report.ResponseRiskAnalysis;
+import com.safeoutput.spring.boot.autoconfigure.SafeOutputConfiguredKeys;
+import com.safeoutput.spring.boot.autoconfigure.SafeOutputProperties;
 
 import java.nio.file.Path;
 import java.util.Collections;
@@ -22,9 +24,13 @@ public class DemoReportController {
 
     private final MaskMetricsCollector metricsCollector;
 
-    public DemoReportController(MaskReportExporter exporter, MaskMetricsCollector metricsCollector) {
+    private final SafeOutputProperties properties;
+
+    public DemoReportController(MaskReportExporter exporter, MaskMetricsCollector metricsCollector,
+            SafeOutputProperties properties) {
         this.exporter = exporter;
         this.metricsCollector = metricsCollector;
+        this.properties = properties;
     }
 
     @GetMapping("/demo/report/snapshot")
@@ -37,7 +43,7 @@ public class DemoReportController {
         MaskReport report = metricsCollector.snapshot();
         ResponseRiskAnalysis riskAnalysis = report.getResponseRiskAnalysis();
         LogRuleSuggestionReport suggestionReport = new LogRuleSuggestionAnalyzer().analyze(
-                metricsCollector.snapshotSuggestions(), Collections.<String>emptyList());
+                metricsCollector.snapshotSuggestions(), SafeOutputConfiguredKeys.from(properties));
 
         Map<String, Object> result = new LinkedHashMap<String, Object>();
         result.put("totalCount", report.getTotalCount());
@@ -78,7 +84,7 @@ public class DemoReportController {
     @GetMapping("/demo/report/log-suggestions")
     public Map<String, Object> logSuggestions() {
         LogRuleSuggestionReport report = new LogRuleSuggestionAnalyzer().analyze(
-                metricsCollector.snapshotSuggestions(), Collections.<String>emptyList());
+                metricsCollector.snapshotSuggestions(), SafeOutputConfiguredKeys.from(properties));
         Map<String, Object> response = new LinkedHashMap<String, Object>();
         response.put("logRuleSuggestions", report.getLogRuleSuggestions());
         response.put("configSnippet", report.getConfigSnippet());

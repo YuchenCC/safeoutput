@@ -90,6 +90,30 @@ class MaskReportExporterTest {
     }
 
     @Test
+    void exportFiltersConfiguredKeysFromLogSuggestionsAndYaml() throws Exception {
+        MaskMetricsCollector collector = new MaskMetricsCollector(10);
+        collector.recordMask(MaskScene.LOG, MaskTypes.MOBILE, 1);
+        collector.record(new LogRuleSuggestionEvent("phoneNo", MaskTypes.MOBILE, "phoneno=<mobile>", 1));
+        collector.record(new LogRuleSuggestionEvent("phoneNo", MaskTypes.MOBILE, "phoneno=<mobile>", 2));
+        collector.record(new LogRuleSuggestionEvent("realName", MaskTypes.CHINESE_NAME,
+                "realname=<chinese_name>", 1));
+        collector.record(new LogRuleSuggestionEvent("realName", MaskTypes.CHINESE_NAME,
+                "realname=<chinese_name>", 2));
+        MaskReportExporter exporter = new MaskReportExporter(new MaskReportExportOptions(tempDir, "filtered",
+                1000, 3), collector, Collections.singletonList("realName"));
+
+        Path written = exporter.exportNow();
+        String json = new String(Files.readAllBytes(written), StandardCharsets.UTF_8);
+
+        assertTrue(json.contains("\"logCount\":1"));
+        assertTrue(json.contains("\"key\":\"phoneno\""));
+        assertTrue(json.contains("\"evidence\":\"phoneno=<mobile>\""));
+        assertTrue(json.contains("suggested-phoneno"));
+        assertFalse(json.contains("realname"));
+        assertFalse(json.contains("13800138000"));
+    }
+
+    @Test
     void writeFailureIncrementsMetricsAndDoesNotThrow() throws Exception {
         Path fileAsDirectory = tempDir.resolve("not-a-directory");
         Files.write(fileAsDirectory, new byte[] {1});

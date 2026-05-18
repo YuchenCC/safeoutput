@@ -184,6 +184,7 @@ class DemoResponseIntegrationTest {
         assertTrue(dashboard.contains("\"maskTypeCounts\""));
         assertTrue(dashboard.contains("\"topRiskApis\""));
         assertTrue(dashboard.contains("\"sceneTrend\""));
+        assertTrue(dashboard.contains("\"suggestionCount\":2"));
         assertFalse(dashboard.contains("13800138000"));
     }
 
@@ -217,7 +218,7 @@ class DemoResponseIntegrationTest {
         assertTrue(logSuggestions.contains("hitCount"));
         assertTrue(logSuggestions.contains("confidence"));
         assertTrue(logSuggestions.contains("effectScopes"));
-        assertTrue(logSuggestions.contains("phoneno"));
+        assertFalse(logSuggestions.contains("phoneno"));
         assertTrue(logSuggestions.contains("certnum"));
         assertTrue(logSuggestions.contains("mailaddr"));
         assertFalse(logSuggestions.contains("13800138000"));
@@ -246,7 +247,7 @@ class DemoResponseIntegrationTest {
         assertTrue(logSuggestions.contains("\"evidence\""));
         assertTrue(logSuggestions.contains("\"effectScopes\""));
         assertTrue(logSuggestions.contains("\"configSnippet\""));
-        assertTrue(logSuggestions.contains("phoneno"));
+        assertFalse(logSuggestions.contains("phoneno"));
         assertTrue(logSuggestions.contains("certnum"));
         assertTrue(logSuggestions.contains("mailaddr"));
         assertFalse(responseRisk.contains("13800138000"));

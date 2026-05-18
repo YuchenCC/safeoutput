@@ -4,6 +4,10 @@ safe-output:
       keys:
         - realName
       type: CHINESE_NAME
+    - name: demoPhoneNo
+      keys:
+        - phoneNo
+      type: MOBILE
   ignore:
     keys:
       - plainNote

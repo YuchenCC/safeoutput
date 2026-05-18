@@ -122,7 +122,7 @@ public class SafeOutputAutoConfiguration {
                 Paths.get(report.getDirectory()),
                 report.getFilePrefix(),
                 report.getIntervalMillis(),
-                report.getRetainFiles()), collector);
+                report.getRetainFiles()), collector, SafeOutputConfiguredKeys.from(properties));
         exporter.start();
         return exporter;
     }

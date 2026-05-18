@@ -6,6 +6,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -24,6 +25,7 @@ public final class MaskReportExporter {
 
     private final MaskReportExportOptions options;
     private final MaskMetricsCollector collector;
+    private final List<String> configuredKeys;
     private final MaskReportJsonWriter jsonWriter = new MaskReportJsonWriter();
     private final AtomicLong sequence = new AtomicLong();
 
@@ -31,8 +33,16 @@ public final class MaskReportExporter {
     private ScheduledFuture<?> future;
 
     public MaskReportExporter(MaskReportExportOptions options, MaskMetricsCollector collector) {
+        this(options, collector, Collections.<String>emptyList());
+    }
+
+    public MaskReportExporter(MaskReportExportOptions options, MaskMetricsCollector collector,
+            List<String> configuredKeys) {
         this.options = options;
         this.collector = collector;
+        this.configuredKeys = configuredKeys == null
+                ? Collections.<String>emptyList()
+                : Collections.unmodifiableList(new ArrayList<String>(configuredKeys));
     }
 
     public synchronized void start() {
@@ -69,7 +79,7 @@ public final class MaskReportExporter {
             Path target = nextFile();
             // 报告只写聚合快照，不写原始响应、原始日志或敏感字段值。
             LogRuleSuggestionReport suggestions = new LogRuleSuggestionAnalyzer()
-                    .analyze(collector.snapshotSuggestions(), java.util.Collections.<String>emptyList());
+                    .analyze(collector.snapshotSuggestions(), configuredKeys);
             Files.write(target, jsonWriter.write(collector.snapshot(), suggestions).getBytes(StandardCharsets.UTF_8));
             retainNewestFiles();
             return target;
