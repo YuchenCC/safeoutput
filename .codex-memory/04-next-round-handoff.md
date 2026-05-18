@@ -38,6 +38,7 @@
 - `.codex-memory/01-module-map.md`
 - `.codex-memory/02-core-flow-map.md`
 - `.codex-memory/03-decision-and-boundary.md`
+- `.codex-memory/04-next-round-handoff.md`
 - `safe-output/README.md`
 - `safe-output/safe-output-core/src/main/java/com/safeoutput/core/MaskRuleMatcher.java`
 - `safe-output/safe-output-core/src/main/java/com/safeoutput/core/ObjectMasker.java`

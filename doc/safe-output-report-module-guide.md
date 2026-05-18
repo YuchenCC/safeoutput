@@ -94,6 +94,164 @@ safe-output/safe-output-report/
 
 开启 `safe-output.report.enabled=true` 后，starter 会把 `MaskMetricsCollector` 作为 `LogRuleSuggestionCollector` 传入 Log4j2 runtime。真实 `%safeOutputMsg` 的 regex fallback 命中未配置 nearby key 时，会自动写入脱敏 evidence；业务方也可以自行调用 `MaskMetricsCollector.record(LogRuleSuggestionEvent)` 补充线索。
 
+## 监控数据的内存存储
+
+当前监控数据以进程内聚合方式存储，核心入口是 `MaskMetricsCollector`。starter 在 `safe-output.report.enabled=true` 时创建单例 `MaskMetricsCollector(1000)`，并把它同时注入到 response、manual、log 和报告导出链路：
+
+- 作为 `MaskEventRecorder`：接收 response、log、manual 场景的成功脱敏事件。
+- 作为 `ResponseRiskRecorder`：接收 `SafeOutputResponseBodyAdvice` 生成的接口风险事件。
+- 作为 `UnknownTypeRecorder`：接收未知类型标签计数。
+- 作为 `LogRuleSuggestionCollector`：接收日志 regex fallback 规则建议线索。
+
+### 1. 全局计数存储
+
+`MaskMetricsCollector` 内部用普通字段保存全局计数，并通过 `synchronized` 方法串行写入：
+
+| 内存字段 | 含义 |
+|---|---|
+| `totalCount` | 成功脱敏值总次数 |
+| `responseCount` | response 场景成功脱敏值次数 |
+| `logCount` | log 场景成功脱敏值次数，不是日志行数 |
+| `manualCount` | 主动脱敏场景成功脱敏值次数 |
+| `failureCount` | 报告导出失败次数 |
+| `totalElapsedNanos` | 所有成功脱敏事件耗时总和 |
+| `maxElapsedNanos` | 单次成功脱敏最大耗时 |
+
+这些字段只保存聚合数字，不保存 raw value、response body 或日志 message。
+
+### 2. 类型计数存储
+
+类型分布存储在两个 `LinkedHashMap<String, Long>` 中：
+
+- `maskTypeCounts`：按标准化后的 String type 统计成功脱敏次数。
+- `unknownTypeCounts`：按标准化后的 String type 统计未知类型次数。
+
+写入前统一通过 `MaskTypes.normalize(type)` 归一化。未知类型事件只记录类型标签和次数；实际脱敏链路会使用 `DEFAULT` 策略兜底，但报告仍保留原未知 type 计数，方便排查配置拼写错误或策略未注册。
+
+### 3. 接口维度存储
+
+Response 接口风险指标存储在：
+
+```java
+Map<String, ApiMaskMetrics> apiMetrics
+```
+
+key 由 `method + " " + apiPath` 组成。`apiPath` 优先使用 `ResponseRiskEvent.apiKey`，也就是 Spring MVC `BEST_MATCHING_PATTERN_ATTRIBUTE`；拿不到时由 `SafeOutputResponseBodyAdvice` 对数字路径段和 UUID 路径段做轻量归一化。
+
+每个 `ApiMaskMetrics` 只保存接口聚合信息：
+
+- `hitCount`
+- `ignored`
+- `ignoreReason`
+- `failureCount`
+- `maskedFieldCount`
+- `totalElapsedNanos`
+- `maxElapsedNanos`
+- `slowMaskCount`
+- `maskTypeCounts`
+
+starter 当前固定使用 `MaskMetricsCollector(1000)`。当接口维度超过上限后，新增接口不再继续扩张 `apiMetrics`，而是聚合到：
+
+```text
+OVERFLOW __overflow__
+```
+
+这能避免高基数 path 导致内存无限增长，但 overflow 会丢失新增接口的单独维度。
+
+### 4. 日志规则建议存储
+
+日志 regex fallback 线索由 `MaskMetricsCollector` 内部的 `InMemoryLogRuleSuggestionCollector` 保存。其内部也是 `LinkedHashMap`，聚合 key 为：
+
+```text
+normalizedKey + ":" + normalizedType
+```
+
+每条建议线索的可变指标只包含：
+
+- `key`
+- `type`
+- `hitCount`
+- `firstSeenTimeMillis`
+- `lastSeenTimeMillis`
+- `evidence`
+
+其中 `evidence` 在日志模块中被写成 `key=<type>` 形态，不包含命中的敏感值。
+
+### 5. 快照读取语义
+
+`MaskMetricsCollector.snapshot()` 会把当前内存聚合转成 `MaskReport`：
+
+- 全局数字按当前值复制。
+- `maskTypeCounts` 和 `unknownTypeCounts` 复制为不可变 `LinkedHashMap`。
+- `apiMetrics` 复制为不可变 List，但 List 内部的 `ApiMaskMetrics` 对象仍来自当前聚合对象。
+- `ResponseRiskAnalysis` 不在线存储，而是在 `MaskReport.getResponseRiskAnalysis()` 被调用时基于 `apiMetrics` 即时计算。
+
+因此当前快照是“当前进程内聚合视图”，不是事件明细，也不能用于还原任何敏感原文。
+
+## 监控数据的持久化存储
+
+当前持久化只支持本地 JSON 快照文件，由 `MaskReportExporter` 完成；没有数据库、没有外部存储适配器、没有事件级追加日志，也没有从历史快照恢复内存计数的机制。
+
+### 1. 自动定时导出
+
+starter 在 `safe-output.report.enabled=true` 时创建 `MaskReportExporter`，并立即调用 `start()`。`start()` 会启动单线程守护调度器：
+
+```text
+safe-output-report-exporter
+```
+
+调度方式是 `scheduleWithFixedDelay`，初始延迟和固定延迟都使用 `intervalMillis`。也就是说应用启动后不会立即写第一份报告，而是在第一个间隔后导出。
+
+### 2. 手动导出
+
+业务代码或 Demo 可以注入 `MaskReportExporter` 并调用：
+
+```java
+Path path = exporter.exportNow();
+```
+
+Demo 的 `GET /demo/report/export` 就是手动触发该方法。导出失败时返回 `null`，同时调用 `collector.recordFailure()` 增加 `failureCount` 并记录 warning，不向业务链路抛出异常。
+
+### 3. 文件写入内容
+
+每次 `exportNow()` 会执行以下步骤：
+
+1. `Files.createDirectories(options.getDirectory())` 创建报告目录。
+2. 调用 `collector.snapshotSuggestions()` 读取日志规则建议线索。
+3. 调用 `LogRuleSuggestionAnalyzer.analyze(..., emptyList())` 生成规则建议报告。
+4. 调用 `collector.snapshot()` 读取当前聚合快照。
+5. 使用 `MaskReportJsonWriter` 手写 JSON。
+6. 通过 `Files.write(..., UTF_8)` 一次性写入本地文件。
+7. 调用 `retainNewestFiles()` 清理旧快照。
+
+JSON 文件是某个时间点的完整聚合快照，而不是从上次导出到本次导出的增量。
+
+### 4. 文件命名和保留
+
+文件名格式为：
+
+```text
+{filePrefix}-{yyyyMMddHHmmssSSS}-{sequence}.json
+```
+
+其中 `sequence` 是当前 `MaskReportExporter` 实例内的 `AtomicLong` 递增序号。旧文件清理逻辑只扫描同一目录下满足以下条件的文件：
+
+- 文件名以 `{filePrefix}-` 开头。
+- 文件名以 `.json` 结尾。
+
+然后按文件名字典序排序，删除超出 `retainFiles` 数量的最旧文件。`retainFiles` 在 `MaskReportExportOptions` 中最小归一为 1。
+
+### 5. 重启后的行为
+
+应用重启后：
+
+- `MaskMetricsCollector` 会重新创建，内存计数从 0 开始。
+- 已导出的 JSON 文件仍保留在配置目录中，受后续 `retainFiles` 清理影响。
+- 当前代码不会读取历史 JSON 文件恢复计数。
+- `sequence` 从新 exporter 实例重新开始递增，但文件名包含毫秒时间戳，通常不会覆盖历史文件。
+
+因此当前持久化能力更适合审计快照和离线查看，不是实时查询数据库，也不是长期完整指标仓库。
+
 ## 当前支持的报告功能
 
 ### 1. 总量与场景统计
