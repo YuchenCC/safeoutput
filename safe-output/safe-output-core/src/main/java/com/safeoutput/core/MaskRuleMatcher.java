@@ -22,7 +22,9 @@ public final class MaskRuleMatcher {
 
     private MaskRuleMatcher(Builder builder) {
         this.configuredRules = enabledRules(builder.configuredRules);
-        this.defaultRules = builder.defaultRulesEnabled ? enabledRules(defaultRules()) : Collections.<MaskRule>emptyList();
+        this.defaultRules = builder.defaultRulesEnabled
+                ? enabledRules(defaultRules())
+                : Collections.<MaskRule>emptyList();
         this.ignoreKeys = normalizedKeys(builder.ignoreKeys);
         this.ignorePaths = immutableStrings(builder.ignorePaths);
     }
