@@ -4,12 +4,35 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 
 class MaskRuleMatcherTest {
+
+    @Test
+    void defaultRuleLibraryIsTheSingleSourceForBuiltInFieldRules() {
+        List<MaskRule> rules = DefaultMaskRules.all();
+
+        assertEquals(5, rules.size());
+        assertEquals("default.mobile", rules.get(0).getName());
+        assertEquals(Arrays.asList("mobile", "phone", "telephone", "tel", "userMobile"), rules.get(0).getKeys());
+        assertEquals(MaskTypes.MOBILE, rules.get(0).getType());
+        assertEquals("default.id-card", rules.get(1).getName());
+        assertEquals(Arrays.asList("idCard", "certNo", "identityNo", "certificateNo"), rules.get(1).getKeys());
+        assertEquals(MaskTypes.ID_CARD, rules.get(1).getType());
+        assertEquals("default.bank-card", rules.get(2).getName());
+        assertEquals(Arrays.asList("bankCard", "cardNo", "bankNo"), rules.get(2).getKeys());
+        assertEquals(MaskTypes.BANK_CARD, rules.get(2).getType());
+        assertEquals("default.email", rules.get(3).getName());
+        assertEquals(Arrays.asList("email", "mail"), rules.get(3).getKeys());
+        assertEquals(MaskTypes.EMAIL, rules.get(3).getType());
+        assertEquals("default.password", rules.get(4).getName());
+        assertEquals(Arrays.asList("password", "secret", "token"), rules.get(4).getKeys());
+        assertEquals(MaskTypes.PASSWORD, rules.get(4).getType());
+    }
 
     @Test
     void defaultRulesMatchClearSensitiveKeysAndSkipAmbiguousKeys() {
