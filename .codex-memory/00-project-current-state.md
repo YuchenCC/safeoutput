@@ -24,7 +24,10 @@ Safe Output 是面向 Spring Boot 2.x / Java 8 老项目的通用数据脱敏 st
 - Spring Boot starter 会把 `safe-output.rules[].keys`、`safe-output.ignore.keys`、自定义 `MaskStrategy`、默认规则开关、`safe-output.log.*` 选项和 report collector 桥接给真实 `%safeOutputMsg`。
 - 统计采集、风险分析、报告输出：`MaskMetricsCollector`、`ResponseRiskAnalyzer`、`MaskReportExporter`；开启 report 后真实 Log4j2 脱敏会记录 `LOG` 计数和 fallback 规则线索。
 - 报告导出、Demo Dashboard 和 Demo Log 规则建议接口会复用 `safe-output.rules[].keys` 过滤已配置 key，避免重复治理建议；过滤只影响报告建议，不影响 Log4j2 在线脱敏和聚合计数。
-- Demo：Response、Log、Manual、Report、Dashboard/风险画像/规则发现/脱敏实验室页面。
+- Demo：R2.5 主入口已升级为“业务系统敏感数据治理驾驶舱”，覆盖业务工作台、接入说明、脱敏实验室、日志场景和报告中心；旧 Response/Log/Manual/Report 兼容接口仍保留，但不再作为默认首屏。
+- R2.5 Demo 业务域：客户、订单、支付、工单、账户 mock 数据源与业务服务，业务接口覆盖 Bean、Map、Collection、嵌套对象，并覆盖 `MOBILE`、`ID_CARD`、`BANK_CARD`、`EMAIL`、`CHINESE_NAME`、`ADDRESS`、`PASSWORD`、`DEFAULT`。
+- R2.5 Demo 前端：`safe-output-demo/src/main/resources/static/index.html` 只保留壳层，页面拆到 `static/css/app.css`、`static/js/api.js`、`static/js/views/*` 和 `static/js/components/*`；默认路由为 `#workbench`，继续使用本地 `vendor/` 资源。
+- R2.5 报告中心：Demo 可导出、列出、读取配置报告目录内的 JSON 报告，并基于 JSON 聚合字段派生单报告 dashboard；读取限制在 `safe-output.report.directory` 且只允许 `file-prefix-*.json`，不读取任意文件。
 - 测试：core、starter、log4j2、report、demo 均有单元或集成测试。
 
 ## 未实现或未确认能力
@@ -49,7 +52,7 @@ Safe Output 是面向 Spring Boot 2.x / Java 8 老项目的通用数据脱敏 st
 
 ## 第三轮适合扩展方向
 
-- 强化 Demo 竞赛展示看板和交互式验证。
+- 强化 Demo 竞赛展示看板和交互式验证；R2.5 已完成主路径重构，后续可继续做浏览器人工视觉验收和截图级 polish。
 - 增强 Response 风险画像、接口治理建议和性能分析。
 - 增强 Log 规则建议的配置生成、人工确认流和采纳状态。
 - 预留 Agent 摘要接口，但继续保持报告不保存敏感原文。

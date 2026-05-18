@@ -9,7 +9,7 @@
 - 默认规则库总开关：`safe-output.rules.default-enabled=false` 可关闭内置默认字段规则，配置规则和注解仍生效。
 - report 聚合指标、Response 风险画像、真实 Log4j2 `LOG` 计数和 fallback 规则线索、本地 JSON 快照。
 - report exporter 与 Demo 规则建议入口已复用 `safe-output.rules[].keys` 过滤已配置日志 key；若后续扩展建议采纳流，应继续使用同一 configured-key 提取逻辑。
-- demo 端到端测试覆盖 Response、Log、Manual、Report。
+- demo 端到端测试覆盖 Response、Log、Manual、Report，以及 R2.5 业务工作台、接入说明、日志场景、报告文件中心和安全读取边界。
 
 ## 当前最适合扩展的模块
 
@@ -26,12 +26,15 @@
 ## 第三轮切入建议
 
 - 日志长度策略增强：新增 R3 PRD `doc/prd/safe-output-r3-prd.md`，要求支持 `maxMessageLength` 整条超限跳过模式与 `max-scan-length` 前缀扫描窗口模式切换；默认应兼容 R2，不截断最终日志输出，不保存原始日志。
-- 增强 Demo：从 `safe-output-demo/src/main/resources/static/index.html`、`DemoReportController`、`DemoManualMaskController` 切入。
+- 增强 Demo：R2.5 后从 `safe-output-demo/src/main/resources/static/js/views/*`、`static/css/app.css`、`DemoBusinessController`、`DemoIntegrationGuideController`、`DemoReportController`、`DemoManualMaskController` 切入；`index.html` 只是静态壳层。
 - 增强风险画像：从 `ResponseRiskAnalyzer`、`ApiMaskMetrics`、`ResponseRiskApiProfile`、`MaskReportExporter.toJson` 切入。
 - 增强统计图表：优先扩展 `DemoReportController.dashboard` 返回结构，再更新 `static/index.html`。
 - 增强 Agent 分析摘要：预留 `MaskReport` / `ResponseRiskAnalysis` 到摘要 DTO 的纯函数接口；输入只用聚合指标，不传原始 response/log。
 - 增强配置建议生成：从 `LogRuleSuggestionAnalyzer` 扩展，保留 `enabled:false` 和人工确认；可增加建议来源、影响范围、置信度原因。
 - Log4j2 report bridge 已补齐：`/demo/logs` 可产生真实 `LOG` 计数和 `phoneNo` / `certNum` / `mailAddr` fallback 规则线索，后续不要再用 Demo controller 手动 seed 日志建议。
+- R2.5 日志场景新增 `/demo/logs/scenarios` 和 `/demo/logs/scenarios/{id}/trigger`，通过真实 logger 触发 JSON-like、key=value、regex fallback、已配置 key 和未配置 key 对比；接口只返回模板摘要、聚合计数、建议和 YAML 片段，不返回完整原始日志。
+- R2.5 报告中心新增 `/demo/report/files`、`/demo/report/files/{name}`、`/demo/report/files/{name}/dashboard`；安全读取只接受配置前缀 JSON 文件，继续禁止报告和页面展示敏感原文。
+- 本轮浏览器插件的执行工具未暴露，已完成本地 HTTP 与静态资源加载验证；下一轮若要做 UI polish，应人工打开 `http://localhost:8080/index.html` 验证五个主页面和打印样式。
 
 ## 编码前必须阅读
 
