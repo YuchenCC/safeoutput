@@ -219,34 +219,34 @@ safe-output:
 
 ### 5.4 未知 type 默认策略
 
-默认策略：
+当前实现策略：
 
 ```text
-warn + skip
+warn + DEFAULT fallback
 ```
 
-不建议默认回退到 `DEFAULT`，避免配置拼写错误被掩盖。
+命中未知 type 时不抛出业务异常，记录 warning 和 unknown type 聚合统计，并使用 `DEFAULT` 策略兜底脱敏。该实现优先避免未知 type 导致敏感值原样输出，同时通过报告暴露配置拼写错误或策略未注册问题。
 
-后续可扩展：
+历史讨论中预留过可配置策略：
 
 ```yaml
 safe-output:
   strategy:
-    unknown-type-policy: SKIP
+    unknown-type-policy: DEFAULT
 ```
 
-可选值预留：
+该配置项当前尚未暴露为运行时开关。可选值仍可作为后续治理增强方向：
 
 | 策略 | 含义 |
 |---|---|
-| SKIP | 默认，跳过并告警 |
-| DEFAULT | 使用默认策略兜底 |
+| SKIP | 跳过并告警 |
+| DEFAULT | 当前实现，使用默认策略兜底并记录 unknown type |
 | FAIL | 启动或运行时报错，适合强治理项目 |
 
 ### 5.5 验收标准
 
 1. 配置 `type: mobileM` 时，应用可以正常启动。
-2. 未注册 `mobileM` 策略时，命中该规则不抛出业务异常，字段默认跳过脱敏，并输出 warn。
+2. 未注册 `mobileM` 策略时，命中该规则不抛出业务异常，字段使用 `DEFAULT` 兜底脱敏，并输出 warn 和 unknown type 统计。
 3. 注册自定义 `mobileM` 策略 Bean 后，配置 `type: mobileM` 可以正常执行自定义脱敏。
 4. 内置 `MOBILE`、`ID_CARD`、`EMAIL` 等类型仍保持兼容。
 5. type 大小写差异不影响策略查找。
@@ -327,7 +327,7 @@ private String mobileM;
 
 1. 提供内置 `MaskTypes` 常量类，减少裸字符串。
 2. 启动期扫描规则并输出 unknown type 告警。
-3. 运行期 unknown type 命中时 warn + skip。
+3. 运行期 unknown type 命中时 warn + DEFAULT fallback，并记录 unknown type 统计。
 4. 统计报告记录 `unknownTypeCount` 和 unknown type 列表。
 5. 文档中推荐业务优先使用 `MaskTypes` 常量。
 
@@ -388,7 +388,7 @@ mobileM=13812345678
 1. 日志 key-value 匹配复用 `rules.keys`。
 2. 命中 key 后，根据 rule.type 查找对应 `MaskStrategy`。
 3. type 支持内置类型和自定义 String 类型。
-4. 未找到策略时，warn + skip，不影响日志输出。
+4. 未找到策略时，warn + DEFAULT fallback，不影响日志输出。
 5. `rules.paths` 暂不作为日志文本匹配依据。
 6. 如需匹配 `user.name` 这类文本 key，可显式加入 `rules.keys`。
 7. 字段级 `ignore.keys` 对日志 key-value 匹配生效。
@@ -1516,8 +1516,10 @@ GET /demo/report/log-suggestions
 ```yaml
 safe-output:
   strategy:
-    unknown-type-policy: SKIP
+    unknown-type-policy: DEFAULT
 ```
+
+说明：该配置项是后续扩展建议，当前代码尚未暴露运行时开关；当前固定行为为 `warn + DEFAULT fallback`。
 
 ### 12.2 身份证配置
 
@@ -1673,4 +1675,3 @@ safe-output:
    - `log-rule-config-suggestion-skill`
 5. 完成第二轮 Demo 验证接口。
 6. 进入第三轮 Demo 竞赛展示看板设计。
-

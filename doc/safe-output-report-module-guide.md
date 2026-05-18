@@ -2,6 +2,8 @@
 
 本文档基于当前代码整理 `safe-output-report` 报告模块的能力边界、数据流、输出字段和接入方式。报告模块只处理聚合指标和脱敏后的 evidence，不保存敏感原文、完整 response 或完整日志。
 
+文档定位：本文是 Report 模块深挖文档。业务接入配置以 `safe-output/doc/component-integration-guide.md` 为准；项目模块总览以 `doc/safe-output-project-overview.md` 为准。
+
 ## 模块定位
 
 `safe-output-report` 是 Safe Output 的统计与报告模块，位于：
@@ -24,6 +26,7 @@ safe-output/safe-output-report/
 - 生成 response 风险画像、性能画像和治理建议。
 - 汇总 log regex fallback 规则线索，生成候选配置片段；开启报告后，真实 Log4j2 `%safeOutputMsg` fallback 线索会进入 `MaskMetricsCollector`。
 - 导出本地 JSON 快照并按数量保留最新报告文件。
+- 在报告和 Demo 规则建议阶段复用已配置日志 key 过滤候选建议，避免重复输出治理建议；该过滤不影响在线日志脱敏和聚合计数。
 
 ## 核心类
 
@@ -218,7 +221,7 @@ Demo 的 `GET /demo/report/export` 就是手动触发该方法。导出失败时
 
 1. `Files.createDirectories(options.getDirectory())` 创建报告目录。
 2. 调用 `collector.snapshotSuggestions()` 读取日志规则建议线索。
-3. 调用 `LogRuleSuggestionAnalyzer.analyze(..., emptyList())` 生成规则建议报告。
+3. 调用 `LogRuleSuggestionAnalyzer.analyze(..., configuredKeys)` 生成规则建议报告，并过滤已配置日志 key。
 4. 调用 `collector.snapshot()` 读取当前聚合快照。
 5. 使用 `MaskReportJsonWriter` 手写 JSON。
 6. 通过 `Files.write(..., UTF_8)` 一次性写入本地文件。
@@ -435,7 +438,7 @@ safe-output:
 | `safe-output.report.file-prefix` | `safe-output-report` | 快照文件名前缀 |
 | `safe-output.report.interval-millis` | `60000` | 定时导出间隔，最小会归一为 1 |
 | `safe-output.report.retain-files` | `10` | 保留最新文件数，最小会归一为 1 |
-| `safe-output.report.include-api-metrics` | `true` | 当前已绑定配置，但 JSON writer 尚未按该开关裁剪字段 |
+| `safe-output.report.include-api-metrics` | `true` | 当前已绑定配置，JSON writer 暂未按该开关裁剪字段 |
 | `safe-output.report.include-field-path` | `true` | 当前已绑定配置，报告实际不输出字段路径 |
 | `safe-output.report.include-raw-value` | `false` | 当前已绑定配置，报告仍不会输出敏感原文 |
 
@@ -684,9 +687,9 @@ ResponseRiskAnalysis analysis = report.getResponseRiskAnalysis();
 - 报告是进程内内存聚合，没有数据库持久化；应用重启后内存计数会清空。
 - 导出的 JSON 是快照文件，不是实时查询存储。
 - `MaskReportJsonWriter` 是手写 JSON 序列化，不是通用 JSON 框架。
-- `include-api-metrics`、`include-field-path`、`include-raw-value` 当前只是属性绑定，导出逻辑尚未基于这些开关裁剪或扩展字段。
+- `include-api-metrics`、`include-field-path`、`include-raw-value` 当前只是属性绑定，导出逻辑尚未基于这些开关裁剪或扩展字段；无论这些配置如何设置，报告都不能输出敏感原文。
 - starter 默认 `MaskMetricsCollector(1000)`，接口维度上限当前不可通过配置调整。
-- `LogRuleSuggestionAnalyzer.analyze(metrics, configuredKeys)` 支持传入已配置 key 过滤建议，但当前 `MaskReportExporter` 调用时传入空列表。
+- `MaskReportExporter` 和 Demo 规则建议接口都会传入已配置 key 过滤建议。
 - Log4j2 runtime bridge 是进程级静态配置，适合单应用 Spring Boot 进程；多应用上下文并发隔离仍不是当前目标。
 - 风险评分是当前内置启发式规则，不代表合规结论；应作为治理线索使用。
 - 主动脱敏计入 `MANUAL` 场景总量，但默认不进入 Response 接口风险统计。

@@ -99,7 +99,7 @@
 - 变更摘要：配置规则、注解、策略接口、策略注册表、脱敏上下文、脱敏结果和统计报告中的脱敏类型标签统一改为 String；内置 `MaskType` 或 `MaskTypes` 仅作为标准类型来源和推荐常量。
 - 变更原因：当前 `MaskType` 枚举强绑定会导致配置中出现自定义 type 时启动失败，也阻断自定义策略从配置、注解到统计报告的全链路贯穿。
 - 范围影响：Core、Starter 配置绑定、注解 API、策略注册、规则匹配、日志脱敏、统计报告和 Demo 示例都需要适配 String type。
-- 验收影响：`type: mobileM`、`@Desensitize(type = "mobileM")` 和自定义 `MaskStrategy.type() = "mobileM"` 均应可用；未注册 type 默认 `warn + skip`，并进入 unknown type 统计。
+- 验收影响：`type: mobileM`、`@Desensitize(type = "mobileM")` 和自定义 `MaskStrategy.type() = "mobileM"` 均应可用；当前实现中未注册 type 默认 `warn + DEFAULT fallback`，并进入 unknown type 统计。
 - 后续工作：优先拆分类型模型重构 issue，再拆分配置绑定、注解兼容、统计报告和自定义策略 Demo issue。
 
 ### CR-20260514-04 增强 Log key-value 规则匹配和异步规则发现

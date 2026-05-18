@@ -2,6 +2,8 @@
 
 本文面向需要在 Spring Boot 2.x 业务系统中接入 Safe Output 的开发者，覆盖核心脱敏组件、Spring Boot starter、Response 脱敏、Log4j2 日志脱敏、主动脱敏、自定义策略和聚合报告配置。
 
+文档定位：本文是业务接入手册。代码结构和模块职责见根目录 `doc/safe-output-project-overview.md`；Report 模块内部数据流见根目录 `doc/safe-output-report-module-guide.md`；Response 拦截与 core 原理见 `safe-output/doc/core.md`。
+
 ## 1. 环境要求
 
 业务系统接入 Safe Output starter 的运行环境要求：
@@ -53,7 +55,7 @@ class CustomerController {
 }
 ```
 
-默认规则按字段名精确匹配，当前内置明细如下：
+默认规则按字段名精确匹配，当前内置明细由 `safe-output-core` 的 `DefaultMaskRules.all()` 统一维护：
 
 | 默认规则 | 字段名 | 脱敏类型 |
 |---|---|---|
@@ -424,7 +426,7 @@ public class EmployeeResponse {
 }
 ```
 
-未知 type 的当前策略为 `DEFAULT fallback`：记录 warning 和未知类型统计后，使用 `DEFAULT` 策略兜底脱敏。
+未知 type 的当前策略为 `DEFAULT fallback`：记录 warning 和未知类型统计后，使用 `DEFAULT` 策略兜底脱敏。历史 PRD 中出现过 `unknown-type-policy` 设计项，但当前代码没有暴露该运行时策略开关。
 
 ## 7. 聚合报告
 
@@ -611,7 +613,7 @@ safe-output:
 | `safe-output.report.file-prefix` | `safe-output-report` | 快照文件名前缀 |
 | `safe-output.report.interval-millis` | `60000` | 定时导出间隔，最小归一为 1 |
 | `safe-output.report.retain-files` | `10` | 保留最新报告文件数，最小归一为 1 |
-| `safe-output.report.include-api-metrics` | `true` | 当前已绑定配置，导出字段暂不按该开关裁剪 |
+| `safe-output.report.include-api-metrics` | `true` | 当前已绑定配置，JSON 导出暂不按该开关裁剪字段 |
 | `safe-output.report.include-field-path` | `true` | 当前已绑定配置，报告实际不输出字段路径 |
 | `safe-output.report.include-raw-value` | `false` | 当前已绑定配置，报告仍不会输出敏感原文 |
 
@@ -693,5 +695,5 @@ Log 规则建议默认只提出候选配置，不自动改配置、不自动启�
 - 导出的 JSON 是快照文件，不是实时查询存储，也不是长期完整指标仓库。
 - 接口维度有上限，超过后会进入 overflow 聚合，避免高基数路径导致内存无限增长。
 - API ignore 可以明文返回，但仍会进入风险统计，并在风险画像中标记为高风险豁免。
-- `include-api-metrics`、`include-field-path`、`include-raw-value` 当前已绑定配置；报告仍不会输出敏感原文。
+- `include-api-metrics`、`include-field-path`、`include-raw-value` 当前已绑定配置；JSON 导出暂不按这些开关裁剪或扩展字段，且报告仍不会输出敏感原文。
 - 风险评分是内置启发式治理线索，不代表合规结论。

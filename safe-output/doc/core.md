@@ -5,6 +5,8 @@
 
 R2 起，脱敏类型使用 String 类型标签贯穿规则、策略、上下文和统计链路。`MaskType` 仍保留为内置清单和兼容入口；业务自定义类型通过 `MaskStrategy.type()` 与配置中的 `rules[].type` 对齐。未知 type 的默认处理是 `warn + DEFAULT fallback`，会记录 warning 和未知类型统计，并使用 `DEFAULT` 策略兜底脱敏。
 
+本文定位为 Response 拦截和 core 引擎说明。业务接入手册见 `safe-output/doc/component-integration-guide.md`，项目代码总览见根目录 `doc/safe-output-project-overview.md`。
+
 ---
 
 ### 一、Response 拦截方式：`ResponseBodyAdvice`
@@ -147,7 +149,7 @@ public Optional<RuleMatch> match(String key, String path) {
 }
 ```
 
-**内置默认 key 列表**（key 匹配大小写不敏感）：
+**内置默认 key 列表**由 `DefaultMaskRules.all()` 统一维护，key 匹配大小写不敏感：
 
 ```java
 mobile / phone / telephone / tel / userMobile  → MOBILE

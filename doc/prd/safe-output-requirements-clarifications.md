@@ -46,7 +46,7 @@ R2 需求以 [Safe Output 数据脱敏组件第二轮需求说明书 PRD](./safe
 | R2-C01 | 姓名脱敏策略 | 姓名策略调整为通用首尾保留：空值和空字符串返回原值，长度 1 脱敏为 `maskChar`，长度 2 保留首字符，长度大于等于 3 保留首尾字符；该调整只改变算法，不扩大 `name` 等歧义字段的默认识别范围。 | Confirmed | 策略、规则匹配、Demo |
 | R2-C02 | 身份证识别分层 | 明确上下文命中 `ID_CARD` 时优先脱敏，不强制完整合法性认证；日志无上下文 Regex fallback 才执行格式、生日、年份和可配置校验位等轻量校验；行政区划校验不默认启用。 | Confirmed | 策略、日志、主动脱敏 |
 | R2-C03 | 自定义类型扩展 | 对外脱敏类型标签统一使用 String，配置、注解、策略注册、上下文、结果和统计报告均需贯穿自定义 type；内置 `MaskType` 或 `MaskTypes` 仅作为标准类型来源和推荐常量。 | Confirmed | Core、Starter、配置、统计 |
-| R2-C04 | Unknown type 策略 | 未注册 type 不阻断应用启动；运行期命中未知 type 时默认 `warn + skip`，不回退到 `DEFAULT`，并纳入 unknown type 统计。 | Confirmed | 策略注册、规则匹配、统计 |
+| R2-C04 | Unknown type 策略 | 未注册 type 不阻断应用启动；当前实现中运行期命中未知 type 时默认 `warn + DEFAULT fallback`，并纳入 unknown type 统计。 | Confirmed | 策略注册、规则匹配、统计 |
 | R2-C05 | Log key-value 规则匹配 | Log 场景复用 `rules.keys` 建立 key -> type 映射，支持轻量 `key=value`、`key: value` 和常见引号形式；`rules.paths` 暂不作为日志文本匹配依据，字段级 `ignore.keys` 对日志 key-value 匹配生效。 | Confirmed | Log4j2、配置、ignore |
 | R2-C06 | 主动脱敏服务 | 新增 Spring Bean 形式的主动脱敏服务，支持指定 type、对象规则和强扫描三种模式；不把数据库、MyBatis、缓存、MQ 或文件导出自动拦截纳入 R2。 | Confirmed | Core、Starter、Demo |
 | R2-C07 | Manual 场景统计 | 主动调用统一计入 `MANUAL` 场景基础统计，但不默认计入 Response 接口风险统计。 | Confirmed | 统计报告、主动脱敏 |

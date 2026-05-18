@@ -2,7 +2,7 @@
 
 Safe Output 是面向 Spring Boot 2.x 的 Java 8 starter，用于在不改 Controller 业务代码的前提下，对 response 和 Log4j2 日志做敏感信息脱敏，并输出聚合统计报告。
 
-R2 扩展了 String 类型标签、自定义策略、主动脱敏、Response 风险画像、性能画像和 Log 规则建议。R3 竞赛展示看板不属于本轮实现范围。
+当前实现已覆盖 String 类型标签、自定义策略、主动脱敏、Response 风险画像、性能画像、Log 规则建议和 Demo 前端控制台。
 
 ## 模块
 
@@ -14,7 +14,7 @@ R2 扩展了 String 类型标签、自定义策略、主动脱敏、Response 风
 
 ## 引用方式
 
-完整业务接入步骤见 [组件接入手册](doc/component-integration-guide.md)。
+完整业务接入步骤见 [组件接入手册](doc/component-integration-guide.md)，项目代码总览见根目录 `doc/safe-output-project-overview.md`。
 
 Maven:
 
@@ -95,8 +95,11 @@ safe-output:
 字段注解用于覆盖默认规则:
 
 ```java
+import com.safeoutput.core.Desensitize;
+import com.safeoutput.core.MaskTypes;
+
 public class CustomerResponse {
-    @Desensitize(type = MaskType.CHINESE_NAME)
+    @Desensitize(type = MaskTypes.CHINESE_NAME)
     private String name;
 }
 ```
@@ -145,7 +148,7 @@ demo 也提供手动导出接口:
 GET /demo/report/export
 ```
 
-当前内存中的聚合指标可通过 `GET /demo/report/snapshot` 以 JSON 返回（与写入磁盘的快照字段一致，便于在浏览器中查看）。启动 demo 后可在浏览器打开 `http://localhost:8080/safe-output-playground.html`，一键调用各类脱敏示例接口并刷新或导出报告。
+当前内存中的聚合指标可通过 `GET /demo/report/snapshot` 以 JSON 返回（与写入磁盘的快照字段一致，便于在浏览器中查看）。启动 demo 后可在浏览器打开 `http://localhost:8080/index.html`，一键调用各类脱敏示例接口并刷新或导出报告。
 
 R2 新增 Demo 验证路径包括 `POST /demo/mask/by-type`、`POST /demo/mask/object`、`POST /demo/mask/strong`、`GET /demo/report/response-risk` 和 `GET /demo/report/log-suggestions`。
 
