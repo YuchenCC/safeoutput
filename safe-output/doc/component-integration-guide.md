@@ -54,7 +54,16 @@ class CustomerController {
 | `default.email` | `email`、`mail` | `EMAIL` |
 | `default.password` | `password`、`secret`、`token` | `PASSWORD` |
 
-`name`、`id`、`code`、`no`、`address` 等字段不会仅凭字段名默认脱敏，需要使用注解或配置规则明确声明。
+`name`、`id`、`code`、`no`、`address` 等字段不会仅凭字段名默认脱敏，需要使用注解或配置规则明确声明。自定义规则的标准 YAML 配置方式是把 `safe-output.rules` 写成数组：
+
+```yaml
+safe-output:
+  rules:
+    - name: customerMobile
+      keys:
+        - customerMobile
+      type: MOBILE
+```
 
 老系统如果存在字段名历史混乱、默认 key 容易误伤的情况，可以关闭默认规则库。关闭后只保留注解规则和 `safe-output.rules[]` 中显式声明的用户规则。
 
@@ -64,7 +73,19 @@ safe-output:
     default-enabled: false
 ```
 
-如果在同一个 YAML 文件中还要声明自定义规则，可以使用带引号的索引 key，避免 `rules` 同时写成对象和数组：
+如果在同一个 YAML 文件中既要关闭默认规则库，又要声明自定义规则，不能把 `rules` 同时写成对象和数组。也就是说，下面这种写法不是合法 YAML 结构：
+
+```yaml
+safe-output:
+  rules:
+    default-enabled: false
+    - name: customerMobile
+      keys:
+        - customerMobile
+      type: MOBILE
+```
+
+此时可以使用带引号的索引 key。`"[0]"` 对应 properties 写法中的 `safe-output.rules[0]`，用于让 Spring Boot 绑定到第 0 条自定义规则：
 
 ```yaml
 safe-output:
@@ -533,3 +554,135 @@ safe-output:
 ### 10.8 报告没有生成
 
 确认 `safe-output.report.enabled=true`，输出目录有写入权限，且应用运行时间超过 `interval-millis`。报告导出失败不会影响业务接口，会记录失败统计。
+
+## 11. Report 模块接入摘要
+
+`safe-output-report` 是统计和报告模块，业务系统通常不需要直接依赖。通过 `safe-output-spring-boot-starter` 接入并开启报告后，starter 会自动创建 `MaskMetricsCollector` 和 `MaskReportExporter`，用于采集脱敏聚合指标并导出本地 JSON 快照。
+
+报告的用途是帮助接入方回答以下问题：
+
+- 当前 Response、Log、Manual 场景分别发生了多少次脱敏。
+- 哪些脱敏类型命中最多，是否存在未注册或拼写错误的未知 type。
+- 哪些接口返回了高敏类型、字段数量较高、命中频率较高或被 API ignore 豁免。
+- Log fallback 发现了哪些疑似可补充为 `safe-output.rules[]` 的字段名。
+- 脱敏链路是否存在失败或明显耗时异常。
+
+报告只保存聚合指标、类型标签、接口维度、耗时、失败次数和脱敏后的 evidence，不保存敏感原文、完整 response 或完整日志。
+
+### 11.1 启用报告
+
+业务系统继续只依赖 starter：
+
+```xml
+<dependency>
+  <groupId>com.safeoutput</groupId>
+  <artifactId>safe-output-spring-boot-starter</artifactId>
+  <version>0.1.0-SNAPSHOT</version>
+</dependency>
+```
+
+开启报告：
+
+```yaml
+safe-output:
+  report:
+    enabled: true
+    directory: ./safe-output-reports
+    file-prefix: safe-output-report
+    interval-millis: 60000
+    retain-files: 10
+```
+
+配置说明：
+
+| 配置项 | 默认值 | 说明 |
+|---|---:|---|
+| `safe-output.report.enabled` | `false` | 是否启用报告采集和导出 |
+| `safe-output.report.directory` | `./safe-output-reports` | JSON 快照输出目录 |
+| `safe-output.report.file-prefix` | `safe-output-report` | 快照文件名前缀 |
+| `safe-output.report.interval-millis` | `60000` | 定时导出间隔，最小归一为 1 |
+| `safe-output.report.retain-files` | `10` | 保留最新报告文件数，最小归一为 1 |
+| `safe-output.report.include-api-metrics` | `true` | 当前已绑定配置，导出字段暂不按该开关裁剪 |
+| `safe-output.report.include-field-path` | `true` | 当前已绑定配置，报告实际不输出字段路径 |
+| `safe-output.report.include-raw-value` | `false` | 当前已绑定配置，报告仍不会输出敏感原文 |
+
+报告默认关闭。未开启时，starter 不会创建报告采集器和导出器，也不会生成 Response 风险画像、Log 规则建议或 JSON 快照。
+
+### 11.2 统计来源和用法
+
+开启报告后，starter 会把同一个 `MaskMetricsCollector` 接入 Response、Log4j2、主动脱敏和报告导出链路。常见统计来源如下：
+
+| 来源 | 场景 | 说明 |
+|---|---|---|
+| Response 自动脱敏 | `RESPONSE` | `ResponseBodyAdvice` 处理返回值时记录脱敏次数、类型分布、接口风险、ignore 和失败信息 |
+| Log4j2 日志脱敏 | `LOG` | `%safeOutputMsg` 成功脱敏 key-value 或 fallback 值后记录日志脱敏次数；`logCount` 统计的是成功脱敏的日志值次数，不是日志行数 |
+| 主动脱敏服务 | `MANUAL` | 注入 `SafeOutputMaskService` 调用 `mask`、`maskObject`、`maskStrong` 或 `maskObjectStrong` 时记录主动脱敏次数 |
+| 手工补充统计 | 业务自定义 | 业务方可注入 `MaskMetricsCollector`，只补充场景、类型和耗时等聚合指标 |
+
+手工补充统计适合接入方已有独立脱敏入口、异步任务或批处理任务，但又希望统一进入 Safe Output 报告。示例：
+
+```java
+private final MaskMetricsCollector metricsCollector;
+
+public void recordManualMaskMetric(long elapsedNanos) {
+    metricsCollector.recordMask(MaskScene.MANUAL, "mobile", elapsedNanos);
+}
+```
+
+手工统计只应传入场景、类型和耗时等聚合信息，不要把原始值、完整响应体、完整日志或敏感样本写入报告链路。
+
+### 11.3 导出和读取报告
+
+启用报告后，`MaskReportExporter` 会按 `safe-output.report.interval-millis` 定时导出 JSON 快照。应用启动后不会立即写第一份报告，而是在第一个间隔后导出。每次导出的文件是当前进程内聚合快照，不是从上次导出到本次导出的增量。
+
+如果业务系统需要主动导出报告，可注入 `MaskReportExporter`：
+
+```java
+private final MaskReportExporter exporter;
+```
+
+调用：
+
+```java
+Path path = exporter.exportNow();
+```
+
+`exportNow()` 失败时返回 `null`，同时增加失败计数并记录 warning，不会抛出异常影响业务流程。
+
+如果需要在程序内读取当前聚合快照，可注入 `MaskMetricsCollector`：
+
+```java
+private final MaskMetricsCollector metricsCollector;
+```
+
+读取：
+
+```java
+MaskReport report = metricsCollector.snapshot();
+ResponseRiskAnalysis analysis = report.getResponseRiskAnalysis();
+```
+
+快照对象只包含聚合指标，不能从中恢复原始 response、日志或敏感值。
+
+### 11.4 报告可提供的信息
+
+| 信息 | 说明 | 常见用途 |
+|---|---|---|
+| 总量和场景分布 | `totalCount`、`responseCount`、`logCount`、`manualCount` | 判断接入后实际覆盖了哪些脱敏场景 |
+| 类型分布 | `maskTypeCounts` | 观察手机号、邮箱、身份证、银行卡等类型的命中情况 |
+| 未知类型统计 | `unknownTypeCounts` | 发现配置拼写错误或自定义 `MaskStrategy` 漏注册 |
+| 接口维度指标 | method、path、命中次数、脱敏字段数、耗时、失败次数、类型分布 | 定位高频、高敏或耗时异常接口 |
+| Response 风险画像 | 风险等级、风险原因、治理建议、ignored 高风险接口 | 排查 API ignore、password、身份证、银行卡、高字段量等治理线索 |
+| Log 规则建议 | 候选 key、建议 type、命中次数、置信度、脱敏 evidence、候选 YAML 片段 | 将日志 fallback 线索沉淀为显式 `safe-output.rules[]` 配置 |
+| 导出状态 | `failureCount` 和本地 JSON 快照文件 | 发现报告导出失败，保留审计快照 |
+
+Log 规则建议默认只提出候选配置，不自动改配置、不自动启用规则。建议片段中的 evidence 只使用 `key=<type>` 形态，不包含命中的日志原文或敏感值。
+
+### 11.5 使用注意事项
+
+- 报告是进程内内存聚合，没有数据库持久化；应用重启后内存计数会从 0 开始。
+- 导出的 JSON 是快照文件，不是实时查询存储，也不是长期完整指标仓库。
+- 接口维度有上限，超过后会进入 overflow 聚合，避免高基数路径导致内存无限增长。
+- API ignore 可以明文返回，但仍会进入风险统计，并在风险画像中标记为高风险豁免。
+- `include-api-metrics`、`include-field-path`、`include-raw-value` 当前已绑定配置；报告仍不会输出敏感原文。
+- 风险评分是内置启发式治理线索，不代表合规结论。
