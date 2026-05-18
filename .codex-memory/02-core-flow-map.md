@@ -10,7 +10,7 @@ Log4j2 PatternLayout `%safeOutputMsg{...}` -> `SafeOutputMessagePatternConverter
 
 ## 配置加载与规则匹配链路
 
-`SafeOutputProperties` 绑定 `safe-output.rules[]` / `ignore.*`，`SafeOutputAutoConfiguration.maskRuleMatcher` 从 Environment 读取 `safe-output.rules.default-enabled` -> 构造 `MaskRule.configured` -> `MaskRuleMatcher.builder` -> `decide` 固定优先级 -> 输出 `RuleMatch` 或 empty。风险点：配置规则目前低于字段注解；path 只支持精确等值匹配和 `[*]` 数字下标段通配，不是完整 JSONPath；默认规则开关只影响内置默认规则，不影响配置规则和注解。
+`SafeOutputProperties` 绑定 `safe-output.rules[]` / `ignore.*`，`SafeOutputAutoConfiguration.maskRuleMatcher` 从 Environment 读取 `safe-output.rules.default-enabled` -> 构造 `MaskRule.configured` -> `MaskRuleMatcher.builder` -> `DefaultMaskRules.all()` 提供内置默认字段规则 -> `decide` 固定优先级 -> 输出 `RuleMatch` 或 empty。风险点：配置规则目前低于字段注解；path 只支持精确等值匹配和 `[*]` 数字下标段通配，不是完整 JSONPath；默认规则开关只影响内置默认规则，不影响配置规则和注解。
 
 ## 注解解析链路
 

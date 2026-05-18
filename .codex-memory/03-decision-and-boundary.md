@@ -9,6 +9,7 @@
 - 脱敏异常不能影响主业务：Response、Object、Log、Manual、Report 均采用 fail-open 或记录失败指标。
 - 老项目即插即用优先：Java 8、Spring Boot 2.7.18、`spring.factories`、starter 聚合内部模块，支持 `single-jar` profile。
 - 脱敏规则优先级：`MaskRuleMatcher.decide` 当前确认顺序为 API ignore / 字段 ignore > 注解 > 配置/默认规则 > regex fallback；后续改动需同步测试该优先级边界。
+- 内置默认字段规则由 `DefaultMaskRules.all()` 统一维护；文档默认规则表应以该类为准，避免在 `MaskRuleMatcher` 或文档中重复维护分叉清单。
 - 默认规则库可通过 starter 配置 `safe-output.rules.default-enabled=false` 关闭；关闭后只移除内置默认规则，不影响注解、用户配置 rules、ignore 或 regex fallback。
 - Spring Boot 2.x 兼容优先：使用 `spring.factories` 和 `spring-boot-autoconfigure`，未迁移 Boot 3 `AutoConfiguration.imports`。
 

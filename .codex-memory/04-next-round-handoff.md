@@ -3,6 +3,7 @@
 ## 当前最稳定的基础能力
 
 - core 规则匹配、内置策略、自定义策略注册、对象递归脱敏。
+- 内置默认字段规则已从 `MaskRuleMatcher` 提取到 `DefaultMaskRules`，后续修改默认 key 时同步更新该类、`MaskRuleMatcherTest.defaultRuleLibraryIsTheSingleSourceForBuiltInFieldRules` 和文档默认规则表。
 - starter 自动装配和 ResponseBodyAdvice 接入。
 - starter 到 Log4j2 `%safeOutputMsg` 的 runtime bridge，可复用 Spring 配置规则、自定义策略、日志选项、日志脱敏计数和日志规则建议采集。
 - 默认规则库总开关：`safe-output.rules.default-enabled=false` 可关闭内置默认字段规则，配置规则和注解仍生效。
@@ -41,6 +42,7 @@
 - `.codex-memory/04-next-round-handoff.md`
 - `safe-output/README.md`
 - `safe-output/safe-output-core/src/main/java/com/safeoutput/core/MaskRuleMatcher.java`
+- `safe-output/safe-output-core/src/main/java/com/safeoutput/core/DefaultMaskRules.java`
 - `safe-output/safe-output-core/src/main/java/com/safeoutput/core/ObjectMasker.java`
 - `safe-output/safe-output-spring-boot-starter/src/main/java/com/safeoutput/spring/boot/autoconfigure/SafeOutputResponseBodyAdvice.java`
 - `safe-output/safe-output-report/src/main/java/com/safeoutput/report/MaskMetricsCollector.java`

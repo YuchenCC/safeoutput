@@ -14,6 +14,7 @@ Safe Output 是面向 Spring Boot 2.x / Java 8 老项目的通用数据脱敏 st
 - Spring Boot 2.x 自动装配：`safe-output-spring-boot-starter/src/main/resources/META-INF/spring.factories` 注册 `SafeOutputAutoConfiguration`、`SafeOutputMvcAutoConfiguration`。
 - 注解模式脱敏：`@Desensitize(type=...)`，由 `SensitiveFieldResolver` 解析字段注解。
 - 配置模式脱敏：`safe-output.rules[]` 绑定到 `SafeOutputProperties`，转换为 `MaskRule` 后进入 `MaskRuleMatcher`；`safe-output.rules.default-enabled=false` 可在自动装配时关闭默认规则库。
+- 内置默认字段规则库集中在 `DefaultMaskRules`，供 `MaskRuleMatcher` 使用；文档默认规则表应以该类为准。
 - 内置策略：`MOBILE`、`ID_CARD`、`BANK_CARD`、`EMAIL`、`CHINESE_NAME`、`ADDRESS`、`PASSWORD`、`DEFAULT`。
 - 对象递归脱敏：`ObjectMasker` 支持 Bean、Map、Collection、数组，带最大深度、集合上限、循环引用保护。
 - Response 返回值脱敏：`SafeOutputResponseBodyAdvice` 在 JSON 序列化前处理，可配置 `response.body-data-path`。
