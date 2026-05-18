@@ -22,6 +22,7 @@ Safe Output 是面向 Spring Boot 2.x / Java 8 老项目的通用数据脱敏 st
 - JSON-like 日志轻量识别：`SafeOutputLogMessageMasker` 用 key-value 正则处理 `"key":"value"`、`key=value` 等片段。
 - Spring Boot starter 会把 `safe-output.rules[].keys`、`safe-output.ignore.keys`、自定义 `MaskStrategy`、默认规则开关、`safe-output.log.*` 选项和 report collector 桥接给真实 `%safeOutputMsg`。
 - 统计采集、风险分析、报告输出：`MaskMetricsCollector`、`ResponseRiskAnalyzer`、`MaskReportExporter`；开启 report 后真实 Log4j2 脱敏会记录 `LOG` 计数和 fallback 规则线索。
+- 报告导出、Demo Dashboard 和 Demo Log 规则建议接口会复用 `safe-output.rules[].keys` 过滤已配置 key，避免重复治理建议；过滤只影响报告建议，不影响 Log4j2 在线脱敏和聚合计数。
 - Demo：Response、Log、Manual、Report、Dashboard/风险画像/规则发现/脱敏实验室页面。
 - 测试：core、starter、log4j2、report、demo 均有单元或集成测试。
 

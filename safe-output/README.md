@@ -135,6 +135,8 @@ regex fallback 命中后可提取 nearbyKey 规则线索。开启 `safe-output.r
 
 启用 `safe-output.report.enabled=true` 后，starter 会创建 `MaskMetricsCollector` 和定时 `MaskReportExporter`。报告只包含聚合指标、接口风险等级、ignored 统计、失败次数、耗时、Response 风险画像、性能画像、Log 脱敏计数和 Log 规则建议，不保存敏感原文、完整 response 或完整日志。
 
+报告导出、Demo Dashboard 和 `GET /demo/report/log-suggestions` 生成 Log 规则建议时，会复用当前 `safe-output.rules[].keys` 过滤已配置字段，避免对已经配置过的日志 key 重复输出治理建议。过滤只发生在报告分析阶段，不改变 Log4j2 在线脱敏和聚合计数。
+
 主动脱敏调用计入 `MANUAL` 场景统计，用于评估显式调用量和类型分布；它不默认进入 Response 接口风险统计。Response 风险统计只聚合响应场景的稳定接口标识、脱敏字段数量、类型分布、耗时、ignore 和失败状态。
 
 demo 也提供手动导出接口:

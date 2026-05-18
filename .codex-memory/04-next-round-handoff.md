@@ -7,6 +7,7 @@
 - starter 到 Log4j2 `%safeOutputMsg` 的 runtime bridge，可复用 Spring 配置规则、自定义策略、日志选项、日志脱敏计数和日志规则建议采集。
 - 默认规则库总开关：`safe-output.rules.default-enabled=false` 可关闭内置默认字段规则，配置规则和注解仍生效。
 - report 聚合指标、Response 风险画像、真实 Log4j2 `LOG` 计数和 fallback 规则线索、本地 JSON 快照。
+- report exporter 与 Demo 规则建议入口已复用 `safe-output.rules[].keys` 过滤已配置日志 key；若后续扩展建议采纳流，应继续使用同一 configured-key 提取逻辑。
 - demo 端到端测试覆盖 Response、Log、Manual、Report。
 
 ## 当前最适合扩展的模块
