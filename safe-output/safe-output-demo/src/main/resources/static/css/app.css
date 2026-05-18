@@ -44,6 +44,24 @@ body {
   margin: 2px 0;
 }
 .shell-nav a.active { color: var(--amber); background: rgba(224, 163, 38, 0.1); border-left-color: var(--amber); }
+.nav-group {
+  margin: 12px 0;
+  padding: 10px 0 10px 10px;
+  border-top: 1px solid var(--line-soft);
+  border-bottom: 1px solid var(--line-soft);
+}
+.nav-group span {
+  display: block;
+  margin: 0 0 6px 2px;
+  color: var(--muted);
+  font-size: 11px;
+  text-transform: uppercase;
+}
+.nav-group a {
+  margin-left: 6px;
+  padding: 9px 10px;
+  font-size: 12px;
+}
 .shell-main { margin-left: 240px; width: calc(100% - 240px); padding: 28px 32px 48px; }
 .hero {
   min-height: 190px;
@@ -114,11 +132,149 @@ pre {
 .result { min-height: 118px; }
 .chart-box { min-height: 240px; position: relative; }
 .report-print-actions { margin-left: auto; }
+.dashboard-hero { min-height: 170px; }
+.report-focus { margin-top: 16px; }
+.workbench-hero { min-height: 170px; }
+.business-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 18px 0;
+}
+.business-tabs a {
+  color: var(--muted);
+  text-decoration: none;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  border-radius: 6px;
+  padding: 9px 12px;
+  font-size: 13px;
+}
+.business-tabs a.active {
+  color: var(--ink);
+  background: var(--amber);
+  border-color: var(--amber);
+  font-weight: 700;
+}
+.module-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+  margin-bottom: 16px;
+}
+.module-card {
+  display: grid;
+  gap: 8px;
+  min-height: 150px;
+  padding: 18px;
+  color: var(--text);
+  text-decoration: none;
+  background: linear-gradient(180deg, rgba(66, 184, 221, 0.07), rgba(224, 163, 38, 0.05)), var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+.module-card span, .module-card small, .panel-head p, .detail-item span {
+  color: var(--muted);
+  font-size: 12px;
+}
+.module-card strong {
+  font: 700 22px var(--font-display);
+}
+.module-card p {
+  margin: 0;
+  color: #c8d1da;
+  line-height: 1.5;
+}
+.business-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(360px, 0.8fr);
+  gap: 16px;
+  align-items: start;
+}
+.panel-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.panel-head p { margin: 4px 0 0; }
+.business-table table button { white-space: nowrap; }
+.business-detail {
+  position: sticky;
+  top: 20px;
+}
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.detail-grid.compact { margin-top: 10px; }
+.detail-item {
+  min-height: 70px;
+  padding: 11px;
+  border: 1px solid var(--line-soft);
+  background: #101419;
+  border-radius: 6px;
+}
+.detail-item strong {
+  display: block;
+  margin-top: 7px;
+  font-size: 13px;
+  line-height: 1.45;
+  word-break: break-word;
+}
+.detail-item.sensitive {
+  border-color: rgba(224, 163, 38, 0.38);
+  background: rgba(224, 163, 38, 0.06);
+}
+.detail-item.danger {
+  border-color: rgba(227, 91, 91, 0.44);
+  background: rgba(227, 91, 91, 0.08);
+}
+.icon-button {
+  width: 34px;
+  height: 32px;
+  padding: 0;
+  font-size: 24px;
+  line-height: 1;
+}
+.eye-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--amber);
+}
+.eye-dot {
+  width: 18px;
+  height: 12px;
+  display: inline-block;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  position: relative;
+}
+.eye-dot::after {
+  content: "";
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: currentColor;
+  position: absolute;
+  left: 6px;
+  top: 3px;
+}
+.reveal-panel {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line-soft);
+}
 @media (max-width: 820px) {
   body { display: block; }
   .shell-nav { position: static; width: 100%; min-width: 0; min-height: auto; }
   .shell-main { margin-left: 0; width: 100%; padding: 18px; }
   .grid.two, .grid.three { grid-template-columns: 1fr; }
+  .business-layout, .detail-grid { grid-template-columns: 1fr; }
+  .business-detail { position: static; }
 }
 @media print {
   body { display: block; background: #fff; color: #111; }

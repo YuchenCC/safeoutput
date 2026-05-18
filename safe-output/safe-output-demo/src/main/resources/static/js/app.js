@@ -1,13 +1,17 @@
 (function (window, document) {
   const root = document.getElementById('app');
-  const routes = ['workbench', 'guide', 'lab', 'logs', 'reports'];
+  const routes = ['dashboard', 'workbench', 'guide', 'lab', 'logs'];
   async function render() {
-    const route = routes.indexOf(location.hash.replace('#', '')) >= 0 ? location.hash.replace('#', '') : 'workbench';
+    const hashRoute = location.hash.replace('#', '').split('/')[0];
+    const route = routes.indexOf(hashRoute) >= 0 ? hashRoute : 'dashboard';
     if (!location.hash) {
-      history.replaceState(null, '', '#workbench');
+      history.replaceState(null, '', '#dashboard');
     }
     Array.prototype.forEach.call(document.querySelectorAll('[data-route]'), function (link) {
-      link.classList.toggle('active', link.dataset.route === route);
+      const sameRoute = link.dataset.route === route;
+      const exactHash = link.getAttribute('href') === location.hash;
+      const routeRoot = route !== 'workbench' && sameRoute;
+      link.classList.toggle('active', routeRoot || (sameRoute && exactHash));
     });
     try {
       await window.SafeOutputViews[route](root);
