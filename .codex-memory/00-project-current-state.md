@@ -26,7 +26,9 @@ Safe Output 是面向 Spring Boot 2.x / Java 8 老项目的通用数据脱敏 st
 - 报告导出、Demo Dashboard 和 Demo Log 规则建议接口会复用 `safe-output.rules[].keys` 过滤已配置 key，避免重复治理建议；过滤只影响报告建议，不影响 Log4j2 在线脱敏和聚合计数。
 - Demo：R2.5 主入口已升级为“业务系统敏感数据治理驾驶舱”，覆盖业务工作台、接入说明、脱敏实验室、日志场景和报告中心；旧 Response/Log/Manual/Report 兼容接口仍保留，但不再作为默认首屏。
 - R2.5 Demo 业务域：客户、订单、支付、工单、账户 mock 数据源与业务服务，业务接口覆盖 Bean、Map、Collection、嵌套对象，并覆盖 `MOBILE`、`ID_CARD`、`BANK_CARD`、`EMAIL`、`CHINESE_NAME`、`ADDRESS`、`PASSWORD`、`DEFAULT`。
-- R2.5 Demo 前端：`safe-output-demo/src/main/resources/static/index.html` 只保留壳层，页面拆到 `static/css/app.css`、`static/js/api.js`、`static/js/views/*` 和 `static/js/components/*`；默认路由为 `#workbench`，继续使用本地 `vendor/` 资源。
+- R3 Demo 业务工作台：客户档案、订单履约、支付核验、工单处理、账户安全已扩展为独立业务页面模型；每个域都有动态 mock 列表、详情和 `/{id}/raw` 明文查看接口，列表/详情走 Response 脱敏，raw 接口走 API ignore 并进入风险统计。
+- R2.5/R3 Demo 前端：`safe-output-demo/src/main/resources/static/index.html` 只保留壳层，页面拆到 `static/css/app.css`、`static/js/api.js`、`static/js/views/*` 和 `static/js/components/*`；默认路由为 `#dashboard`，侧边栏把业务功能拆成客户档案、订单履约、支付核验、工单处理、账户安全子菜单，对应 `#workbench/{customers|orders|payments|tickets|accounts}`，继续使用本地 `vendor/` 资源。
+- R3 Demo Dashboard：原业务工作台风险摘要与报告中心已整合到 `#dashboard`，集中展示实时风险摘要、场景/类型图表、报告导出、报告文件列表和单报告明细。
 - R2.5 报告中心：Demo 可导出、列出、读取配置报告目录内的 JSON 报告，并基于 JSON 聚合字段派生单报告 dashboard；读取限制在 `safe-output.report.directory` 且只允许 `file-prefix-*.json`，不读取任意文件。
 - 测试：core、starter、log4j2、report、demo 均有单元或集成测试。
 
