@@ -8,6 +8,14 @@ safe-output:
       keys:
         - phoneNo
       type: MOBILE
+    - name: demoAddress
+      keys:
+        - shippingAddress
+      type: ADDRESS
+    - name: demoDefault
+      keys:
+        - securityAnswer
+      type: DEFAULT
   ignore:
     keys:
       - plainNote
@@ -15,6 +23,9 @@ safe-output:
       - method: GET
         path: /demo/ignored
         reason: demo plaintext endpoint
+      - method: GET
+        path: /demo/business/legacy-plaintext
+        reason: legacy plaintext integration contract
   report:
     enabled: true
     directory: target/safe-output-demo-reports

@@ -22,32 +22,60 @@ public class DemoManualMaskController {
     @PostMapping("/demo/mask/by-type")
     public Map<String, Object> byType(@RequestBody ByTypeRequest request) {
         // Demo 连续执行两次，用响应里的 idempotent 字段展示主动脱敏不会反复破坏格式。
-        String first = maskService.mask(request.getValue(), request.getType());
-        String second = maskService.mask(first, request.getType());
-        return result(first, second);
+        int iterations = iterations(request.getIterations());
+        long startedAt = System.nanoTime();
+        String first = null;
+        String second = null;
+        for (int i = 0; i < iterations; i++) {
+            first = maskService.mask(request.getValue(), request.getType());
+            second = maskService.mask(first, request.getType());
+        }
+        return result(first, second, iterations, System.nanoTime() - startedAt);
     }
 
     @PostMapping("/demo/mask/object")
-    public Map<String, Object> object() {
-        ManualOrder first = (ManualOrder) maskService.maskObject(manualOrder());
-        ManualOrder second = (ManualOrder) maskService.maskObject(first);
-        return result(first, second);
+    public Map<String, Object> object(@RequestBody(required = false) ObjectRequest request) {
+        int iterations = request == null ? 1 : iterations(request.getIterations());
+        long startedAt = System.nanoTime();
+        ManualOrder first = null;
+        ManualOrder second = null;
+        for (int i = 0; i < iterations; i++) {
+            first = (ManualOrder) maskService.maskObject(manualOrder());
+            second = (ManualOrder) maskService.maskObject(first);
+        }
+        return result(first, second, iterations, System.nanoTime() - startedAt);
     }
 
     @PostMapping("/demo/mask/strong")
     public Map<String, Object> strong(@RequestBody StrongRequest request) {
         // 强扫描必须由调用方显式进入，普通对象主动脱敏不会默认全局 regex 扫描文本。
-        String first = maskService.maskStrong(request.getText());
-        String second = maskService.maskStrong(first);
-        return result(first, second);
+        int iterations = iterations(request.getIterations());
+        long startedAt = System.nanoTime();
+        String first = null;
+        String second = null;
+        for (int i = 0; i < iterations; i++) {
+            first = maskService.maskStrong(request.getText());
+            second = maskService.maskStrong(first);
+        }
+        return result(first, second, iterations, System.nanoTime() - startedAt);
     }
 
-    private static Map<String, Object> result(Object first, Object second) {
+    private static Map<String, Object> result(Object first, Object second, int iterations, long totalElapsedNanos) {
         Map<String, Object> response = new LinkedHashMap<String, Object>();
         response.put("first", first);
         response.put("second", second);
         response.put("idempotent", first == null ? second == null : first.equals(second));
+        response.put("iterations", iterations);
+        response.put("totalElapsedNanos", totalElapsedNanos);
+        response.put("averageElapsedNanos", iterations == 0 ? 0 : totalElapsedNanos / iterations);
         return response;
+    }
+
+    private static int iterations(Integer iterations) {
+        if (iterations == null) {
+            return 1;
+        }
+        return Math.max(1, Math.min(iterations.intValue(), 1000));
     }
 
     private static ManualOrder manualOrder() {
@@ -59,6 +87,8 @@ public class DemoManualMaskController {
         private String value;
 
         private String type;
+
+        private Integer iterations;
 
         public String getValue() {
             return value;
@@ -75,11 +105,34 @@ public class DemoManualMaskController {
         public void setType(String type) {
             this.type = type;
         }
+
+        public Integer getIterations() {
+            return iterations;
+        }
+
+        public void setIterations(Integer iterations) {
+            this.iterations = iterations;
+        }
+    }
+
+    public static final class ObjectRequest {
+
+        private Integer iterations;
+
+        public Integer getIterations() {
+            return iterations;
+        }
+
+        public void setIterations(Integer iterations) {
+            this.iterations = iterations;
+        }
     }
 
     public static final class StrongRequest {
 
         private String text;
+
+        private Integer iterations;
 
         public String getText() {
             return text;
@@ -87,6 +140,14 @@ public class DemoManualMaskController {
 
         public void setText(String text) {
             this.text = text;
+        }
+
+        public Integer getIterations() {
+            return iterations;
+        }
+
+        public void setIterations(Integer iterations) {
+            this.iterations = iterations;
         }
     }
 

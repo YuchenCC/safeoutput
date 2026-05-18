@@ -19,6 +19,8 @@ import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 
 @SpringBootTest(classes = DemoApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -46,6 +48,62 @@ class DemoResponseIntegrationTest {
         assertFalse(map.contains("foo@example.com"));
         assertTrue(list.contains("139****8001"));
         assertTrue(nested.contains("622202*********0123"));
+    }
+
+    @Test
+    void r25BusinessWorkbenchUsesBusinessScenariosAndResponseAdvice() {
+        String workbench = restTemplate.getForObject("/demo/workbench", String.class);
+        String customer = restTemplate.getForObject("/demo/business/customer", String.class);
+        String order = restTemplate.getForObject("/demo/business/order", String.class);
+        String payment = restTemplate.getForObject("/demo/business/payment", String.class);
+        String tickets = restTemplate.getForObject("/demo/business/tickets", String.class);
+        String account = restTemplate.getForObject("/demo/business/account", String.class);
+
+        assertTrue(workbench.contains("客户档案"));
+        assertTrue(workbench.contains("订单履约"));
+        assertTrue(workbench.contains("支付核验"));
+        assertTrue(workbench.contains("工单处理"));
+        assertTrue(workbench.contains("账户安全"));
+        assertTrue(customer.contains("\"displayName\":\"张*\""));
+        assertTrue(customer.contains("138****8000"));
+        assertTrue(customer.contains("110105********002X"));
+        assertTrue(customer.contains("zha****@example.com"));
+        assertTrue(customer.contains("北京市朝阳区****"));
+        assertTrue(customer.contains("\"plainNote\":\"demo note 13800138000\""));
+        assertFalse(customer.contains("\"mobile\":\"13800138000\""));
+        assertTrue(order.contains("622202*********0123"));
+        assertTrue(payment.contains("\"securityAnswer\":\"****\""));
+        assertTrue(tickets.contains("\"realName\":\"李*\""));
+        assertTrue(account.contains("\"password\":\"********\""));
+        assertFalse(order.contains("6222021234567890123"));
+        assertFalse(payment.contains("13900138001"));
+        assertFalse(tickets.contains("13700138002"));
+        assertFalse(account.contains("Secret-12345"));
+    }
+
+    @Test
+    void r25BusinessApiIgnoreKeepsPlaintextAndRecordsRiskMetric() {
+        String ignored = restTemplate.getForObject("/demo/business/legacy-plaintext", String.class);
+
+        assertTrue(ignored.contains("\"mobile\":\"13800138000\""));
+        ApiMaskMetrics metric = metricsCollector.snapshot().getApiMetric("GET", "/demo/business/legacy-plaintext");
+        assertNotNull(metric);
+        assertTrue(metric.isIgnored());
+    }
+
+    @Test
+    void integrationGuideCoversAllMajorIntegrationModes() {
+        String guide = restTemplate.getForObject("/demo/integration-guide", String.class);
+
+        assertTrue(guide.contains("yaml-rule"));
+        assertTrue(guide.contains("annotation"));
+        assertTrue(guide.contains("default-rule"));
+        assertTrue(guide.contains("field-ignore"));
+        assertTrue(guide.contains("api-ignore"));
+        assertTrue(guide.contains("log4j2"));
+        assertTrue(guide.contains("manual"));
+        assertTrue(guide.contains("/demo/business/customer"));
+        assertTrue(guide.contains("/demo/logs/scenarios"));
     }
 
     @Test
@@ -99,11 +157,15 @@ class DemoResponseIntegrationTest {
         Map<String, String> req = new LinkedHashMap<String, String>();
         req.put("value", "13800138000");
         req.put("type", "MOBILE");
+        req.put("iterations", "3");
         String result = restTemplate.postForObject("/demo/mask/by-type", req, String.class);
 
         assertTrue(result.contains("\"first\""));
         assertTrue(result.contains("\"second\""));
         assertTrue(result.contains("\"idempotent\""));
+        assertTrue(result.contains("\"iterations\":3"));
+        assertTrue(result.contains("\"totalElapsedNanos\""));
+        assertTrue(result.contains("\"averageElapsedNanos\""));
         assertTrue(result.contains("138****8000"));
         assertFalse(result.contains("13800138000"));
     }
@@ -124,13 +186,36 @@ class DemoResponseIntegrationTest {
     void maskStrongEndpointScansTextAndReturnsResult() {
         Map<String, String> req = new LinkedHashMap<String, String>();
         req.put("text", "手机号13800138000邮箱foo@example.com");
+        req.put("iterations", "2");
         String result = restTemplate.postForObject("/demo/mask/strong", req, String.class);
 
         assertTrue(result.contains("\"first\""));
         assertTrue(result.contains("\"second\""));
         assertTrue(result.contains("\"idempotent\":true"));
+        assertTrue(result.contains("\"iterations\":2"));
         assertTrue(result.contains("138****8000"));
         assertTrue(result.contains("foo****@example.com"));
+    }
+
+    @Test
+    void logScenarioEndpointsTriggerRealLog4j2AndReturnOnlyTemplateSummaries() {
+        String scenarios = restTemplate.getForObject("/demo/logs/scenarios", String.class);
+        long before = metricsCollector.snapshot().getLogCount();
+        String triggered = restTemplate.getForObject("/demo/logs/scenarios/configured-vs-missing/trigger",
+                String.class);
+
+        assertTrue(scenarios.contains("json-like"));
+        assertTrue(scenarios.contains("key-value"));
+        assertTrue(scenarios.contains("regex-fallback"));
+        assertTrue(scenarios.contains("configured-vs-missing"));
+        assertTrue(metricsCollector.snapshot().getLogCount() > before);
+        assertTrue(triggered.contains("\"templateSummary\""));
+        assertTrue(triggered.contains("\"logRuleSuggestions\""));
+        assertTrue(triggered.contains("certnum"));
+        assertTrue(triggered.contains("mailaddr"));
+        assertFalse(triggered.contains("13500138004"));
+        assertFalse(triggered.contains("11010519491231002X"));
+        assertFalse(triggered.contains("missing@example.com"));
     }
 
     @Test
@@ -257,6 +342,38 @@ class DemoResponseIntegrationTest {
         assertFalse(logSuggestions.contains("11010519491231002X"));
         assertFalse(logSuggestions.contains("foo@example.com"));
         assertFalse(logSuggestions.contains("bar@example.com"));
+    }
+
+    @Test
+    void reportFileCenterExportsListsReadsAndRejectsUnsafeNames() throws Exception {
+        restTemplate.getForObject("/demo/business/order", String.class);
+        restTemplate.getForObject("/demo/logs/scenarios/configured-vs-missing/trigger", String.class);
+        String exported = restTemplate.getForObject("/demo/report/export", String.class);
+        assertTrue(exported.contains("demo-report"));
+
+        String files = restTemplate.getForObject("/demo/report/files", String.class);
+        Path latest = latestReport();
+        String name = latest.getFileName().toString();
+        String raw = restTemplate.getForObject("/demo/report/files/" + name, String.class);
+        String dashboard = restTemplate.getForObject("/demo/report/files/" + name + "/dashboard", String.class);
+        ResponseEntity<String> traversal = restTemplate.getForEntity("/demo/report/files/../pom.xml",
+                String.class);
+        ResponseEntity<String> nonJson = restTemplate.getForEntity("/demo/report/files/demo-report.txt",
+                String.class);
+
+        assertTrue(files.contains("\"count\""));
+        assertTrue(files.contains(name));
+        assertTrue(files.contains("\"size\""));
+        assertTrue(raw.contains("\"totalCount\""));
+        assertTrue(dashboard.contains("\"responseCount\""));
+        assertTrue(dashboard.contains("\"maskTypeCounts\""));
+        assertTrue(dashboard.contains("\"topRiskApis\""));
+        assertTrue(dashboard.contains("\"ignoredRiskApis\""));
+        assertTrue(dashboard.contains("\"logRuleSuggestions\""));
+        assertTrue(traversal.getStatusCode().is4xxClientError() || traversal.getStatusCode() == HttpStatus.NOT_FOUND);
+        assertTrue(nonJson.getStatusCode().is4xxClientError());
+        assertFalse(raw.contains("13800138000"));
+        assertFalse(dashboard.contains("11010519491231002X"));
     }
 
     private static Path latestReport() throws Exception {
