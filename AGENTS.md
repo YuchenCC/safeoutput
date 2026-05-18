@@ -40,7 +40,12 @@ Safe Output 是 Java 8 / Spring Boot 2.x 通用数据脱敏 starter，用于在�
 
 ## 编码约束
 
-- 修改前先读 `.codex-memory/00-project-current-state.md` 到 `04-next-round-handoff.md`。
+- 修改前先按实际文件名依次读取以下项目记忆文件，避免只按编号猜测文件名：
+  - `.codex-memory/00-project-current-state.md`
+  - `.codex-memory/01-module-map.md`
+  - `.codex-memory/02-core-flow-map.md`
+  - `.codex-memory/03-decision-and-boundary.md`
+  - `.codex-memory/04-next-round-handoff.md`
 - 后续任何编码操作如果改变模块职责、核心调用链、设计边界、运行命令、测试命令、Demo 能力或第三轮交接信息，必须同步修订 `.codex-memory/` 中对应文档。
 - 保持 Java 8 和 Spring Boot 2.x 兼容，不随意引入 Boot 3 API。
 - 优先沿用现有 String 类型标签、`MaskStrategy`、`MaskRuleMatcher`、`MaskMetricsCollector` 模型。
