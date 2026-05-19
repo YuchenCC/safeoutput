@@ -68,11 +68,18 @@ public class DemoReportController {
         result.put("responseCount", report.getResponseCount());
         result.put("logCount", report.getLogCount());
         result.put("manualCount", report.getManualCount());
+        result.put("failureCount", report.getFailureCount());
         result.put("highRiskApiCount", riskAnalysis.getResponseRiskSummary().getHighRiskApiCount());
+        result.put("apiCount", riskAnalysis.getResponseRiskSummary().getApiCount());
+        result.put("ignoredApiCount", riskAnalysis.getResponseRiskSummary().getIgnoredApiCount());
+        result.put("slowApiCount", riskAnalysis.getResponseRiskSummary().getSlowApiCount());
         result.put("suggestionCount", suggestionReport.getLogRuleSuggestions().size());
         result.put("averageElapsedNanos", report.getAverageElapsedNanos());
+        result.put("maxElapsedNanos", report.getMaxElapsedNanos());
         result.put("maskTypeCounts", report.getMaskTypeCounts());
         result.put("topRiskApis", riskAnalysis.getTopRiskApis());
+        result.put("ignoredRiskApis", riskAnalysis.getIgnoredRiskApis());
+        result.put("logRuleSuggestions", suggestionReport.getLogRuleSuggestions());
 
         Map<String, Long> sceneTrend = new LinkedHashMap<String, Long>();
         sceneTrend.put("response", report.getResponseCount());
@@ -121,9 +128,11 @@ public class DemoReportController {
         dashboard.put("responseCount", report.get("responseCount"));
         dashboard.put("logCount", report.get("logCount"));
         dashboard.put("manualCount", report.get("manualCount"));
+        dashboard.put("failureCount", report.get("failureCount"));
         dashboard.put("averageElapsedNanos", report.get("averageElapsedNanos"));
         dashboard.put("maxElapsedNanos", report.get("maxElapsedNanos"));
         dashboard.put("maskTypeCounts", report.get("maskTypeCounts"));
+        addRiskSummary(dashboard, report.get("responseRiskSummary"));
         dashboard.put("topRiskApis", report.get("topRiskApis"));
         dashboard.put("ignoredRiskApis", report.get("ignoredRiskApis"));
         dashboard.put("logRuleSuggestions", report.get("logRuleSuggestions"));
@@ -191,6 +200,18 @@ public class DemoReportController {
 
     private Path reportDirectory() throws IOException {
         return Paths.get(properties.getReport().getDirectory()).toAbsolutePath().normalize();
+    }
+
+    @SuppressWarnings("unchecked")
+    private static void addRiskSummary(Map<String, Object> dashboard, Object summary) {
+        if (!(summary instanceof Map)) {
+            return;
+        }
+        Map<String, Object> values = (Map<String, Object>) summary;
+        dashboard.put("apiCount", values.get("apiCount"));
+        dashboard.put("highRiskApiCount", values.get("highRiskApiCount"));
+        dashboard.put("ignoredApiCount", values.get("ignoredApiCount"));
+        dashboard.put("slowApiCount", values.get("slowApiCount"));
     }
 
     private static Map<String, Object> error(String code) {

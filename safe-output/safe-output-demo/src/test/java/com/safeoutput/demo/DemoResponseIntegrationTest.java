@@ -341,11 +341,18 @@ class DemoResponseIntegrationTest {
         assertTrue(dashboard.contains("\"responseCount\""));
         assertTrue(dashboard.contains("\"logCount\""));
         assertTrue(dashboard.contains("\"manualCount\""));
+        assertTrue(dashboard.contains("\"failureCount\""));
         assertTrue(dashboard.contains("\"highRiskApiCount\""));
+        assertTrue(dashboard.contains("\"apiCount\""));
+        assertTrue(dashboard.contains("\"ignoredApiCount\""));
+        assertTrue(dashboard.contains("\"slowApiCount\""));
         assertTrue(dashboard.contains("\"suggestionCount\""));
         assertTrue(dashboard.contains("\"averageElapsedNanos\""));
+        assertTrue(dashboard.contains("\"maxElapsedNanos\""));
         assertTrue(dashboard.contains("\"maskTypeCounts\""));
         assertTrue(dashboard.contains("\"topRiskApis\""));
+        assertTrue(dashboard.contains("\"ignoredRiskApis\""));
+        assertTrue(dashboard.contains("\"logRuleSuggestions\""));
         assertTrue(dashboard.contains("\"sceneTrend\""));
         assertFalse(dashboard.contains("13800138000"));
     }
@@ -461,6 +468,10 @@ class DemoResponseIntegrationTest {
         assertTrue(files.contains("\"size\""));
         assertTrue(raw.contains("\"totalCount\""));
         assertTrue(dashboard.contains("\"responseCount\""));
+        assertTrue(dashboard.contains("\"failureCount\""));
+        assertTrue(dashboard.contains("\"apiCount\""));
+        assertTrue(dashboard.contains("\"ignoredApiCount\""));
+        assertTrue(dashboard.contains("\"slowApiCount\""));
         assertTrue(dashboard.contains("\"maskTypeCounts\""));
         assertTrue(dashboard.contains("\"topRiskApis\""));
         assertTrue(dashboard.contains("\"ignoredRiskApis\""));
