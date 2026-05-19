@@ -3,8 +3,8 @@
   const routes = ['dashboard', 'workbench', 'lab', 'logs'];
   async function render() {
     const hashRoute = location.hash.replace('#', '').split('/')[0];
-    if (hashRoute === 'guide') {
-      history.replaceState(null, '', '#workbench/integration');
+    if (hashRoute === 'guide' || location.hash.indexOf('#workbench/integration') === 0) {
+      history.replaceState(null, '', '#workbench');
     }
     const currentHashRoute = location.hash.replace('#', '').split('/')[0];
     const route = routes.indexOf(currentHashRoute) >= 0 ? currentHashRoute : 'dashboard';
