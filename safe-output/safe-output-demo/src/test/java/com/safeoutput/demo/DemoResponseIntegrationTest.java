@@ -187,46 +187,55 @@ class DemoResponseIntegrationTest {
     }
 
     @Test
-    void maskByTypeEndpointReturnsFirstSecondAndIdempotentFields() {
+    void maskByTypeEndpointReturnsTwoRoundResultArray() {
         Map<String, String> req = new LinkedHashMap<String, String>();
         req.put("value", "13800138000");
         req.put("type", "MOBILE");
-        req.put("iterations", "3");
         String result = restTemplate.postForObject("/demo/mask/by-type", req, String.class);
 
-        assertTrue(result.contains("\"first\""));
-        assertTrue(result.contains("\"second\""));
-        assertTrue(result.contains("\"idempotent\""));
-        assertTrue(result.contains("\"iterations\":3"));
-        assertTrue(result.contains("\"totalElapsedNanos\""));
-        assertTrue(result.contains("\"averageElapsedNanos\""));
+        assertTrue(result.startsWith("["));
+        assertTrue(result.contains("\"round\":1"));
+        assertTrue(result.contains("\"round\":2"));
+        assertTrue(result.contains("\"result\""));
+        assertTrue(result.contains("\"elapsedNanos\""));
+        assertTrue(result.contains("\"sameAsPrevious\":true"));
         assertTrue(result.contains("138****8000"));
+        assertFalse(result.contains("\"iterations\""));
         assertFalse(result.contains("13800138000"));
     }
 
     @Test
     void maskObjectEndpointReturnsStructuredResult() {
-        String result = restTemplate.postForObject(
-                "/demo/mask/object", new LinkedHashMap<String, String>(), String.class);
+        Map<String, String> req = new LinkedHashMap<String, String>();
+        req.put("realName", "李四");
+        req.put("mobile", "13900138009");
+        req.put("name", "测试商品A");
+        String result = restTemplate.postForObject("/demo/mask/object", req, String.class);
 
-        assertTrue(result.contains("\"first\""));
-        assertTrue(result.contains("\"second\""));
-        assertTrue(result.contains("\"idempotent\":true"));
-        assertTrue(result.contains("\"realName\""));
-        assertTrue(result.contains("\"mobile\""));
+        assertTrue(result.startsWith("["));
+        assertTrue(result.contains("\"round\":1"));
+        assertTrue(result.contains("\"round\":2"));
+        assertTrue(result.contains("\"sameAsPrevious\":true"));
+        assertTrue(result.contains("\"elapsedNanos\""));
+        assertTrue(result.contains("\"realName\":\"李*\""));
+        assertTrue(result.contains("\"mobile\":\"139****8009\""));
+        assertTrue(result.contains("\"name\":\"测试商品A\""));
+        assertFalse(result.contains("\"realName\":\"李四\""));
+        assertFalse(result.contains("\"mobile\":\"13900138009\""));
     }
 
     @Test
     void maskStrongEndpointScansTextAndReturnsResult() {
         Map<String, String> req = new LinkedHashMap<String, String>();
         req.put("text", "手机号13800138000邮箱foo@example.com");
-        req.put("iterations", "2");
         String result = restTemplate.postForObject("/demo/mask/strong", req, String.class);
 
-        assertTrue(result.contains("\"first\""));
-        assertTrue(result.contains("\"second\""));
-        assertTrue(result.contains("\"idempotent\":true"));
-        assertTrue(result.contains("\"iterations\":2"));
+        assertTrue(result.startsWith("["));
+        assertTrue(result.contains("\"round\":1"));
+        assertTrue(result.contains("\"round\":2"));
+        assertTrue(result.contains("\"sameAsPrevious\":true"));
+        assertTrue(result.contains("\"elapsedNanos\""));
+        assertFalse(result.contains("\"iterations\""));
         assertTrue(result.contains("138****8000"));
         assertTrue(result.contains("foo****@example.com"));
     }
@@ -253,28 +262,33 @@ class DemoResponseIntegrationTest {
     }
 
     @Test
-    void manualMaskDemoEndpointsReturnFirstSecondAndIdempotentResults() {
+    void manualMaskDemoEndpointsReturnTwoRoundResults() {
         Map<String, String> byTypeRequest = new LinkedHashMap<String, String>();
         byTypeRequest.put("value", "13800138000");
         byTypeRequest.put("type", "mobileM");
         String byType = restTemplate.postForObject("/demo/mask/by-type", byTypeRequest, String.class);
 
-        String object = restTemplate.postForObject("/demo/mask/object", new LinkedHashMap<String, String>(),
-                String.class);
+        Map<String, String> objectRequest = new LinkedHashMap<String, String>();
+        objectRequest.put("realName", "王五");
+        objectRequest.put("mobile", "13700138008");
+        objectRequest.put("name", "手工输入商品");
+        String object = restTemplate.postForObject("/demo/mask/object", objectRequest, String.class);
 
         Map<String, String> strongRequest = new LinkedHashMap<String, String>();
         strongRequest.put("text", "联系 13800138000 foo@example.com");
         String strong = restTemplate.postForObject("/demo/mask/strong", strongRequest, String.class);
 
         assertTrue(byType.contains("m-138****8000"));
-        assertTrue(byType.contains("\"idempotent\":true"));
-        assertTrue(object.contains("\"realName\":\"张*\""));
-        assertTrue(object.contains("\"mobile\":\"138****8000\""));
-        assertTrue(object.contains("\"name\":\"演示商品\""));
-        assertTrue(object.contains("\"idempotent\":true"));
+        assertTrue(byType.contains("\"round\":2"));
+        assertTrue(byType.contains("\"sameAsPrevious\":true"));
+        assertTrue(object.contains("\"realName\":\"王*\""));
+        assertTrue(object.contains("\"mobile\":\"137****8008\""));
+        assertTrue(object.contains("\"name\":\"手工输入商品\""));
+        assertTrue(object.contains("\"sameAsPrevious\":true"));
+        assertFalse(object.contains("\"mobile\":\"13700138008\""));
         assertTrue(strong.contains("138****8000"));
         assertTrue(strong.contains("foo****@example.com"));
-        assertTrue(strong.contains("\"idempotent\":true"));
+        assertTrue(strong.contains("\"sameAsPrevious\":true"));
 
         String snapshot = restTemplate.getForObject("/demo/report/snapshot", String.class);
         assertTrue(snapshot.contains("\"manualCount\""));

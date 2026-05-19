@@ -31,6 +31,7 @@ Safe Output 是面向 Spring Boot 2.x / Java 8 老项目的通用数据脱敏 st
 - R3 Demo 视觉：前端已从深色驾驶舱改为白底业务后台风格，采用浅色侧边栏、白色面板、细边框、蓝/青/绿语义色和代码片段高亮；接入说明卡片不再展示跳转入口。
 - R3 Demo Dashboard：原业务工作台风险摘要与报告中心已整合到 `#dashboard`，集中展示实时风险摘要、场景/类型图表、报告导出、报告文件列表和单报告明细。
 - R2.5 报告中心：Demo 可导出、列出、读取配置报告目录内的 JSON 报告，并基于 JSON 聚合字段派生单报告 dashboard；读取限制在 `safe-output.report.directory` 且只允许 `file-prefix-*.json`，不读取任意文件。
+- Demo 脱敏实验室：`/demo/mask/by-type`、`/demo/mask/object`、`/demo/mask/strong` 固定连续执行两轮，不再接收前端 iterations 输入；接口返回两条 `{round,result,elapsedNanos,sameAsPrevious}` 记录，前端将纳秒耗时统一转为 ms 展示，用于直观看首次脱敏、二次脱敏稳定性和单轮耗时；业务对象面板支持编辑 `realName`、`mobile`、`name`，用于验证命中脱敏和商品名不误脱敏。
 - 测试：core、starter、log4j2、report、demo 均有单元或集成测试。
 
 ## 未实现或未确认能力
