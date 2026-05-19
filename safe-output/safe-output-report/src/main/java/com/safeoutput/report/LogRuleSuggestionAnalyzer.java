@@ -29,10 +29,7 @@ public final class LogRuleSuggestionAnalyzer {
         yaml.append("  rules:\n");
         int index = 0;
         for (LogRuleSuggestion suggestion : suggestions) {
-            if (suggestion.getConfidence() == LogRuleSuggestionConfidence.LOW) {
-                continue;
-            }
-            // 只为中高置信度生成候选配置，且默认不自动生效。
+            // 所有候选配置都默认不自动生效；低置信度由 confidence 字段提示人工复核。
             yaml.append("    - name: suggested-").append(suggestion.getKey()).append('\n');
             yaml.append("      keys:\n");
             yaml.append("        - ").append(suggestion.getKey()).append('\n');

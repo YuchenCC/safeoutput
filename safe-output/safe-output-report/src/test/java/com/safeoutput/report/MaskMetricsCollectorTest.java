@@ -149,7 +149,7 @@ class MaskMetricsCollectorTest {
         assertSuggestion(report.getLogRuleSuggestions(), "mailaddr", LogRuleSuggestionConfidence.LOW);
         assertEquals(true, report.getConfigSnippet().contains("phoneno"));
         assertEquals(true, report.getConfigSnippet().contains("certnum"));
-        assertEquals(false, report.getConfigSnippet().contains("mailaddr"));
+        assertEquals(true, report.getConfigSnippet().contains("mailaddr"));
         assertEquals(false, report.getConfigSnippet().contains("13812345678"));
     }
 
