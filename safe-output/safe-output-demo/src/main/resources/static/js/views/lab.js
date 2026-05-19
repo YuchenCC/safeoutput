@@ -10,12 +10,10 @@
       labPanel('by-type', '按类型标签', '<input id="by-type-value" value="13800138000"><select id="by-type-type"><option>MOBILE</option><option>EMAIL</option><option>ID_CARD</option><option>DEFAULT</option><option>mobileM</option></select>', '执行') +
       labPanel('object', '业务对象', '<input id="object-real-name" value="张三" placeholder="realName"><input id="object-mobile" value="13800138000" placeholder="mobile"><input id="object-name" value="演示商品" placeholder="name">', '执行') +
       labPanel('strong', '强文本扫描', '<textarea id="strong-text">联系 13800138000 foo@example.com</textarea>', '执行') +
-      '</div><div class="panel"><h2>MANUAL 统计</h2><button id="refresh-lab">刷新统计</button><pre id="manual-stats"></pre></div>';
+      '</div>';
     document.getElementById('by-type-run').onclick = runByType;
     document.getElementById('object-run').onclick = runObject;
     document.getElementById('strong-run').onclick = runStrong;
-    document.getElementById('refresh-lab').onclick = loadStats;
-    await loadStats();
   }
   function labPanel(id, title, controls, label) {
     return '<div class="panel"><h2>' + title + '</h2><div class="grid">' + controls + '<button class="primary" id="' + id + '-run">' + label + '</button><div class="result round-list" id="' + id + '-result"></div></div></div>';
@@ -26,28 +24,17 @@
       type: document.getElementById('by-type-type').value
     });
     show('by-type-result', data);
-    await loadStats();
   }
   async function runObject() {
     const payload = objectPayload();
     const data = await window.SafeOutputApi.post('/demo/mask/object', payload);
     show('object-result', data, payload);
-    await loadStats();
   }
   async function runStrong() {
     const data = await window.SafeOutputApi.post('/demo/mask/strong', {
       text: document.getElementById('strong-text').value
     });
     show('strong-result', data);
-    await loadStats();
-  }
-  async function loadStats() {
-    const stats = await window.SafeOutputApi.get('/demo/report/dashboard');
-    document.getElementById('manual-stats').textContent = JSON.stringify({
-      manualCount: stats.manualCount,
-      averageElapsedMs: window.SafeOutputFormat.nanosToMs(stats.averageElapsedNanos),
-      maskTypeCounts: stats.maskTypeCounts
-    }, null, 2);
   }
   function objectPayload() {
     return {
