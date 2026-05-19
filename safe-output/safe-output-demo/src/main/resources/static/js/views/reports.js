@@ -35,8 +35,8 @@
       '<div class="panel"><h2>实时类型分布</h2><div class="chart-box"><canvas id="live-type-chart"></canvas></div></div>',
       '</div>',
       '<div class="grid two">',
-      '<div class="panel"><h2>风险摘要</h2><pre>' + esc(JSON.stringify(dashboard.topRiskApis || [], null, 2)) + '</pre></div>',
-      '<div class="panel"><h2>治理信号</h2><pre>' + esc(JSON.stringify({ suggestionCount: dashboard.suggestionCount, averageElapsedNanos: dashboard.averageElapsedNanos, sceneTrend: dashboard.sceneTrend }, null, 2)) + '</pre></div>',
+      '<div class="panel"><h2>风险摘要</h2><pre>' + jsonTiming(dashboard.topRiskApis || []) + '</pre></div>',
+      '<div class="panel"><h2>治理信号</h2><pre>' + jsonTiming({ suggestionCount: dashboard.suggestionCount, averageElapsedNanos: dashboard.averageElapsedNanos, sceneTrend: dashboard.sceneTrend }) + '</pre></div>',
       '</div>',
       '<div class="panel"><h2>报告文件 <span class="badge">' + esc(files.count) + '</span></h2><table><thead><tr><th>文件</th><th>大小</th><th>修改时间</th><th></th></tr></thead><tbody>',
       (files.files || []).map(function (file) {
@@ -62,14 +62,18 @@
       '<div class="grid three">' +
       metric('总脱敏次数', report.totalCount) + metric('Response', report.responseCount) + metric('Log / Manual', (report.logCount || 0) + ' / ' + (report.manualCount || 0)) +
       '</div><div class="grid two"><div class="panel"><h2>报告场景分布</h2><div class="chart-box"><canvas id="report-scene-chart"></canvas></div></div><div class="panel"><h2>报告类型 Top</h2><div class="chart-box"><canvas id="report-type-chart"></canvas></div></div></div>' +
-      '<div class="grid two"><div class="panel"><h2>高风险接口</h2><pre>' + esc(JSON.stringify(report.topRiskApis || [], null, 2)) + '</pre></div><div class="panel"><h2>Ignore 风险</h2><pre>' + esc(JSON.stringify(report.ignoredRiskApis || [], null, 2)) + '</pre></div></div>' +
-      '<div class="panel"><h2>日志规则建议</h2><pre>' + esc(JSON.stringify(report.logRuleSuggestions || [], null, 2)) + '</pre></div><div class="panel"><h2>性能指标</h2><pre>' + esc(JSON.stringify({ averageElapsedNanos: report.averageElapsedNanos, maxElapsedNanos: report.maxElapsedNanos }, null, 2)) + '</pre></div></div>';
+      '<div class="grid two"><div class="panel"><h2>高风险接口</h2><pre>' + jsonTiming(report.topRiskApis || []) + '</pre></div><div class="panel"><h2>Ignore 风险</h2><pre>' + jsonTiming(report.ignoredRiskApis || []) + '</pre></div></div>' +
+      '<div class="panel"><h2>日志规则建议</h2><pre>' + esc(JSON.stringify(report.logRuleSuggestions || [], null, 2)) + '</pre></div><div class="panel"><h2>性能指标</h2><pre>' + jsonTiming({ averageElapsedNanos: report.averageElapsedNanos, maxElapsedNanos: report.maxElapsedNanos }) + '</pre></div></div>';
     window.SafeOutputCharts.doughnut('report-scene-chart', ['Response', 'Log', 'Manual'], [report.responseCount || 0, report.logCount || 0, report.manualCount || 0]);
     window.SafeOutputCharts.bars('report-type-chart', Object.keys(counts), Object.keys(counts).map(function (key) { return counts[key]; }));
   }
 
   function metric(label, value) {
     return '<div class="panel metric"><span>' + esc(label) + '</span><strong>' + esc(value || 0) + '</strong></div>';
+  }
+
+  function jsonTiming(value) {
+    return esc(JSON.stringify(window.SafeOutputFormat.toDisplayTiming(value), null, 2));
   }
 
   window.SafeOutputViews = window.SafeOutputViews || {};
