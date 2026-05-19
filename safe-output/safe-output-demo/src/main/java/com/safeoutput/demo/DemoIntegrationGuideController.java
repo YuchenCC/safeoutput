@@ -20,42 +20,81 @@ public class DemoIntegrationGuideController {
 
     private static List<Map<String, Object>> items() {
         List<Map<String, Object>> items = new ArrayList<Map<String, Object>>();
-        items.add(item("yaml-rule", "YAML 配置规则", "工单 realName / 客户 shippingAddress / payment securityAnswer",
-                "/demo/business/tickets", "demoRealName / demoAddress / demoDefault"));
-        items.add(item("annotation", "字段注解", "客户 displayName 是歧义字段，使用 @Desensitize",
-                "/demo/business/customer", "ANNOTATION"));
-        items.add(item("default-rule", "默认规则库", "mobile / email / idCard / bankCard / password",
-                "/demo/business/order", "DEFAULT_RULE"));
-        items.add(item("field-ignore", "字段级 ignore", "plainNote 保留原文但其它字段继续脱敏",
-                "/demo/business/customer", "FIELD_IGNORE"));
-        items.add(item("api-ignore", "接口级 ignore", "legacy-plaintext 明文返回并进入风险统计",
-                "/demo/business/legacy-plaintext", "API_IGNORE"));
-        items.add(item("log4j2", "Log4j2 PatternConverter", "%safeOutputMsg 处理 JSON-like、key=value 和 fallback",
-                "/demo/logs/scenarios", "LOG4J2"));
-        items.add(item("manual", "SafeOutputMaskService", "实验室主动按 type、对象、强扫描和批量性能脱敏",
-                "/demo/mask/by-type", "MANUAL"));
+        items.add(item("default-rule", "默认字段规则", "mobile / idCard / bankCard / email / password",
+                "/demo/business/orders", "DEFAULT_RULE", "DefaultMaskRules",
+                "字段名命中内置规则库即可脱敏，业务代码不需要写注解或调用服务。",
+                "public final class DefaultMaskRules {\n"
+                        + "  rules.add(MaskRule.defaults(\"default.mobile\")\n"
+                        + "      .keys(Arrays.asList(\"mobile\", \"phone\", \"telephone\", \"tel\", \"userMobile\"))\n"
+                        + "      .type(MaskTypes.MOBILE)\n"
+                        + "      .build());\n"
+                        + "  rules.add(MaskRule.defaults(\"default.bank-card\")\n"
+                        + "      .keys(Arrays.asList(\"bankCard\", \"cardNo\", \"bankNo\"))\n"
+                        + "      .type(MaskTypes.BANK_CARD)\n"
+                        + "      .build());\n"
+                        + "}"));
+        items.add(item("yaml-rule", "YAML 配置规则", "shippingAddress / securityAnswer",
+                "/demo/business/payments", "CONFIGURED_RULE", "application.yml",
+                "业务字段名明确但不在默认规则里时，通过 safe-output.rules 声明 key 与脱敏类型。",
+                "safe-output:\n"
+                        + "  rules:\n"
+                        + "    - name: demoAddress\n"
+                        + "      keys:\n"
+                        + "        - shippingAddress\n"
+                        + "      type: ADDRESS\n"
+                        + "    - name: demoDefault\n"
+                        + "      keys:\n"
+                        + "        - securityAnswer\n"
+                        + "      type: DEFAULT"));
+        items.add(item("annotation", "字段注解", "displayName / customerName / payerName / requesterName / realName",
+                "/demo/business/customers", "ANNOTATION", "DemoBusinessDataSource.java",
+                "字段名有业务语义但不适合放入全局默认规则时，在响应 DTO 字段上显式声明类型。",
+                "public static final class CustomerProfile {\n"
+                        + "  @Desensitize(type = MaskTypes.CHINESE_NAME)\n"
+                        + "  private String displayName;\n"
+                        + "}\n\n"
+                        + "public static final class PaymentVerification {\n"
+                        + "  @Desensitize(type = MaskTypes.CHINESE_NAME)\n"
+                        + "  private String payerName;\n"
+                        + "}"));
+        items.add(item("field-ignore", "字段级 Ignore", "plainNote",
+                "/demo/business/tickets", "FIELD_IGNORE", "application.yml",
+                "个别字段需要按业务约定保留原样时，用 ignore.keys 跳过字段脱敏；其它字段仍继续脱敏。",
+                "safe-output:\n"
+                        + "  ignore:\n"
+                        + "    keys:\n"
+                        + "      - plainNote"));
+        items.add(item("api-ignore", "接口级 Ignore", "/demo/business/{domain}/{id}/raw",
+                "/demo/business/customers/C-1001/raw", "API_IGNORE", "application.yml",
+                "业务控制台的小眼睛查看明文走独立 raw 接口；接口返回明文，但会进入 Response 风险统计。",
+                "safe-output:\n"
+                        + "  ignore:\n"
+                        + "    apis:\n"
+                        + "      - method: GET\n"
+                        + "        pattern: /demo/business/customers/*/raw\n"
+                        + "        reason: business console reveal customer sensitive fields\n"
+                        + "      - method: GET\n"
+                        + "        pattern: /demo/business/payments/*/raw\n"
+                        + "        reason: business console reveal payment sensitive fields"));
         return items;
     }
 
     private static Map<String, Object> item(String id, String title, String businessField, String endpoint,
-            String ruleSource) {
+            String ruleSource, String sourceFile, String description, String snippet) {
         Map<String, Object> item = new LinkedHashMap<String, Object>();
         item.put("id", id);
         item.put("title", title);
         item.put("businessField", businessField);
         item.put("endpoint", endpoint);
         item.put("ruleSource", ruleSource);
+        item.put("sourceFile", sourceFile);
+        item.put("description", description);
+        item.put("snippet", snippet);
         item.put("actionHash", actionHash(id));
         return item;
     }
 
     private static String actionHash(String id) {
-        if ("log4j2".equals(id)) {
-            return "#logs";
-        }
-        if ("manual".equals(id)) {
-            return "#lab";
-        }
         return "#workbench";
     }
 }

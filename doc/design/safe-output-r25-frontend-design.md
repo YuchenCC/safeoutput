@@ -1,13 +1,13 @@
 # Safe Output R2.5 Demo 前端设计文档
 
-版本：v0.1
-适用范围：0047-0053 R2.5 Demo 前端与展示体验
+版本：v0.2
+适用范围：0047-0053 R2.5/R3 Demo 前端与展示体验
 关联 PRD：`doc/prd/safe-output-r25-prd.md`
 目标入口：`safe-output-demo/src/main/resources/static/index.html`
 
 ## 1. 设计目标
 
-R2.5 前端要把 Demo 从“功能验证控制台”升级为“真实业务系统接入 Safe Output 后的治理驾驶舱”。页面既要能支撑本地验证，也要能在竞赛现场投屏演示时让评委快速理解：
+R2.5/R3 前端要把 Demo 从“功能验证控制台”升级为“真实业务系统接入 Safe Output 后的治理工作台”。页面既要能支撑本地验证，也要能在竞赛现场投屏演示时让评委快速理解：
 
 1. Safe Output 不是单点工具，而是可以嵌入业务系统的输出侧脱敏 starter。
 2. Response、Log、Manual、Report 四类能力来自同一套规则、策略和统计边界。
@@ -16,13 +16,13 @@ R2.5 前端要把 Demo 从“功能验证控制台”升级为“真实业务系
 
 一句话定位：
 
-> 一个真实业务系统的敏感数据治理驾驶舱。
+> 一个真实业务系统的敏感数据治理工作台。
 
 ## 2. 设计原则
 
 ### 2.1 业务系统优先
 
-默认首屏必须是业务工作台，不再以 Dashboard、Response、Log、Manual、Report 等底层能力作为首屏主叙事。页面语言优先使用“客户、订单、工单、支付、账户、风险、治理建议”等业务词汇，底层 API 名称作为辅助信息出现。
+默认首屏保留治理 Dashboard，用于集中展示报告、统计和风险摘要；业务菜单统一命名为“工作台”，承载总览、接入说明、客户、订单、支付、工单和账户等业务页面。页面语言优先使用“客户、订单、工单、支付、账户、风险、治理建议”等业务词汇，底层 API 名称作为辅助信息出现。
 
 ### 2.2 投屏可读
 
@@ -44,53 +44,42 @@ R2.5 前端要把 Demo 从“功能验证控制台”升级为“真实业务系
 
 ### 3.1 静态资源结构
 
-建议将当前单文件页面拆分为以下结构：
+当前静态资源已从单文件页面拆分为以下结构：
 
 ```text
 safe-output-demo/src/main/resources/static/
   index.html
   vendor/
     chart.min.js
+    fonts/
+      fonts.css
   css/
-    tokens.css
-    layout.css
-    components.css
-    print.css
+    app.css
   js/
     app.js
     api.js
-    router.js
-    state.js
     views/
       workbench.js
-      integration-guide.js
-      manual-lab.js
-      log-scenarios.js
-      report-center.js
-      report-view.js
+      guide.js
+      lab.js
+      logs.js
+      reports.js
     components/
       charts.js
-      tables.js
-      code-block.js
-      risk-badge.js
 ```
 
-如果单次 issue 无法完成全部拆分，可以先保持 `index.html` 可运行，但新增代码应向上述结构迁移，避免继续扩大单文件。
+`index.html` 只保留壳层、导航和脚本引用。`guide.js` 不再作为主导航独立页使用，而是提供接入说明卡片渲染能力，由 `workbench.js` 在 `#workbench/integration` 内复用；旧 `#guide` 路由应重定向到该工作台内页。
 
 ### 3.2 模块职责
 
 | 模块 | 职责 |
 |---|---|
-| `app.js` | 初始化应用、绑定全局导航、启动默认页面。 |
-| `router.js` | 处理 hash 路由、页面切换和路由参数。 |
+| `app.js` | 初始化应用、绑定全局导航、处理 hash 路由和旧入口重定向。 |
 | `api.js` | 封装所有 Demo HTTP 调用、错误处理和 JSON 解析。 |
-| `state.js` | 保存轻量页面状态，如当前报告、最近日志统计、已选业务场景。 |
 | `views/*` | 各页面渲染、事件绑定和局部刷新。 |
-| `components/*` | 可复用 UI 片段，如图表、表格、代码块、风险标签。 |
-| `tokens.css` | 颜色、字号、间距、圆角、阴影等设计 token。 |
-| `layout.css` | 应用框架、导航、页面栅格、响应式布局。 |
-| `components.css` | 按钮、卡片、指标、表格、badge、代码块等组件样式。 |
-| `print.css` | 单报告打印样式，隐藏导航和交互控件。 |
+| `guide.js` | 接入说明卡片、代码片段高亮和旧 `#guide` 兼容渲染。 |
+| `components/*` | 可复用 UI 片段，目前包含图表封装。 |
+| `app.css` | 颜色、字号、布局、组件、代码高亮和打印样式。 |
 
 ### 3.3 路由设计
 
@@ -98,14 +87,14 @@ safe-output-demo/src/main/resources/static/
 
 | 路由 | 页面 | 对应 issue |
 |---|---|---|
-| `#workbench` | 业务工作台 | 0047 |
-| `#integration` | 接入方式说明 | 0048 |
-| `#manual-lab` | 主动脱敏实验室 | 0049 |
-| `#log-scenarios` | 日志场景与规则建议 | 0050 |
-| `#reports` | 报告文件中心 | 0051 |
-| `#report/<fileName>` | 单报告可视化 | 0051 / 0052 |
+| `#dashboard` | 治理 Dashboard、报告文件中心与单报告视图 | 0051 / 0052 |
+| `#workbench` | 工作台总览 | 0047 |
+| `#workbench/integration` | 工作台内接入说明 | 0048 |
+| `#workbench/{customers|orders|payments|tickets|accounts}` | 业务页面 | 0047 |
+| `#lab` | 主动脱敏实验室 | 0049 |
+| `#logs` | 日志场景与规则建议 | 0050 |
 
-`#workbench` 是默认路由。旧页面可以临时保留兼容入口，但不能作为主导航或默认演示路径。
+`#dashboard` 是当前默认路由。旧 `#guide` 入口只做兼容跳转，主导航中不再出现独立“接入说明”菜单。
 
 ### 3.4 API 封装
 
@@ -144,19 +133,18 @@ AppState.selectedReportName
 
 ### 4.1 全局导航
 
-导航固定展示 R2.5 主路径：
+导航固定展示当前主路径：
 
-1. 业务工作台
-2. 接入说明
+1. 治理 Dashboard
+2. 工作台
 3. 脱敏实验室
 4. 日志场景
-5. 报告中心
 
-导航底部可展示 Demo 运行状态，例如 `Spring Boot Demo`、`Report enabled`、`Log4j2 bridge active`。这些状态应来自后端接口或配置摘要，不能写死成误导性结论。
+“工作台”是一个导航分组，包含总览、接入说明、客户档案、订单履约、支付核验、工单处理和账户安全。接入说明不再作为一级菜单。
 
 ### 4.2 业务工作台
 
-目标：让评委第一眼看到“这是一个已接入 Safe Output 的业务系统”。
+目标：让评委第一眼看到“这是一个已接入 Safe Output 的业务系统”，并且能从同一组工作台菜单理解接入方式。
 
 推荐布局：
 
@@ -166,7 +154,7 @@ AppState.selectedReportName
 右侧：实时治理摘要
 ```
 
-业务场景至少覆盖客户、订单、工单、支付或账户中的四类。每个场景卡片展示：
+业务场景至少覆盖客户、订单、工单、支付或账户中的四类；工作台总览还应包含一个“接入说明”入口卡片。每个业务场景卡片展示：
 
 - 业务对象名称。
 - 示例接口路径。
@@ -188,7 +176,7 @@ AppState.selectedReportName
 
 ### 4.3 接入方式说明
 
-目标：把“为什么这样接入”讲清楚，而不是做静态长文档。
+目标：把“为什么这样接入”讲清楚，而不是做静态长文档。该页面属于工作台内页，路由为 `#workbench/integration`。
 
 核心结构：
 
@@ -196,17 +184,17 @@ AppState.selectedReportName
 业务场景 -> 接入方式 -> 示例接口 -> 字段或日志 key -> 规则来源 -> 输出效果
 ```
 
-必须覆盖：
+工作台内接入说明当前聚焦业务页面真实用到的字段规则，必须覆盖：
 
 - YAML 配置规则。
 - 注解规则。
 - 默认规则库。
 - 字段级 ignore。
 - 接口级 ignore。
-- Log4j2 `%safeOutputMsg`。
-- `SafeOutputMaskService` 主动脱敏。
 
-每条说明应提供“触发场景”或“查看结果”入口，跳转到对应页面或直接调用 Demo 场景。
+Log4j2 `%safeOutputMsg` 和 `SafeOutputMaskService` 主动脱敏分别在“日志场景”和“脱敏实验室”中展示，不再混入工作台接入说明卡片。
+
+每条说明展示业务字段、示例接口、片段来源、规则来源和代码片段。说明项内部不再展示“打开业务页”“触发场景”等跳转入口，避免与工作台主菜单重复。代码片段必须做轻量语法高亮：YAML 高亮配置 key 和脱敏类型，Java 高亮关键字、注解、类型和字符串。
 
 ### 4.4 主动脱敏实验室
 
@@ -298,16 +286,17 @@ AppState.selectedReportName
 
 ### 5.1 风格定位
 
-采用“深色合规指挥台 + 业务实证卡片”的风格。它应有竞赛现场的视觉冲击力，但不能变成空洞大屏。
+采用“白底业务后台 + 治理实证卡片”的风格。它应该像真实业务系统的运营工作台，而不是深色大屏或营销页。
 
 关键词：
 
 - 可信。
 - 清晰。
-- 高对比。
+- 干净。
+- 可扫描。
 - 业务系统。
 - 合规治理。
-- 可扫描。
+- 代码可读。
 
 避免：
 
@@ -316,6 +305,7 @@ AppState.selectedReportName
 - 复杂玻璃拟态。
 - 过细灰字。
 - 只堆图表的大屏模板。
+- 深色指挥舱式背景。
 
 ### 5.2 色彩 token
 
@@ -323,20 +313,20 @@ AppState.selectedReportName
 
 ```css
 :root {
-  --bg: #0b0f14;
-  --panel: #121923;
-  --panel-strong: #172231;
-  --panel-inset: #0f151d;
-  --border: #263445;
-  --border-soft: #1d2936;
-  --text: #f3f7fb;
-  --muted: #9aa8b6;
-  --subtle: #6f7d8b;
-  --safe: #35d07f;
-  --risk: #ff5a64;
-  --warn: #f6b945;
-  --info: #4da3ff;
-  --mask: #b8f3ff;
+  --bg: #f7f8fb;
+  --surface: #ffffff;
+  --surface-2: #f1f5f9;
+  --surface-3: #e8eef6;
+  --line: #d9e1ea;
+  --line-soft: #edf1f5;
+  --text: #17202a;
+  --muted: #687789;
+  --blue: #2563eb;
+  --teal: #0f9f8f;
+  --green: #138a52;
+  --amber: #b7791f;
+  --red: #c2413a;
+  --code-bg: #f8fafc;
 }
 ```
 
@@ -344,11 +334,11 @@ AppState.selectedReportName
 
 | 颜色 | 语义 |
 |---|---|
-| `--safe` | 已脱敏、已保护、通过。 |
-| `--warn` | 待治理、建议、ignore 风险。 |
-| `--risk` | 高风险、失败、异常。 |
-| `--info` | 业务链路、接口、说明。 |
-| `--mask` | 脱敏结果、受保护字段。 |
+| `--green` | 已脱敏、已保护、通过。 |
+| `--amber` | 待治理、建议、ignore 风险。 |
+| `--red` | 高风险、失败、异常。 |
+| `--blue` | 主操作、业务链路、接口、说明。 |
+| `--teal` | 日志、统计、辅助成功态。 |
 
 ### 5.3 字号与投屏规格
 
@@ -425,7 +415,7 @@ Badge：
 
 前端应完成：
 
-- 默认入口切换到 `#workbench`。
+- 默认入口保持 `#dashboard`，工作台从主导航分组进入。
 - 建立业务工作台布局。
 - 展示客户、订单、工单、支付或账户等业务场景。
 - 场景卡片展示接口路径、规则来源、脱敏状态和风险摘要。
@@ -440,9 +430,10 @@ Badge：
 
 前端应完成：
 
-- 接入矩阵页面。
+- 接入矩阵作为 `#workbench/integration` 工作台内页。
 - 每条说明关联业务场景、接入方式、示例接口、字段/key、规则来源、输出效果。
-- 支持跳转或触发对应 Demo 场景。
+- 不展示跳转或触发入口，避免说明项和工作台菜单形成重复路径。
+- 代码片段提供轻量高亮。
 
 验收重点：
 
@@ -525,10 +516,10 @@ Badge：
 
 ### 7.1 人工演示验收
 
-1. 启动 Demo 后打开 `http://localhost:8080/index.html`，默认进入业务工作台。
-2. 在 1920x1080 视口下，首屏能看到主业务区、治理摘要和主操作按钮。
+1. 启动 Demo 后打开 `http://localhost:8080/index.html`，默认进入治理 Dashboard。
+2. 在 1920x1080 视口下，Dashboard 首屏能看到治理摘要、报告操作和主指标；工作台首屏能看到总览卡片。
 3. 触发业务接口后，Response 统计或风险摘要有可见变化。
-4. 接入说明页可以从说明项跳转或触发对应场景。
+4. 接入说明位于工作台菜单内，说明项不展示跳转入口，代码片段有高亮。
 5. 主动脱敏实验室能展示两次脱敏结果、幂等判断和耗时。
 6. 日志场景页触发后，LOG 统计或日志建议有可见变化。
 7. 报告中心可以导出、列出并打开报告。

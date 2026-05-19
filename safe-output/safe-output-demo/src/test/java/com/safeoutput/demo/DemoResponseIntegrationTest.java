@@ -58,6 +58,12 @@ class DemoResponseIntegrationTest {
         String payment = restTemplate.getForObject("/demo/business/payment", String.class);
         String tickets = restTemplate.getForObject("/demo/business/tickets", String.class);
         String account = restTemplate.getForObject("/demo/business/account", String.class);
+        String customers = restTemplate.getForObject("/demo/business/customers", String.class);
+        String customerDetail = restTemplate.getForObject("/demo/business/customers/C-1001", String.class);
+        String orderDetail = restTemplate.getForObject("/demo/business/orders/ORD-20260518-001", String.class);
+        String paymentDetail = restTemplate.getForObject("/demo/business/payments/PAY-8840", String.class);
+        String ticketDetail = restTemplate.getForObject("/demo/business/tickets/TK-20260518-01", String.class);
+        String accountDetail = restTemplate.getForObject("/demo/business/accounts/AC-7780", String.class);
 
         assertTrue(workbench.contains("客户档案"));
         assertTrue(workbench.contains("订单履约"));
@@ -67,32 +73,56 @@ class DemoResponseIntegrationTest {
         assertTrue(customer.contains("\"displayName\":\"张*\""));
         assertTrue(customer.contains("138****8000"));
         assertTrue(customer.contains("110105********002X"));
-        assertTrue(customer.contains("zha****@example.com"));
-        assertTrue(customer.contains("北京市朝阳区****"));
+        assertTrue(customer.contains("cus****@example.com"));
+        assertTrue(customer.contains("北京市核心区****"));
         assertTrue(customer.contains("\"plainNote\":\"demo note 13800138000\""));
         assertFalse(customer.contains("\"mobile\":\"13800138000\""));
         assertTrue(order.contains("622202*********0123"));
         assertTrue(payment.contains("\"securityAnswer\":\"****\""));
-        assertTrue(tickets.contains("\"realName\":\"李*\""));
+        assertTrue(tickets.contains("\"requesterName\":\"用*1\""));
         assertTrue(account.contains("\"password\":\"********\""));
         assertFalse(order.contains("6222021234567890123"));
         assertFalse(payment.contains("13900138001"));
-        assertFalse(tickets.contains("13700138002"));
+        assertFalse(tickets.contains("\"mobile\":\"13700138002\""));
         assertFalse(account.contains("Secret-12345"));
+        assertTrue(customers.contains("\"customerNo\":\"C-1001\""));
+        assertTrue(customerDetail.contains("138****8000"));
+        assertTrue(orderDetail.contains("622202*********0120"));
+        assertTrue(paymentDetail.contains("\"securityAnswer\":\"****\""));
+        assertTrue(ticketDetail.contains("\"requesterName\":\"用*1\""));
+        assertTrue(accountDetail.contains("\"password\":\"********\""));
+        assertFalse(customerDetail.contains("\"mobile\":\"13800138000\""));
+        assertFalse(orderDetail.contains("6222021234567890120"));
+        assertFalse(paymentDetail.contains("13900138000"));
+        assertFalse(ticketDetail.contains("\"mobile\":\"13700138000\""));
+        assertFalse(accountDetail.contains("Secret-12340"));
     }
 
     @Test
     void r25BusinessApiIgnoreKeepsPlaintextAndRecordsRiskMetric() {
         String ignored = restTemplate.getForObject("/demo/business/legacy-plaintext", String.class);
+        String rawCustomer = restTemplate.getForObject("/demo/business/customers/C-1001/raw", String.class);
+        String rawOrder = restTemplate.getForObject("/demo/business/orders/ORD-20260518-001/raw", String.class);
+        String rawPayment = restTemplate.getForObject("/demo/business/payments/PAY-8840/raw", String.class);
+        String rawTicket = restTemplate.getForObject("/demo/business/tickets/TK-20260518-01/raw", String.class);
+        String rawAccount = restTemplate.getForObject("/demo/business/accounts/AC-7780/raw", String.class);
 
         assertTrue(ignored.contains("\"mobile\":\"13800138000\""));
+        assertTrue(rawCustomer.contains("\"mobile\":\"13800138000\""));
+        assertTrue(rawOrder.contains("6222021234567890120"));
+        assertTrue(rawPayment.contains("\"securityAnswer\":\"母亲生日是19900100\""));
+        assertTrue(rawTicket.contains("13700138000"));
+        assertTrue(rawAccount.contains("Secret-12340"));
         ApiMaskMetrics metric = metricsCollector.snapshot().getApiMetric("GET", "/demo/business/legacy-plaintext");
+        ApiMaskMetrics rawMetric = metricsCollector.snapshot().getApiMetric("GET", "/demo/business/customers/{id}/raw");
         assertNotNull(metric);
+        assertNotNull(rawMetric);
         assertTrue(metric.isIgnored());
+        assertTrue(rawMetric.isIgnored());
     }
 
     @Test
-    void integrationGuideCoversAllMajorIntegrationModes() {
+    void integrationGuideCoversBusinessFieldConfigurationSnippets() {
         String guide = restTemplate.getForObject("/demo/integration-guide", String.class);
 
         assertTrue(guide.contains("yaml-rule"));
@@ -100,10 +130,14 @@ class DemoResponseIntegrationTest {
         assertTrue(guide.contains("default-rule"));
         assertTrue(guide.contains("field-ignore"));
         assertTrue(guide.contains("api-ignore"));
-        assertTrue(guide.contains("log4j2"));
-        assertTrue(guide.contains("manual"));
-        assertTrue(guide.contains("/demo/business/customer"));
-        assertTrue(guide.contains("/demo/logs/scenarios"));
+        assertTrue(guide.contains("shippingAddress"));
+        assertTrue(guide.contains("securityAnswer"));
+        assertTrue(guide.contains("@Desensitize"));
+        assertTrue(guide.contains("plainNote"));
+        assertTrue(guide.contains("/demo/business/customers/*/raw"));
+        assertTrue(guide.contains("/demo/business/orders"));
+        assertFalse(guide.contains("Log4j2 PatternConverter"));
+        assertFalse(guide.contains("SafeOutputMaskService"));
     }
 
     @Test
@@ -153,46 +187,55 @@ class DemoResponseIntegrationTest {
     }
 
     @Test
-    void maskByTypeEndpointReturnsFirstSecondAndIdempotentFields() {
+    void maskByTypeEndpointReturnsTwoRoundResultArray() {
         Map<String, String> req = new LinkedHashMap<String, String>();
         req.put("value", "13800138000");
         req.put("type", "MOBILE");
-        req.put("iterations", "3");
         String result = restTemplate.postForObject("/demo/mask/by-type", req, String.class);
 
-        assertTrue(result.contains("\"first\""));
-        assertTrue(result.contains("\"second\""));
-        assertTrue(result.contains("\"idempotent\""));
-        assertTrue(result.contains("\"iterations\":3"));
-        assertTrue(result.contains("\"totalElapsedNanos\""));
-        assertTrue(result.contains("\"averageElapsedNanos\""));
+        assertTrue(result.startsWith("["));
+        assertTrue(result.contains("\"round\":1"));
+        assertTrue(result.contains("\"round\":2"));
+        assertTrue(result.contains("\"result\""));
+        assertTrue(result.contains("\"elapsedNanos\""));
+        assertTrue(result.contains("\"sameAsPrevious\":true"));
         assertTrue(result.contains("138****8000"));
+        assertFalse(result.contains("\"iterations\""));
         assertFalse(result.contains("13800138000"));
     }
 
     @Test
     void maskObjectEndpointReturnsStructuredResult() {
-        String result = restTemplate.postForObject(
-                "/demo/mask/object", new LinkedHashMap<String, String>(), String.class);
+        Map<String, String> req = new LinkedHashMap<String, String>();
+        req.put("realName", "李四");
+        req.put("mobile", "13900138009");
+        req.put("name", "测试商品A");
+        String result = restTemplate.postForObject("/demo/mask/object", req, String.class);
 
-        assertTrue(result.contains("\"first\""));
-        assertTrue(result.contains("\"second\""));
-        assertTrue(result.contains("\"idempotent\":true"));
-        assertTrue(result.contains("\"realName\""));
-        assertTrue(result.contains("\"mobile\""));
+        assertTrue(result.startsWith("["));
+        assertTrue(result.contains("\"round\":1"));
+        assertTrue(result.contains("\"round\":2"));
+        assertTrue(result.contains("\"sameAsPrevious\":true"));
+        assertTrue(result.contains("\"elapsedNanos\""));
+        assertTrue(result.contains("\"realName\":\"李*\""));
+        assertTrue(result.contains("\"mobile\":\"139****8009\""));
+        assertTrue(result.contains("\"name\":\"测试商品A\""));
+        assertFalse(result.contains("\"realName\":\"李四\""));
+        assertFalse(result.contains("\"mobile\":\"13900138009\""));
     }
 
     @Test
     void maskStrongEndpointScansTextAndReturnsResult() {
         Map<String, String> req = new LinkedHashMap<String, String>();
         req.put("text", "手机号13800138000邮箱foo@example.com");
-        req.put("iterations", "2");
         String result = restTemplate.postForObject("/demo/mask/strong", req, String.class);
 
-        assertTrue(result.contains("\"first\""));
-        assertTrue(result.contains("\"second\""));
-        assertTrue(result.contains("\"idempotent\":true"));
-        assertTrue(result.contains("\"iterations\":2"));
+        assertTrue(result.startsWith("["));
+        assertTrue(result.contains("\"round\":1"));
+        assertTrue(result.contains("\"round\":2"));
+        assertTrue(result.contains("\"sameAsPrevious\":true"));
+        assertTrue(result.contains("\"elapsedNanos\""));
+        assertFalse(result.contains("\"iterations\""));
         assertTrue(result.contains("138****8000"));
         assertTrue(result.contains("foo****@example.com"));
     }
@@ -219,28 +262,33 @@ class DemoResponseIntegrationTest {
     }
 
     @Test
-    void manualMaskDemoEndpointsReturnFirstSecondAndIdempotentResults() {
+    void manualMaskDemoEndpointsReturnTwoRoundResults() {
         Map<String, String> byTypeRequest = new LinkedHashMap<String, String>();
         byTypeRequest.put("value", "13800138000");
         byTypeRequest.put("type", "mobileM");
         String byType = restTemplate.postForObject("/demo/mask/by-type", byTypeRequest, String.class);
 
-        String object = restTemplate.postForObject("/demo/mask/object", new LinkedHashMap<String, String>(),
-                String.class);
+        Map<String, String> objectRequest = new LinkedHashMap<String, String>();
+        objectRequest.put("realName", "王五");
+        objectRequest.put("mobile", "13700138008");
+        objectRequest.put("name", "手工输入商品");
+        String object = restTemplate.postForObject("/demo/mask/object", objectRequest, String.class);
 
         Map<String, String> strongRequest = new LinkedHashMap<String, String>();
         strongRequest.put("text", "联系 13800138000 foo@example.com");
         String strong = restTemplate.postForObject("/demo/mask/strong", strongRequest, String.class);
 
         assertTrue(byType.contains("m-138****8000"));
-        assertTrue(byType.contains("\"idempotent\":true"));
-        assertTrue(object.contains("\"realName\":\"张*\""));
-        assertTrue(object.contains("\"mobile\":\"138****8000\""));
-        assertTrue(object.contains("\"name\":\"演示商品\""));
-        assertTrue(object.contains("\"idempotent\":true"));
+        assertTrue(byType.contains("\"round\":2"));
+        assertTrue(byType.contains("\"sameAsPrevious\":true"));
+        assertTrue(object.contains("\"realName\":\"王*\""));
+        assertTrue(object.contains("\"mobile\":\"137****8008\""));
+        assertTrue(object.contains("\"name\":\"手工输入商品\""));
+        assertTrue(object.contains("\"sameAsPrevious\":true"));
+        assertFalse(object.contains("\"mobile\":\"13700138008\""));
         assertTrue(strong.contains("138****8000"));
         assertTrue(strong.contains("foo****@example.com"));
-        assertTrue(strong.contains("\"idempotent\":true"));
+        assertTrue(strong.contains("\"sameAsPrevious\":true"));
 
         String snapshot = restTemplate.getForObject("/demo/report/snapshot", String.class);
         assertTrue(snapshot.contains("\"manualCount\""));

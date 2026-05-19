@@ -5,55 +5,54 @@
     });
   }
   async function render(root) {
-    root.innerHTML = '<section class="hero"><div><h1>主动脱敏实验室</h1><p>用 SafeOutputMaskService 验证按类型、业务对象、强文本扫描和批量执行耗时；输入只参与当前请求，不写入报告。</p></div></section>' +
+    root.innerHTML = '<section class="hero"><div><h1>主动脱敏实验室</h1><p>用 SafeOutputMaskService 固定执行两轮脱敏，直观看到首次结果、二次脱敏稳定性和单轮耗时；输入只参与当前请求，不写入报告。</p></div></section>' +
       '<div class="grid three">' +
-      labPanel('by-type', '按类型标签', '<input id="by-type-value" value="13800138000"><select id="by-type-type"><option>MOBILE</option><option>EMAIL</option><option>ID_CARD</option><option>DEFAULT</option><option>mobileM</option></select><input id="by-type-iterations" type="number" min="1" max="1000" value="3">', '执行') +
-      labPanel('object', '业务对象', '<input id="object-iterations" type="number" min="1" max="1000" value="2">', '执行') +
-      labPanel('strong', '强文本扫描', '<textarea id="strong-text">联系 13800138000 foo@example.com</textarea><input id="strong-iterations" type="number" min="1" max="1000" value="2">', '执行') +
-      '</div><div class="panel"><h2>MANUAL 统计</h2><button id="refresh-lab">刷新统计</button><pre id="manual-stats"></pre></div>';
+      labPanel('by-type', '按类型标签', '<input id="by-type-value" value="13800138000"><select id="by-type-type"><option>MOBILE</option><option>EMAIL</option><option>ID_CARD</option><option>DEFAULT</option><option>mobileM</option></select>', '执行') +
+      labPanel('object', '业务对象', '<input id="object-real-name" value="张三" placeholder="realName"><input id="object-mobile" value="13800138000" placeholder="mobile"><input id="object-name" value="演示商品" placeholder="name">', '执行') +
+      labPanel('strong', '强文本扫描', '<textarea id="strong-text">联系 13800138000 foo@example.com</textarea>', '执行') +
+      '</div>';
     document.getElementById('by-type-run').onclick = runByType;
     document.getElementById('object-run').onclick = runObject;
     document.getElementById('strong-run').onclick = runStrong;
-    document.getElementById('refresh-lab').onclick = loadStats;
-    await loadStats();
   }
   function labPanel(id, title, controls, label) {
-    return '<div class="panel"><h2>' + title + '</h2><div class="grid">' + controls + '<button class="primary" id="' + id + '-run">' + label + '</button><pre class="result" id="' + id + '-result"></pre></div></div>';
+    return '<div class="panel"><h2>' + title + '</h2><div class="grid">' + controls + '<button class="primary" id="' + id + '-run">' + label + '</button><div class="result round-list" id="' + id + '-result"></div></div></div>';
   }
   async function runByType() {
     const data = await window.SafeOutputApi.post('/demo/mask/by-type', {
       value: document.getElementById('by-type-value').value,
-      type: document.getElementById('by-type-type').value,
-      iterations: Number(document.getElementById('by-type-iterations').value)
+      type: document.getElementById('by-type-type').value
     });
     show('by-type-result', data);
-    await loadStats();
   }
   async function runObject() {
-    const data = await window.SafeOutputApi.post('/demo/mask/object', {
-      iterations: Number(document.getElementById('object-iterations').value)
-    });
-    show('object-result', data);
-    await loadStats();
+    const payload = objectPayload();
+    const data = await window.SafeOutputApi.post('/demo/mask/object', payload);
+    show('object-result', data, payload);
   }
   async function runStrong() {
     const data = await window.SafeOutputApi.post('/demo/mask/strong', {
-      text: document.getElementById('strong-text').value,
-      iterations: Number(document.getElementById('strong-iterations').value)
+      text: document.getElementById('strong-text').value
     });
     show('strong-result', data);
-    await loadStats();
   }
-  async function loadStats() {
-    const stats = await window.SafeOutputApi.get('/demo/report/dashboard');
-    document.getElementById('manual-stats').textContent = JSON.stringify({
-      manualCount: stats.manualCount,
-      averageElapsedNanos: stats.averageElapsedNanos,
-      maskTypeCounts: stats.maskTypeCounts
-    }, null, 2);
+  function objectPayload() {
+    return {
+      realName: document.getElementById('object-real-name').value,
+      mobile: document.getElementById('object-mobile').value,
+      name: document.getElementById('object-name').value
+    };
   }
-  function show(id, data) {
-    document.getElementById(id).textContent = JSON.stringify(data, null, 2);
+  function show(id, data, original) {
+    const target = document.getElementById(id);
+    if (!Array.isArray(data)) {
+      target.innerHTML = '<pre>' + esc(JSON.stringify(window.SafeOutputFormat.toDisplayTiming(data), null, 2)) + '</pre>';
+      return;
+    }
+    const originalHtml = original ? '<div class="round-card"><div class="round-meta"><strong>原始输入</strong><span class="badge warn">待脱敏</span></div><pre>' + esc(JSON.stringify(original, null, 2)) + '</pre></div>' : '';
+    target.innerHTML = originalHtml + data.map(function (item) {
+      return '<div class="round-card"><div class="round-meta"><strong>Round ' + esc(item.round) + '</strong><span>' + esc(window.SafeOutputFormat.nanosToMs(item.elapsedNanos)) + '</span><span class="badge ' + (item.sameAsPrevious ? 'ok' : 'warn') + '">' + (item.sameAsPrevious ? '稳定' : '首次变化') + '</span></div><pre>' + esc(JSON.stringify(item.result, null, 2)) + '</pre></div>';
+    }).join('');
   }
   window.SafeOutputViews = window.SafeOutputViews || {};
   window.SafeOutputViews.lab = render;

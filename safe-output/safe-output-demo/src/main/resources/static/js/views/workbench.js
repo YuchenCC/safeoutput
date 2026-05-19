@@ -1,45 +1,189 @@
 (function (window) {
+  const modules = [
+    {
+      id: 'customers',
+      title: '客户档案',
+      noun: '客户',
+      description: '客户档案用于维护客户身份、联系方式、证件、邮箱、等级和常用地址。主要敏感信息包括客户姓名、手机号、证件号、邮箱和收货地址；姓名通过字段注解 @Desensitize(CHINESE_NAME) 实现，手机号/证件号/邮箱使用内置默认字段规则，收货地址使用 safe-output.rules 中的 demoAddress 配置，备注字段通过 ignore.keys 演示字段级豁免。',
+      list: '/demo/business/customers',
+      detail: '/demo/business/customers/',
+      key: 'customerNo',
+      columns: ['customerNo', 'displayName', 'mobile', 'customerLevel', 'status'],
+      sensitive: ['displayName', 'mobile', 'idCard', 'email', 'shippingAddress']
+    },
+    {
+      id: 'orders',
+      title: '订单履约',
+      noun: '订单',
+      description: '订单履约覆盖订单出库、运输、签收和异常拦截流程。主要敏感信息包括客户姓名、联系手机号、银行卡和收货地址；客户姓名使用字段注解声明 CHINESE_NAME，手机号和银行卡使用内置默认规则，收货地址通过 safe-output.rules 的 shippingAddress 规则配置为 ADDRESS。',
+      list: '/demo/business/orders',
+      detail: '/demo/business/orders/',
+      key: 'orderNo',
+      columns: ['orderNo', 'customerName', 'mobile', 'fulfillmentStatus', 'productSku'],
+      sensitive: ['customerName', 'mobile', 'bankCard', 'shippingAddress']
+    },
+    {
+      id: 'payments',
+      title: '支付核验',
+      noun: '支付',
+      description: '支付核验用于展示支付流水、付款人、渠道、核验状态和安全问答。主要敏感信息包括付款人姓名、手机号、银行卡、邮箱和核验答案；付款人姓名使用字段注解，手机号/银行卡/邮箱使用内置默认规则，securityAnswer 通过 safe-output.rules 配置为 DEFAULT 兜底脱敏。',
+      list: '/demo/business/payments',
+      detail: '/demo/business/payments/',
+      key: 'paymentNo',
+      columns: ['paymentNo', 'payerName', 'mobile', 'channel', 'verifyStatus'],
+      sensitive: ['payerName', 'mobile', 'bankCard', 'email', 'securityAnswer']
+    },
+    {
+      id: 'tickets',
+      title: '工单处理',
+      noun: '工单',
+      description: '工单处理模拟客服队列中的账号解锁、支付核验、地址修改和登录异常处理。主要敏感信息包括提交人姓名、手机号、邮箱和用户补充备注；提交人姓名使用字段注解，手机号/邮箱使用内置默认规则，plainNote 通过 ignore.keys 演示字段级不脱敏但保留治理边界。',
+      list: '/demo/business/tickets',
+      detail: '/demo/business/tickets/',
+      key: 'ticketNo',
+      columns: ['ticketNo', 'requesterName', 'mobile', 'title', 'priority'],
+      sensitive: ['requesterName', 'mobile', 'email', 'plainNote']
+    },
+    {
+      id: 'accounts',
+      title: '账户安全',
+      noun: '账户',
+      description: '账户安全用于展示登录状态、设备变更、密码过期和风险拦截等安全运营场景。主要敏感信息包括实名姓名、手机号、邮箱、密码和地址；实名姓名使用字段注解，手机号/邮箱/密码使用内置默认规则，地址通过 safe-output.rules 的 ADDRESS 配置处理。',
+      list: '/demo/business/accounts',
+      detail: '/demo/business/accounts/',
+      key: 'accountNo',
+      columns: ['accountNo', 'realName', 'mobile', 'securityState', 'deviceId'],
+      sensitive: ['realName', 'mobile', 'email', 'password', 'shippingAddress']
+    }
+  ];
+
+  const labels = {
+    accountNo: '账户号',
+    bankCard: '银行卡',
+    channel: '渠道',
+    customerLevel: '客户等级',
+    customerName: '客户姓名',
+    customerNo: '客户号',
+    deviceId: '设备',
+    displayName: '客户姓名',
+    email: '邮箱',
+    fulfillmentStatus: '履约状态',
+    idCard: '证件号',
+    mobile: '手机号',
+    orderNo: '订单号',
+    password: '密码',
+    payerName: '付款人',
+    paymentNo: '支付流水',
+    plainNote: '备注',
+    priority: '优先级',
+    productSku: '商品',
+    quantity: '数量',
+    requesterName: '提交人',
+    securityAnswer: '核验答案',
+    securityState: '安全状态',
+    shippingAddress: '地址',
+    status: '状态',
+    ticketNo: '工单号',
+    title: '标题',
+    verifyStatus: '核验状态',
+    warehouseMemo: '仓库备注'
+  };
+
   function esc(value) {
     return String(value == null ? '' : value).replace(/[&<>"']/g, function (ch) {
       return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch];
     });
   }
+
   async function render(root) {
-    root.innerHTML = '<section class="hero"><div><h1>业务系统敏感数据治理驾驶舱</h1><p>以客户、订单、支付、工单和账户场景触发真实 Response 脱敏链路，展示接入后的治理效果。</p></div></section><div class="toolbar"><button class="primary" id="refresh-workbench">刷新摘要</button></div><div id="workbench-body"></div>';
-    document.getElementById('refresh-workbench').onclick = load;
-    await load();
-  }
-  async function load() {
-    const body = document.getElementById('workbench-body');
-    const data = await window.SafeOutputApi.get('/demo/workbench');
-    const dashboard = await window.SafeOutputApi.get('/demo/report/dashboard');
-    body.innerHTML = [
-      '<div class="grid three">',
-      metric('业务场景', data.summary.scenarioCount),
-      metric('Response 脱敏', dashboard.responseCount),
-      metric('高风险接口', dashboard.highRiskApiCount),
-      '</div>',
-      '<div class="grid auto">',
-      data.scenarios.map(card).join(''),
-      '</div>',
-      '<div class="panel"><h2>风险摘要</h2><div class="grid two"><div class="chart-box"><canvas id="scene-chart"></canvas></div><pre>' + esc(JSON.stringify(dashboard.topRiskApis || [], null, 2)) + '</pre></div></div>'
+    const active = activeModule();
+    root.innerHTML = [
+      '<section class="hero workbench-hero"><div><h1>' + esc(active ? active.title : '工作台总览') + '</h1><p>' + esc(active ? active.description : overviewDescription()) + '</p></div></section>',
+      '<div id="workbench-body"></div>'
     ].join('');
-    window.SafeOutputCharts.doughnut('scene-chart', ['Response', 'Log', 'Manual'],
-      [dashboard.responseCount || 0, dashboard.logCount || 0, dashboard.manualCount || 0]);
-    Array.prototype.forEach.call(document.querySelectorAll('[data-endpoint]'), function (button) {
-      button.onclick = async function () {
-        const target = document.getElementById('result-' + button.dataset.id);
-        const result = await window.SafeOutputApi.get(button.dataset.endpoint);
-        target.textContent = JSON.stringify(result, null, 2);
-      };
+    if (active) {
+      await renderModule(active);
+    } else {
+      await renderOverview();
+    }
+  }
+
+  function activeModule() {
+    const id = activeSection();
+    for (let i = 0; i < modules.length; i++) {
+      if (modules[i].id === id) {
+        return modules[i];
+      }
+    }
+    return null;
+  }
+
+  function activeSection() {
+    const parts = location.hash.replace('#', '').split('/');
+    return parts.length > 1 ? parts[1] : '';
+  }
+
+  async function renderOverview() {
+    const body = document.getElementById('workbench-body');
+    const guide = await window.SafeOutputApi.get('/demo/integration-guide');
+    body.innerHTML = window.SafeOutputGuide.renderCards(guide.items || []);
+  }
+
+  async function renderModule(module) {
+    const body = document.getElementById('workbench-body');
+    body.innerHTML = '<div class="business-layout"><section class="panel business-table"><div class="panel-head"><div><h2>' + esc(module.title) + '</h2><p>' + esc(module.noun) + '列表</p></div><button class="primary" id="refresh-module">刷新</button></div><div id="module-table"></div></section><section class="panel business-detail" id="module-detail"></section></div>';
+    document.getElementById('refresh-module').onclick = function () { renderModule(module); };
+    const rows = await window.SafeOutputApi.get(module.list);
+    renderTable(module, rows);
+    if (rows && rows.length) {
+      await renderDetail(module, rows[0][module.key]);
+    }
+  }
+
+  function renderTable(module, rows) {
+    const target = document.getElementById('module-table');
+    target.innerHTML = '<table><thead><tr>' + module.columns.map(function (key) {
+      return '<th>' + esc(label(key)) + '</th>';
+    }).join('') + '<th>操作</th></tr></thead><tbody>' + rows.map(function (row, index) {
+      return '<tr>' + module.columns.map(function (key) {
+        return '<td>' + esc(row[key]) + '</td>';
+      }).join('') + '<td><button class="icon-button" title="查看详情" data-id="' + esc(row[module.key]) + '">›</button></td></tr>';
+    }).join('') + '</tbody></table>';
+    Array.prototype.forEach.call(target.querySelectorAll('[data-id]'), function (button) {
+      button.onclick = function () { renderDetail(module, button.dataset.id); };
     });
   }
-  function metric(label, value) {
-    return '<div class="panel metric"><span>' + esc(label) + '</span><strong>' + esc(value) + '</strong></div>';
+
+  async function renderDetail(module, id) {
+    const detail = await window.SafeOutputApi.get(module.detail + encodeURIComponent(id));
+    const target = document.getElementById('module-detail');
+    target.innerHTML = [
+      '<div class="panel-head"><div><h2>' + esc(module.title) + '详情</h2><p>' + esc(id) + '</p></div>',
+      '<button class="eye-button" id="reveal-sensitive" title="查看敏感信息"><span class="eye-dot"></span>查看</button></div>',
+      '<div class="detail-grid">',
+      Object.keys(detail).map(function (key) {
+        return '<div class="detail-item ' + (module.sensitive.indexOf(key) >= 0 ? 'sensitive' : '') + '"><span>' + esc(label(key)) + '</span><strong>' + esc(detail[key]) + '</strong></div>';
+      }).join(''),
+      '</div>',
+      '<div class="reveal-panel" id="reveal-panel"></div>'
+    ].join('');
+    document.getElementById('reveal-sensitive').onclick = async function () {
+      const raw = await window.SafeOutputApi.get(module.detail + encodeURIComponent(id) + '/raw');
+      document.getElementById('reveal-panel').innerHTML = '<h3>API ignore 明文查看</h3>' +
+        '<div class="detail-grid compact">' + module.sensitive.map(function (key) {
+          return '<div class="detail-item danger"><span>' + esc(label(key)) + '</span><strong>' + esc(raw[key]) + '</strong></div>';
+        }).join('') + '</div>';
+    };
   }
-  function card(item) {
-    return '<div class="panel"><h2>' + esc(item.name) + '</h2><p><span class="badge">' + esc(item.responseShape) + '</span></p><p>' + esc(item.governance) + '</p><button data-id="' + esc(item.id) + '" data-endpoint="' + esc(item.endpoint) + '">触发场景</button><pre class="result" id="result-' + esc(item.id) + '"></pre></div>';
+
+  function label(key) {
+    return labels[key] || key;
   }
+
+  function overviewDescription() {
+    return '只展示工作台实际用到的几类接入配置：默认规则、YAML rules、字段注解、字段 ignore 和 API ignore。示例代码使用高亮显示，便于在白底后台界面中快速扫描。';
+  }
+
   window.SafeOutputViews = window.SafeOutputViews || {};
   window.SafeOutputViews.workbench = render;
 })(window);

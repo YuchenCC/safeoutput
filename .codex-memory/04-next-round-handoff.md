@@ -34,6 +34,10 @@
 - Log4j2 report bridge 已补齐：`/demo/logs` 可产生真实 `LOG` 计数和 `phoneNo` / `certNum` / `mailAddr` fallback 规则线索，后续不要再用 Demo controller 手动 seed 日志建议。
 - R2.5 日志场景新增 `/demo/logs/scenarios` 和 `/demo/logs/scenarios/{id}/trigger`，通过真实 logger 触发 JSON-like、key=value、regex fallback、已配置 key 和未配置 key 对比；接口只返回模板摘要、聚合计数、建议和 YAML 片段，不返回完整原始日志。
 - R2.5 报告中心新增 `/demo/report/files`、`/demo/report/files/{name}`、`/demo/report/files/{name}/dashboard`；安全读取只接受配置前缀 JSON 文件，继续禁止报告和页面展示敏感原文。
+- R3 导航与 Dashboard：默认入口已改为 `#dashboard`，原风险摘要和报告中心整合为治理 Dashboard，包含实时风险摘要、场景/类型图表、报告导出、报告文件列表和单报告明细；原 `reports.js` 仍作为 dashboard view 载体。
+- R3 工作台侧边栏“工作台”分组包含总览、客户档案、订单履约、支付核验、工单处理、账户安全：`#workbench`、`#workbench/customers`、`#workbench/orders`、`#workbench/payments`、`#workbench/tickets`、`#workbench/accounts`。工作台总览直接展示 `/demo/integration-guide` 的接入说明内容，不再保留接入说明子菜单；旧 `#guide` 和 `#workbench/integration` 兼容跳转到 `#workbench`。后端新增对应 `/demo/business/{domain}`、`/demo/business/{domain}/{id}`、`/demo/business/{domain}/{id}/raw`；raw 接口通过 `safe-output.ignore.apis` 的 Ant pattern 配置为 API ignore，用于“小眼睛查看明文”演示，并保留风险统计。
+- Demo 脱敏实验室当前约定：前端不再暴露 `iterations`，三类主动脱敏接口固定执行两轮；响应是数组，第一条为首次脱敏结果，第二条为对首次结果再次脱敏后的结果，每条包含 `round`、`result`、`elapsedNanos`、`sameAsPrevious`；前端通过 `static/js/components/formatters.js` 将 `elapsedNanos` / `*ElapsedNanos` 转为 `ms` 展示；业务对象面板提交 `realName`、`mobile`、`name` 表单字段，空值回退默认样例。
+- R3 前端整体风格已切换为白底业务后台：浅色侧边栏、白色面板、细边框、蓝/青/绿语义图表色和浅底代码块。后续 UI polish 应基于该白底风格，不再恢复深色驾驶舱。
 - 本轮浏览器插件的执行工具未暴露，已完成本地 HTTP 与静态资源加载验证；下一轮若要做 UI polish，应人工打开 `http://localhost:8080/index.html` 验证五个主页面和打印样式。
 
 ## 编码前必须阅读
