@@ -22,6 +22,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.test.annotation.DirtiesContext;
 
 @SpringBootTest(classes = DemoApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class DemoResponseIntegrationTest {
@@ -167,11 +168,12 @@ class DemoResponseIntegrationTest {
                 StandardCharsets.UTF_8);
         assertTrue(log4j2Xml.contains("%safeOutputMsg"));
 
-        String logs = restTemplate.getForObject("/demo/logs", String.class);
+        long before = metricsCollector.snapshot().getLogCount();
+        collectDemoLogs();
         String ignored = restTemplate.getForObject("/demo/ignored", String.class);
         String exported = restTemplate.getForObject("/demo/report/export", String.class);
 
-        assertTrue(logs.contains("logged"));
+        assertTrue(metricsCollector.snapshot().getLogCount() > before);
         assertTrue(ignored.contains("13800138000"));
         assertTrue(exported.contains("demo-report"));
 
@@ -241,24 +243,56 @@ class DemoResponseIntegrationTest {
     }
 
     @Test
-    void logScenarioEndpointsTriggerRealLog4j2AndReturnOnlyTemplateSummaries() {
-        String scenarios = restTemplate.getForObject("/demo/logs/scenarios", String.class);
+    void logScenarioEndpointReturnsReadOnlySummariesAndUsesExternalLogSources() {
         long before = metricsCollector.snapshot().getLogCount();
-        String triggered = restTemplate.getForObject("/demo/logs/scenarios/configured-vs-missing/trigger",
-                String.class);
+        collectDemoLogs();
+        String scenarios = restTemplate.getForObject("/demo/logs/scenarios", String.class);
+        ResponseEntity<String> removedTrigger = restTemplate.getForEntity(
+                "/demo/logs/scenarios/configured-vs-missing/trigger", String.class);
 
         assertTrue(scenarios.contains("json-like"));
         assertTrue(scenarios.contains("key-value"));
         assertTrue(scenarios.contains("regex-fallback"));
-        assertTrue(scenarios.contains("configured-vs-missing"));
         assertTrue(metricsCollector.snapshot().getLogCount() > before);
-        assertTrue(triggered.contains("\"templateSummary\""));
-        assertTrue(triggered.contains("\"logRuleSuggestions\""));
-        assertTrue(triggered.contains("certnum"));
-        assertTrue(triggered.contains("mailaddr"));
-        assertFalse(triggered.contains("13500138004"));
-        assertFalse(triggered.contains("11010519491231002X"));
-        assertFalse(triggered.contains("missing@example.com"));
+        assertTrue(scenarios.contains("\"templateSummary\""));
+        assertTrue(scenarios.contains("\"logRuleSuggestions\""));
+        assertTrue(scenarios.contains("certnum"));
+        assertTrue(scenarios.contains("mailaddr"));
+        assertFalse(scenarios.contains("triggerEndpoint"));
+        assertFalse(scenarios.contains("configured-vs-missing"));
+        assertTrue(removedTrigger.getStatusCode().is4xxClientError());
+        assertFalse(scenarios.contains("11010519491231002X"));
+        assertFalse(scenarios.contains("business-detail@example.com"));
+    }
+
+    @Test
+    @DirtiesContext(methodMode = DirtiesContext.MethodMode.BEFORE_METHOD)
+    void businessWorkbenchLogsUseConfiguredKeysWithoutMissingKeySuggestions() {
+        long before = metricsCollector.snapshot().getLogCount();
+        restTemplate.getForObject("/demo/workbench", String.class);
+        restTemplate.getForObject("/demo/business/customer", String.class);
+        restTemplate.getForObject("/demo/business/customers", String.class);
+        restTemplate.getForObject("/demo/business/customers/C-1001", String.class);
+        restTemplate.getForObject("/demo/business/orders", String.class);
+        restTemplate.getForObject("/demo/business/orders/ORD-20260518-001", String.class);
+        restTemplate.getForObject("/demo/business/payments", String.class);
+        restTemplate.getForObject("/demo/business/payments/PAY-8840", String.class);
+        restTemplate.getForObject("/demo/business/tickets", String.class);
+        restTemplate.getForObject("/demo/business/tickets/TK-20260518-01", String.class);
+        restTemplate.getForObject("/demo/business/accounts", String.class);
+        restTemplate.getForObject("/demo/business/accounts/AC-7780", String.class);
+
+        String scenarios = restTemplate.getForObject("/demo/logs/scenarios", String.class);
+
+        assertTrue(metricsCollector.snapshot().getLogCount() > before);
+        assertFalse(scenarios.contains("mailaddr"));
+        assertFalse(scenarios.contains("certnum"));
+        assertFalse(scenarios.contains("customer-log@example.com"));
+        assertFalse(scenarios.contains("payment-detail@example.com"));
+        assertFalse(scenarios.contains("ticket-detail@example.com"));
+        assertFalse(scenarios.contains("account-detail@example.com"));
+        assertFalse(scenarios.contains("11010519491231002X"));
+        assertFalse(scenarios.contains("6222029876543210987"));
     }
 
     @Test
@@ -298,11 +332,7 @@ class DemoResponseIntegrationTest {
     @Test
     void dashboardEndpointReturnsAggregatedStatsAndChartData() {
         restTemplate.getForObject("/demo/bean", String.class);
-        restTemplate.getForObject("/demo/logs", String.class);
-        Map<String, String> byTypeReq = new LinkedHashMap<String, String>();
-        byTypeReq.put("value", "13800138000");
-        byTypeReq.put("type", "mobileM");
-        restTemplate.postForObject("/demo/mask/by-type", byTypeReq, String.class);
+        collectDemoLogs();
 
         String dashboard = restTemplate.getForObject("/demo/report/dashboard", String.class);
 
@@ -317,7 +347,6 @@ class DemoResponseIntegrationTest {
         assertTrue(dashboard.contains("\"maskTypeCounts\""));
         assertTrue(dashboard.contains("\"topRiskApis\""));
         assertTrue(dashboard.contains("\"sceneTrend\""));
-        assertTrue(dashboard.contains("\"suggestionCount\":2"));
         assertFalse(dashboard.contains("13800138000"));
     }
 
@@ -339,7 +368,7 @@ class DemoResponseIntegrationTest {
 
     @Test
     void logSuggestionsEndpointReturnsYamlSnippet() {
-        restTemplate.getForObject("/demo/logs", String.class);
+        collectDemoLogs();
 
         String logSuggestions = restTemplate.getForObject("/demo/report/log-suggestions", String.class);
 
@@ -356,14 +385,32 @@ class DemoResponseIntegrationTest {
         assertTrue(logSuggestions.contains("mailaddr"));
         assertFalse(logSuggestions.contains("13800138000"));
         assertFalse(logSuggestions.contains("13900139000"));
-        assertFalse(logSuggestions.contains("bar@example.com"));
+        assertFalse(logSuggestions.contains("business-detail@example.com"));
+    }
+
+    @Test
+    @DirtiesContext(methodMode = DirtiesContext.MethodMode.BEFORE_METHOD)
+    void logSuggestionsEndpointReturnsYamlForLowConfidenceSuggestions() {
+        Map<String, String> byTypeReq = new LinkedHashMap<String, String>();
+        byTypeReq.put("value", "13800138000");
+        byTypeReq.put("type", "MOBILE");
+        restTemplate.postForObject("/demo/mask/by-type", byTypeReq, String.class);
+
+        String logSuggestions = restTemplate.getForObject("/demo/report/log-suggestions", String.class);
+
+        assertTrue(logSuggestions.contains("\"confidence\":\"LOW\""));
+        assertTrue(logSuggestions.contains("suggested-certnum"));
+        assertTrue(logSuggestions.contains("suggested-mailaddr"));
+        assertTrue(logSuggestions.contains("enabled: false"));
+        assertFalse(logSuggestions.contains("11010519491231002X"));
+        assertFalse(logSuggestions.contains("lab-type@example.com"));
     }
 
     @Test
     void r2ReportDemoEndpointsReturnRiskAndLogSuggestionsWithoutSensitiveSamples() {
         restTemplate.getForObject("/demo/nested", String.class);
         restTemplate.getForObject("/demo/ignored", String.class);
-        restTemplate.getForObject("/demo/logs", String.class);
+        collectDemoLogs();
 
         String responseRisk = restTemplate.getForObject("/demo/report/response-risk", String.class);
         String logSuggestions = restTemplate.getForObject("/demo/report/log-suggestions", String.class);
@@ -389,13 +436,13 @@ class DemoResponseIntegrationTest {
         assertFalse(logSuggestions.contains("13900139000"));
         assertFalse(logSuggestions.contains("11010519491231002X"));
         assertFalse(logSuggestions.contains("foo@example.com"));
-        assertFalse(logSuggestions.contains("bar@example.com"));
+        assertFalse(logSuggestions.contains("business-detail@example.com"));
     }
 
     @Test
     void reportFileCenterExportsListsReadsAndRejectsUnsafeNames() throws Exception {
         restTemplate.getForObject("/demo/business/order", String.class);
-        restTemplate.getForObject("/demo/logs/scenarios/configured-vs-missing/trigger", String.class);
+        collectDemoLogs();
         String exported = restTemplate.getForObject("/demo/report/export", String.class);
         assertTrue(exported.contains("demo-report"));
 
@@ -422,6 +469,17 @@ class DemoResponseIntegrationTest {
         assertTrue(nonJson.getStatusCode().is4xxClientError());
         assertFalse(raw.contains("13800138000"));
         assertFalse(dashboard.contains("11010519491231002X"));
+    }
+
+    private void collectDemoLogs() {
+        restTemplate.getForObject("/demo/business/customers/C-1001", String.class);
+        Map<String, String> byTypeReq = new LinkedHashMap<String, String>();
+        byTypeReq.put("value", "13800138000");
+        byTypeReq.put("type", "MOBILE");
+        restTemplate.postForObject("/demo/mask/by-type", byTypeReq, String.class);
+        Map<String, String> strongReq = new LinkedHashMap<String, String>();
+        strongReq.put("text", "联系 13600138003 fallback@example.com");
+        restTemplate.postForObject("/demo/mask/strong", strongReq, String.class);
     }
 
     private static Path latestReport() throws Exception {

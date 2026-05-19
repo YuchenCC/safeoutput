@@ -8,12 +8,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 public class DemoManualMaskController {
+
+    private static final Logger LOGGER = LogManager.getLogger(DemoManualMaskController.class);
 
     private final SafeOutputMaskService maskService;
 
@@ -23,6 +27,8 @@ public class DemoManualMaskController {
 
     @PostMapping("/demo/mask/by-type")
     public List<Map<String, Object>> byType(@RequestBody ByTypeRequest request) {
+        LOGGER.info("mask lab by-type mobile=" + request.getValue()
+                + " certNum=11010519491231002X mailAddr=lab-type@example.com");
         List<Map<String, Object>> response = new ArrayList<Map<String, Object>>();
         String previous = null;
         String current = request.getValue();
@@ -37,9 +43,12 @@ public class DemoManualMaskController {
 
     @PostMapping("/demo/mask/object")
     public List<Map<String, Object>> object(@RequestBody(required = false) ObjectRequest request) {
+        ManualOrder current = manualOrder(request);
+        LOGGER.info("mask lab object {\"mobile\":\"" + current.getMobile()
+                + "\",\"email\":\"lab-object@example.com\"} certNum=11010519491231002X"
+                + " mailAddr=lab-object@example.com");
         List<Map<String, Object>> response = new ArrayList<Map<String, Object>>();
         Object previous = null;
-        ManualOrder current = manualOrder(request);
         for (int round = 1; round <= 2; round++) {
             long startedAt = System.nanoTime();
             current = (ManualOrder) maskService.maskObject(current);
@@ -52,6 +61,8 @@ public class DemoManualMaskController {
     @PostMapping("/demo/mask/strong")
     public List<Map<String, Object>> strong(@RequestBody StrongRequest request) {
         // 强扫描必须由调用方显式进入，普通对象主动脱敏不会默认全局 regex 扫描文本。
+        LOGGER.info("mask lab strong free text " + request.getText()
+                + " fallback contact 13600138003 fallback@example.com");
         List<Map<String, Object>> response = new ArrayList<Map<String, Object>>();
         String previous = null;
         String current = request.getText();
