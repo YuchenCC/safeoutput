@@ -122,7 +122,7 @@ class DemoResponseIntegrationTest {
     }
 
     @Test
-    void integrationGuideCoversAllMajorIntegrationModes() {
+    void integrationGuideCoversBusinessFieldConfigurationSnippets() {
         String guide = restTemplate.getForObject("/demo/integration-guide", String.class);
 
         assertTrue(guide.contains("yaml-rule"));
@@ -130,10 +130,14 @@ class DemoResponseIntegrationTest {
         assertTrue(guide.contains("default-rule"));
         assertTrue(guide.contains("field-ignore"));
         assertTrue(guide.contains("api-ignore"));
-        assertTrue(guide.contains("log4j2"));
-        assertTrue(guide.contains("manual"));
-        assertTrue(guide.contains("/demo/business/customer"));
-        assertTrue(guide.contains("/demo/logs/scenarios"));
+        assertTrue(guide.contains("shippingAddress"));
+        assertTrue(guide.contains("securityAnswer"));
+        assertTrue(guide.contains("@Desensitize"));
+        assertTrue(guide.contains("plainNote"));
+        assertTrue(guide.contains("/demo/business/customers/*/raw"));
+        assertTrue(guide.contains("/demo/business/orders"));
+        assertFalse(guide.contains("Log4j2 PatternConverter"));
+        assertFalse(guide.contains("SafeOutputMaskService"));
     }
 
     @Test

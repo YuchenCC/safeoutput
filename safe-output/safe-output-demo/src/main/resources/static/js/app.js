@@ -1,9 +1,13 @@
 (function (window, document) {
   const root = document.getElementById('app');
-  const routes = ['dashboard', 'workbench', 'guide', 'lab', 'logs'];
+  const routes = ['dashboard', 'workbench', 'lab', 'logs'];
   async function render() {
     const hashRoute = location.hash.replace('#', '').split('/')[0];
-    const route = routes.indexOf(hashRoute) >= 0 ? hashRoute : 'dashboard';
+    if (hashRoute === 'guide') {
+      history.replaceState(null, '', '#workbench/integration');
+    }
+    const currentHashRoute = location.hash.replace('#', '').split('/')[0];
+    const route = routes.indexOf(currentHashRoute) >= 0 ? currentHashRoute : 'dashboard';
     if (!location.hash) {
       history.replaceState(null, '', '#dashboard');
     }

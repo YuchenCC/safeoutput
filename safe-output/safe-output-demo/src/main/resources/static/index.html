@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Safe Output 业务治理驾驶舱</title>
+  <title>Safe Output 工作台</title>
   <link rel="stylesheet" href="vendor/fonts/fonts.css">
   <link rel="stylesheet" href="css/app.css">
   <script src="vendor/chart.min.js"></script>
@@ -12,19 +12,19 @@
   <nav class="shell-nav" aria-label="主导航">
     <div class="brand">
       <strong>Safe Output</strong>
-      <span>业务系统敏感数据治理驾驶舱</span>
+      <span>业务系统敏感数据治理工作台</span>
     </div>
     <a href="#dashboard" data-route="dashboard">治理 Dashboard</a>
     <div class="nav-group">
-      <span>业务功能</span>
-      <a href="#workbench" data-route="workbench">业务总览</a>
+      <span>工作台</span>
+      <a href="#workbench" data-route="workbench">总览</a>
+      <a href="#workbench/integration" data-route="workbench">接入说明</a>
       <a href="#workbench/customers" data-route="workbench">客户档案</a>
       <a href="#workbench/orders" data-route="workbench">订单履约</a>
       <a href="#workbench/payments" data-route="workbench">支付核验</a>
       <a href="#workbench/tickets" data-route="workbench">工单处理</a>
       <a href="#workbench/accounts" data-route="workbench">账户安全</a>
     </div>
-    <a href="#guide" data-route="guide">接入说明</a>
     <a href="#lab" data-route="lab">脱敏实验室</a>
     <a href="#logs" data-route="logs">日志场景</a>
   </nav>
@@ -33,8 +33,8 @@
   </main>
   <script src="js/api.js"></script>
   <script src="js/components/charts.js"></script>
-  <script src="js/views/workbench.js"></script>
   <script src="js/views/guide.js"></script>
+  <script src="js/views/workbench.js"></script>
   <script src="js/views/lab.js"></script>
   <script src="js/views/logs.js"></script>
   <script src="js/views/reports.js"></script>

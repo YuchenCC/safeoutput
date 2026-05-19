@@ -14,14 +14,14 @@
     bars: function (id, labels, values) {
       chart(id, {
         type: 'bar',
-        data: { labels: labels, datasets: [{ data: values, backgroundColor: '#e0a326' }] },
+        data: { labels: labels, datasets: [{ data: values, backgroundColor: '#2563eb' }] },
         options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
       });
     },
     doughnut: function (id, labels, values) {
       chart(id, {
         type: 'doughnut',
-        data: { labels: labels, datasets: [{ data: values, backgroundColor: ['#e0a326', '#42b8dd', '#43c77b'] }] },
+        data: { labels: labels, datasets: [{ data: values, backgroundColor: ['#2563eb', '#0f9f8f', '#138a52'] }] },
         options: { responsive: true, maintainAspectRatio: false }
       });
     }

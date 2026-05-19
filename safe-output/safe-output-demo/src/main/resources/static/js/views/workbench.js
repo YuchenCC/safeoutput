@@ -97,11 +97,14 @@
 
   async function render(root) {
     const active = activeModule();
+    const integration = activeSection() === 'integration';
     root.innerHTML = [
-      '<section class="hero workbench-hero"><div><h1>' + esc(active ? active.title : '业务工作台') + '</h1><p>' + esc(active ? active.description : overviewDescription()) + '</p></div></section>',
+      '<section class="hero workbench-hero"><div><h1>' + esc(integration ? '接入说明' : (active ? active.title : '工作台')) + '</h1><p>' + esc(integration ? integrationDescription() : (active ? active.description : overviewDescription())) + '</p></div></section>',
       '<div id="workbench-body"></div>'
     ].join('');
-    if (active) {
+    if (integration) {
+      await renderIntegration();
+    } else if (active) {
       await renderModule(active);
     } else {
       await renderOverview();
@@ -109,14 +112,27 @@
   }
 
   function activeModule() {
-    const parts = location.hash.replace('#', '').split('/');
-    const id = parts.length > 1 ? parts[1] : '';
+    const id = activeSection();
+    if (id === 'integration') {
+      return null;
+    }
     for (let i = 0; i < modules.length; i++) {
       if (modules[i].id === id) {
         return modules[i];
       }
     }
     return null;
+  }
+
+  function activeSection() {
+    const parts = location.hash.replace('#', '').split('/');
+    return parts.length > 1 ? parts[1] : '';
+  }
+
+  async function renderIntegration() {
+    const body = document.getElementById('workbench-body');
+    const guide = await window.SafeOutputApi.get('/demo/integration-guide');
+    body.innerHTML = window.SafeOutputGuide.renderCards(guide.items || []);
   }
 
   async function renderOverview() {
@@ -129,6 +145,10 @@
       metric('默认入口', data.summary.primaryRoute),
       '</div>',
       '<div class="module-grid">',
+      '<a class="module-card module-card-guide" href="#workbench/integration">' +
+      '<span>接入</span><strong>接入说明</strong>' +
+      '<p>把默认规则、YAML rules、字段注解、字段 ignore 和 API ignore 收进工作台视角，和业务页面放在同一条演示路径里。</p>' +
+      '<small>/demo/integration-guide</small></a>',
       modules.map(function (item) {
         const scenario = findScenario(data.scenarios || [], item.id);
         return '<a class="module-card" href="#workbench/' + item.id + '">' +
@@ -201,7 +221,11 @@
   }
 
   function overviewDescription() {
-    return '业务工作台模拟一个包含客户档案、订单履约、支付核验、工单处理和账户安全的后台系统。系统响应中通常包含姓名、手机号、证件号、银行卡、邮箱、地址、密码和安全问答等敏感信息；Demo 通过内置默认字段规则、YAML 配置规则、字段注解、字段 ignore 与 API ignore 组合展示业务系统接入脱敏组件后的治理需求。';
+    return '工作台模拟一个包含客户档案、订单履约、支付核验、工单处理和账户安全的后台系统，并把接入说明并入同一组业务菜单。系统响应中通常包含姓名、手机号、证件号、银行卡、邮箱、地址、密码和安全问答等敏感信息；Demo 通过内置默认字段规则、YAML 配置规则、字段注解、字段 ignore 与 API ignore 组合展示业务系统接入脱敏组件后的治理需求。';
+  }
+
+  function integrationDescription() {
+    return '这些接入片段只解释工作台真实用到的规则来源和代码位置，不再提供跳转入口；示例代码使用高亮显示，便于在白底后台界面中快速扫描。';
   }
 
   function metric(labelText, value) {
