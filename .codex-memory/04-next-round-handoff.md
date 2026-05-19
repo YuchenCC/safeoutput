@@ -35,7 +35,8 @@
 - R2.5 日志场景新增 `/demo/logs/scenarios` 和 `/demo/logs/scenarios/{id}/trigger`，通过真实 logger 触发 JSON-like、key=value、regex fallback、已配置 key 和未配置 key 对比；接口只返回模板摘要、聚合计数、建议和 YAML 片段，不返回完整原始日志。
 - R2.5 报告中心新增 `/demo/report/files`、`/demo/report/files/{name}`、`/demo/report/files/{name}/dashboard`；安全读取只接受配置前缀 JSON 文件，继续禁止报告和页面展示敏感原文。
 - R3 导航与 Dashboard：默认入口已改为 `#dashboard`，原风险摘要和报告中心整合为治理 Dashboard，包含实时风险摘要、场景/类型图表、报告导出、报告文件列表和单报告明细；原 `reports.js` 仍作为 dashboard view 载体。
-- R3 业务工作台已把客户档案、订单履约、支付核验、工单处理、账户安全拆成侧边栏业务功能子菜单：`#workbench/customers`、`#workbench/orders`、`#workbench/payments`、`#workbench/tickets`、`#workbench/accounts`。后端新增对应 `/demo/business/{domain}`、`/demo/business/{domain}/{id}`、`/demo/business/{domain}/{id}/raw`；raw 接口通过 `safe-output.ignore.apis` 的 Ant pattern 配置为 API ignore，用于“小眼睛查看明文”演示，并保留风险统计。
+- R3 工作台已把接入说明、客户档案、订单履约、支付核验、工单处理、账户安全收进侧边栏“工作台”分组：`#workbench/integration`、`#workbench/customers`、`#workbench/orders`、`#workbench/payments`、`#workbench/tickets`、`#workbench/accounts`。旧 `#guide` 仅兼容跳转到 `#workbench/integration`；接入说明卡片不展示跳转入口，代码片段使用轻量高亮。后端新增对应 `/demo/business/{domain}`、`/demo/business/{domain}/{id}`、`/demo/business/{domain}/{id}/raw`；raw 接口通过 `safe-output.ignore.apis` 的 Ant pattern 配置为 API ignore，用于“小眼睛查看明文”演示，并保留风险统计。
+- R3 前端整体风格已切换为白底业务后台：浅色侧边栏、白色面板、细边框、蓝/青/绿语义图表色和浅底代码块。后续 UI polish 应基于该白底风格，不再恢复深色驾驶舱。
 - 本轮浏览器插件的执行工具未暴露，已完成本地 HTTP 与静态资源加载验证；下一轮若要做 UI polish，应人工打开 `http://localhost:8080/index.html` 验证五个主页面和打印样式。
 
 ## 编码前必须阅读
