@@ -736,4 +736,6 @@ mvn test
 6. `safe-output/safe-output-report/src/main/java/com/safeoutput/report/MaskReportExporter.java`
 7. `safe-output/safe-output-spring-boot-starter/src/main/java/com/safeoutput/spring/boot/autoconfigure/SafeOutputAutoConfiguration.java`
 8. `safe-output/safe-output-spring-boot-starter/src/main/java/com/safeoutput/spring/boot/autoconfigure/SafeOutputResponseBodyAdvice.java`
-9. `safe-output/safe-output-demo/src/main/java/com/safeoutput/demo/DemoReportController.java`
+9. `safe-output/safe-output-demo/src/main/java/com/safeoutput/demo/report/DemoReportController.java`
+10. `safe-output/safe-output-demo/src/main/java/com/safeoutput/demo/report/DemoReportFileStore.java`
+11. `safe-output/safe-output-demo/src/main/java/com/safeoutput/demo/report/DemoReportDashboardAssembler.java`

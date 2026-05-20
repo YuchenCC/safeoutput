@@ -1,4 +1,4 @@
-package com.safeoutput.demo;
+package com.safeoutput.demo.business;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;

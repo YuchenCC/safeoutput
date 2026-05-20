@@ -1,4 +1,4 @@
-package com.safeoutput.demo;
+package com.safeoutput.demo.lab;
 
 import com.safeoutput.core.SafeOutputMaskService;
 

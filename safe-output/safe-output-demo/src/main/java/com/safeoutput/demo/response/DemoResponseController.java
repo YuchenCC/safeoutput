@@ -1,4 +1,4 @@
-package com.safeoutput.demo;
+package com.safeoutput.demo.response;
 
 import com.safeoutput.core.Desensitize;
 import com.safeoutput.core.MaskTypes;

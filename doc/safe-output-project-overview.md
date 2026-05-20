@@ -49,8 +49,8 @@ safe-output-demo
 | `safe-output-log4j2` | 3 | 631 | 2 | 315 |
 | `safe-output-report` | 16 | 1,217 | 2 | 349 |
 | `safe-output-spring-boot-starter` | 8 | 929 | 9 | 1,234 |
-| `safe-output-demo` | 5 | 390 | 1 | 270 |
-| **合计** | **65** | **5,652** | **21** | **3,334** |
+| `safe-output-demo` | 12 | 1,874 | 1 | 270 |
+| **合计** | **72** | **7,136** | **21** | **3,334** |
 
 ## 4. 核心模块
 
@@ -130,10 +130,16 @@ safe-output-demo
 | 类 | 定位 |
 |---|---|
 | `DemoApplication` | 启动类，并注册 `mobileM` 自定义策略示例。 |
-| `DemoResponseController` | Response 脱敏、嵌套对象、Map/List、API ignore 示例。 |
-| `DemoLogController` | 真实 Log4j2 `%safeOutputMsg` 日志脱敏示例。 |
-| `DemoManualMaskController` | 主动脱敏、对象脱敏、强扫描示例。 |
-| `DemoReportController` | 报告快照、手动导出、风险画像、日志规则建议接口。 |
+| `response/DemoResponseController` | Response 脱敏、嵌套对象、Map/List、API ignore 示例。 |
+| `business/DemoBusinessController` | 业务工作台、业务域列表/详情/raw 接口。 |
+| `business/DemoBusinessService` / `DemoBusinessDataSource` | mock 业务域数据和工作台元数据。 |
+| `business/DemoBusinessLog` | 业务工作台用于触发真实 Log4j2 脱敏统计的日志模板。 |
+| `logs/DemoLogController` | 真实 Log4j2 `%safeOutputMsg` 日志脱敏聚合视图。 |
+| `lab/DemoManualMaskController` | 主动脱敏、对象脱敏、强扫描示例。 |
+| `report/DemoReportController` | 报告快照、手动导出、风险画像、日志规则建议接口。 |
+| `report/DemoReportFileStore` | 报告目录安全读取，只允许配置前缀 JSON 文件。 |
+| `report/DemoReportDashboardAssembler` | 实时和历史报告 dashboard DTO 组装。 |
+| `guide/DemoIntegrationGuideController` | Demo 接入说明接口。 |
 
 浏览器入口为 `http://localhost:8080/index.html`。
 
