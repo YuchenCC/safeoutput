@@ -1,4 +1,6 @@
 safe-output:
+  dashboard:
+    enabled: true
   rules:
     - name: demoRealName
       keys:

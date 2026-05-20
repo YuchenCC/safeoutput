@@ -335,6 +335,12 @@ class DemoResponseIntegrationTest {
         collectDemoLogs();
 
         String dashboard = restTemplate.getForObject("/demo/report/dashboard", String.class);
+        String reusableDashboardPage = restTemplate.getForObject("/safe-output/dashboard/index.html", String.class);
+        Map<String, Object> request = new LinkedHashMap<String, Object>();
+        String reusableDashboard = restTemplate.postForObject("/safe-output/dashboard/api/overview", request,
+                String.class);
+        ResponseEntity<String> getReusableDashboard = restTemplate.getForEntity("/safe-output/dashboard/api/overview",
+                String.class);
 
         assertTrue(metricsCollector.snapshot().getLogCount() > 0);
         assertTrue(dashboard.contains("\"totalCount\""));
@@ -357,7 +363,12 @@ class DemoResponseIntegrationTest {
         assertTrue(dashboard.contains("\"ignoredRiskApis\""));
         assertTrue(dashboard.contains("\"logRuleSuggestions\""));
         assertTrue(dashboard.contains("\"sceneTrend\""));
+        assertTrue(reusableDashboardPage.contains("Safe Output Dashboard"));
+        assertTrue(reusableDashboard.contains("\"totalCount\""));
+        assertTrue(reusableDashboard.contains("\"topRiskApis\""));
+        assertTrue(getReusableDashboard.getStatusCode().is4xxClientError());
         assertFalse(dashboard.contains("13800138000"));
+        assertFalse(reusableDashboard.contains("13800138000"));
     }
 
     @Test

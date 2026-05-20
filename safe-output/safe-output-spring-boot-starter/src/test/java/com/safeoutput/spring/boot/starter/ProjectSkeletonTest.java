@@ -62,7 +62,9 @@ class ProjectSkeletonTest {
         Document document = document(demoPom);
 
         Set<String> safeOutputDependencies = productionDependencyArtifactIds(document, "com.safeoutput");
-        assertEquals(new HashSet<String>(Arrays.asList("safe-output-spring-boot-starter")),
+        assertEquals(new HashSet<String>(Arrays.asList(
+                "safe-output-spring-boot-starter",
+                "safe-output-dashboard-spring-boot-starter")),
                 safeOutputDependencies);
     }
 

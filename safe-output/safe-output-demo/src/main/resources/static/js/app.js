@@ -1,15 +1,15 @@
 (function (window, document) {
   const root = document.getElementById('app');
-  const routes = ['dashboard', 'workbench', 'lab', 'logs'];
+  const routes = ['workbench', 'lab', 'logs'];
   async function render() {
     const hashRoute = location.hash.replace('#', '').split('/')[0];
     if (hashRoute === 'guide' || location.hash.indexOf('#workbench/integration') === 0) {
       history.replaceState(null, '', '#workbench');
     }
     const currentHashRoute = location.hash.replace('#', '').split('/')[0];
-    const route = routes.indexOf(currentHashRoute) >= 0 ? currentHashRoute : 'dashboard';
+    const route = routes.indexOf(currentHashRoute) >= 0 ? currentHashRoute : 'workbench';
     if (!location.hash) {
-      history.replaceState(null, '', '#dashboard');
+      history.replaceState(null, '', '#workbench');
     }
     Array.prototype.forEach.call(document.querySelectorAll('[data-route]'), function (link) {
       const sameRoute = link.dataset.route === route;
