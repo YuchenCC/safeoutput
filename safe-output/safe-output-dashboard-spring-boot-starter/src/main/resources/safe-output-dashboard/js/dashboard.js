@@ -5,6 +5,8 @@
     const route = window.location.hash.replace('#', '') || 'overview';
     if (route === 'reports') {
       await renderReports();
+    } else if (route === 'lab') {
+      renderLab();
     } else if (route === 'log-suggestions') {
       await renderLogSuggestions();
     } else if (route === 'risk') {
@@ -96,6 +98,45 @@
     const report = await window.SafeOutputDashboardApi.postForm('/reports/upload', form);
     document.getElementById('report-detail').innerHTML = '<pre>' + escapeHtml(JSON.stringify(report, null, 2))
       + '</pre>';
+  }
+
+  function renderLab() {
+    root.innerHTML = '<section class="hero"><h1>脱敏实验室</h1><p>固定两轮执行，响应不返回原始输入。</p></section>'
+      + '<section class="panel"><h2>按类型标签</h2><input id="type-value" value="13800138000">'
+      + '<select id="type-name"><option>MOBILE</option><option>EMAIL</option><option>ID_CARD</option></select>'
+      + '<button id="type-run">执行</button><pre id="type-result"></pre></section>'
+      + '<section class="panel"><h2>对象脱敏</h2><input id="object-real-name" value="张三">'
+      + '<input id="object-mobile" value="13800138000"><input id="object-name" value="演示商品">'
+      + '<button id="object-run">执行</button><pre id="object-result"></pre></section>'
+      + '<section class="panel"><h2>强文本扫描</h2><textarea id="strong-text">联系 13800138000 foo@example.com</textarea>'
+      + '<button id="strong-run">执行</button><pre id="strong-result"></pre></section>';
+    document.getElementById('type-run').onclick = runByType;
+    document.getElementById('object-run').onclick = runObject;
+    document.getElementById('strong-run').onclick = runStrong;
+  }
+
+  async function runByType() {
+    const data = await window.SafeOutputDashboardApi.post('/lab/by-type', {
+      value: document.getElementById('type-value').value,
+      type: document.getElementById('type-name').value
+    });
+    document.getElementById('type-result').textContent = JSON.stringify(data, null, 2);
+  }
+
+  async function runObject() {
+    const data = await window.SafeOutputDashboardApi.post('/lab/object', {
+      realName: document.getElementById('object-real-name').value,
+      mobile: document.getElementById('object-mobile').value,
+      name: document.getElementById('object-name').value
+    });
+    document.getElementById('object-result').textContent = JSON.stringify(data, null, 2);
+  }
+
+  async function runStrong() {
+    const data = await window.SafeOutputDashboardApi.post('/lab/strong', {
+      text: document.getElementById('strong-text').value
+    });
+    document.getElementById('strong-result').textContent = JSON.stringify(data, null, 2);
   }
 
   function escapeHtml(value) {

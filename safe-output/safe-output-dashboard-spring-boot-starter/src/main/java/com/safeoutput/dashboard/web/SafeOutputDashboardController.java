@@ -1,6 +1,7 @@
 package com.safeoutput.dashboard.web;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.safeoutput.core.SafeOutputMaskService;
 import com.safeoutput.dashboard.autoconfigure.SafeOutputDashboardProperties;
 import com.safeoutput.dashboard.service.SafeOutputDashboardAssembler;
 import com.safeoutput.dashboard.service.SafeOutputDashboardReportFileStore;
@@ -17,6 +18,8 @@ import java.util.LinkedHashMap;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+import java.util.ArrayList;
+import java.util.Objects;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.http.HttpStatus;
@@ -47,16 +50,20 @@ public class SafeOutputDashboardController {
 
     private final SafeOutputDashboardReportFileStore reportFileStore;
 
+    private final ObjectProvider<SafeOutputMaskService> maskServices;
+
     public SafeOutputDashboardController(SafeOutputDashboardProperties properties, ObjectMapper objectMapper,
             SafeOutputDashboardAssembler dashboardAssembler, ObjectProvider<MaskMetricsCollector> metricsCollectors,
             ObjectProvider<SafeOutputProperties> safeOutputProperties,
-            SafeOutputDashboardReportFileStore reportFileStore) {
+            SafeOutputDashboardReportFileStore reportFileStore,
+            ObjectProvider<SafeOutputMaskService> maskServices) {
         this.properties = properties;
         this.objectMapper = objectMapper;
         this.dashboardAssembler = dashboardAssembler;
         this.metricsCollectors = metricsCollectors;
         this.safeOutputProperties = safeOutputProperties;
         this.reportFileStore = reportFileStore;
+        this.maskServices = maskServices;
     }
 
     @PostMapping("/health")
@@ -125,6 +132,61 @@ public class SafeOutputDashboardController {
         return ResponseEntity.ok(dashboardAssembler.historical(file.getOriginalFilename(), report));
     }
 
+    @PostMapping("/lab/by-type")
+    public ResponseEntity<List<Map<String, Object>>> maskByType(@RequestBody ByTypeRequest request) {
+        SafeOutputMaskService maskService = maskServices.getIfAvailable();
+        if (maskService == null) {
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(new ArrayList<Map<String, Object>>());
+        }
+        List<Map<String, Object>> response = new ArrayList<Map<String, Object>>();
+        String current = request == null ? "" : request.getValue();
+        Object previous = null;
+        for (int round = 1; round <= 2; round++) {
+            long startedAt = System.nanoTime();
+            current = maskService.mask(current, request == null ? null : request.getType());
+            appendRound(response, round, current, System.nanoTime() - startedAt, previous);
+            previous = current;
+        }
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/lab/object")
+    public ResponseEntity<List<Map<String, Object>>> maskObject(@RequestBody(required = false) ObjectRequest request) {
+        SafeOutputMaskService maskService = maskServices.getIfAvailable();
+        if (maskService == null) {
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(new ArrayList<Map<String, Object>>());
+        }
+        List<Map<String, Object>> response = new ArrayList<Map<String, Object>>();
+        ManualOrder current = manualOrder(request);
+        Object previous = null;
+        for (int round = 1; round <= 2; round++) {
+            long startedAt = System.nanoTime();
+            current = (ManualOrder) maskService.maskObject(current);
+            ManualOrder snapshot = snapshot(current);
+            appendRound(response, round, snapshot, System.nanoTime() - startedAt, previous);
+            previous = snapshot;
+        }
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/lab/strong")
+    public ResponseEntity<List<Map<String, Object>>> maskStrong(@RequestBody StrongRequest request) {
+        SafeOutputMaskService maskService = maskServices.getIfAvailable();
+        if (maskService == null) {
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(new ArrayList<Map<String, Object>>());
+        }
+        List<Map<String, Object>> response = new ArrayList<Map<String, Object>>();
+        String current = request == null ? "" : request.getText();
+        Object previous = null;
+        for (int round = 1; round <= 2; round++) {
+            long startedAt = System.nanoTime();
+            current = maskService.maskStrong(current);
+            appendRound(response, round, current, System.nanoTime() - startedAt, previous);
+            previous = current;
+        }
+        return ResponseEntity.ok(response);
+    }
+
     private MaskReport snapshot() {
         MaskMetricsCollector collector = metricsCollectors.getIfAvailable();
         if (collector == null) {
@@ -173,6 +235,33 @@ public class SafeOutputDashboardController {
                 && report.containsKey("responseRiskSummary");
     }
 
+    private static void appendRound(List<Map<String, Object>> response, int round, Object result, long elapsedNanos,
+            Object previous) {
+        Map<String, Object> item = new LinkedHashMap<String, Object>();
+        item.put("round", round);
+        item.put("result", result);
+        item.put("elapsedNanos", elapsedNanos);
+        item.put("sameAsPrevious", previous != null && previous.equals(result));
+        response.add(item);
+    }
+
+    private static ManualOrder manualOrder(ObjectRequest request) {
+        if (request == null) {
+            return new ManualOrder("张三", "13800138000", "演示商品");
+        }
+        return new ManualOrder(valueOrDefault(request.getRealName(), "张三"),
+                valueOrDefault(request.getMobile(), "13800138000"),
+                valueOrDefault(request.getName(), "演示商品"));
+    }
+
+    private static String valueOrDefault(String value, String defaultValue) {
+        return value == null || value.trim().isEmpty() ? defaultValue : value;
+    }
+
+    private static ManualOrder snapshot(ManualOrder order) {
+        return new ManualOrder(order.getRealName(), order.getMobile(), order.getName());
+    }
+
     public static final class ReportViewRequest {
 
         private String filename;
@@ -183,6 +272,118 @@ public class SafeOutputDashboardController {
 
         public void setFilename(String filename) {
             this.filename = filename;
+        }
+    }
+
+    public static final class ByTypeRequest {
+
+        private String value;
+
+        private String type;
+
+        public String getValue() {
+            return value;
+        }
+
+        public void setValue(String value) {
+            this.value = value;
+        }
+
+        public String getType() {
+            return type;
+        }
+
+        public void setType(String type) {
+            this.type = type;
+        }
+    }
+
+    public static final class ObjectRequest {
+
+        private String realName;
+
+        private String mobile;
+
+        private String name;
+
+        public String getRealName() {
+            return realName;
+        }
+
+        public void setRealName(String realName) {
+            this.realName = realName;
+        }
+
+        public String getMobile() {
+            return mobile;
+        }
+
+        public void setMobile(String mobile) {
+            this.mobile = mobile;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+    }
+
+    public static final class StrongRequest {
+
+        private String text;
+
+        public String getText() {
+            return text;
+        }
+
+        public void setText(String text) {
+            this.text = text;
+        }
+    }
+
+    public static final class ManualOrder {
+
+        private String realName;
+
+        private String mobile;
+
+        private String name;
+
+        ManualOrder(String realName, String mobile, String name) {
+            this.realName = realName;
+            this.mobile = mobile;
+            this.name = name;
+        }
+
+        public String getRealName() {
+            return realName;
+        }
+
+        public String getMobile() {
+            return mobile;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        @Override
+        public boolean equals(Object other) {
+            if (!(other instanceof ManualOrder)) {
+                return false;
+            }
+            ManualOrder that = (ManualOrder) other;
+            return Objects.equals(realName, that.realName)
+                    && Objects.equals(mobile, that.mobile)
+                    && Objects.equals(name, that.name);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(realName, mobile, name);
         }
     }
 }

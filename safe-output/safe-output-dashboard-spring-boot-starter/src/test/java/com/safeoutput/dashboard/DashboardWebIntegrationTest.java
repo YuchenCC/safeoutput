@@ -38,7 +38,9 @@ import org.springframework.core.io.ByteArrayResource;
                 "spring.servlet.multipart.max-file-size=2MB",
                 "spring.servlet.multipart.max-request-size=2MB",
                 "safe-output.rules[0].keys[0]=phoneNo",
-                "safe-output.rules[0].type=MOBILE"
+                "safe-output.rules[0].type=MOBILE",
+                "safe-output.rules[1].keys[0]=realName",
+                "safe-output.rules[1].type=CHINESE_NAME"
         })
 class DashboardWebIntegrationTest {
 
@@ -204,6 +206,46 @@ class DashboardWebIntegrationTest {
         assertTrue(before.equals(after));
         assertTrue(!after.contains("upload.json"));
         assertTrue(!uploaded.getBody().contains("13800138000"));
+    }
+
+    @Test
+    void maskLabRunsTwoRoundsWithoutReturningRawInputAndRecordsManualMetrics() {
+        long manualBefore = metricsCollector.snapshot().getManualCount();
+        Map<String, Object> byTypeRequest = new LinkedHashMap<String, Object>();
+        byTypeRequest.put("value", "13800138000");
+        byTypeRequest.put("type", "MOBILE");
+        Map<String, Object> objectRequest = new LinkedHashMap<String, Object>();
+        objectRequest.put("realName", "李四");
+        objectRequest.put("mobile", "13900138009");
+        objectRequest.put("name", "测试商品A");
+        Map<String, Object> strongRequest = new LinkedHashMap<String, Object>();
+        strongRequest.put("text", "联系 13800138000 foo@example.com");
+
+        String byType = restTemplate.postForObject("/safe-output/dashboard/api/lab/by-type", byTypeRequest,
+                String.class);
+        String object = restTemplate.postForObject("/safe-output/dashboard/api/lab/object", objectRequest,
+                String.class);
+        String strong = restTemplate.postForObject("/safe-output/dashboard/api/lab/strong", strongRequest,
+                String.class);
+        ResponseEntity<String> getLab = restTemplate.getForEntity("/safe-output/dashboard/api/lab/by-type",
+                String.class);
+
+        assertTrue(byType.contains("\"round\":1"));
+        assertTrue(byType.contains("\"round\":2"));
+        assertTrue(byType.contains("\"elapsedNanos\""));
+        assertTrue(byType.contains("\"sameAsPrevious\":true"));
+        assertTrue(byType.contains("138****8000"));
+        assertTrue(!byType.contains("13800138000"));
+        assertTrue(object.contains("\"realName\":\"李*\""));
+        assertTrue(object.contains("\"mobile\":\"139****8009\""));
+        assertTrue(object.contains("\"name\":\"测试商品A\""));
+        assertTrue(!object.contains("\"realName\":\"李四\""));
+        assertTrue(!object.contains("\"mobile\":\"13900138009\""));
+        assertTrue(strong.contains("138****8000"));
+        assertTrue(strong.contains("foo****@example.com"));
+        assertTrue(!strong.contains("foo@example.com"));
+        assertTrue(metricsCollector.snapshot().getManualCount() > manualBefore);
+        assertTrue(getLab.getStatusCode().is4xxClientError());
     }
 
     private static HttpEntity<MultiValueMap<String, Object>> multipart(String filename, byte[] content) {
