@@ -27,6 +27,7 @@
 
 ## 第三轮切入建议
 
+- R2.6 Dashboard 模块边界收敛：已新增 PRD `doc/prd/safe-output-r26-dashboard-prd.md`，建议新增 `safe-output-dashboard-spring-boot-starter` 可选附加包。Dashboard 默认关闭，通过 `safe-output.dashboard.enabled=true` 启用，默认路径前缀 `/safe-output/dashboard`，仅支持 Spring MVC Web 应用；后端 API 全部使用 POST，静态页面/资源仍使用 GET。第一期包含实时概览、接口风险、日志规则建议、历史报告、默认支持报告上传临时查看、通用脱敏实验室；不包含 Demo 业务工作台、小眼睛明文查看、权限系统、数据库、多报告趋势或规则自动采纳。Demo 第一阶段保留 `/demo/report/**` 和 `/demo/mask/**` 兼容接口。
 - 日志长度策略增强：新增 R3 PRD `doc/prd/safe-output-r3-prd.md`，要求支持 `maxMessageLength` 整条超限跳过模式与 `max-scan-length` 前缀扫描窗口模式切换；默认应兼容 R2，不截断最终日志输出，不保存原始日志。
 - 增强 Demo：R2.5/R3 后从 `safe-output-demo/src/main/resources/static/js/views/*`、`static/css/app.css`、`business/DemoBusinessController`、`guide/DemoIntegrationGuideController`、`report/DemoReportController`、`lab/DemoManualMaskController` 切入；`index.html` 只是静态壳层，`DemoApplication` 只作为根包扫描入口。
 - 增强风险画像：从 `ResponseRiskAnalyzer`、`ApiMaskMetrics`、`ResponseRiskApiProfile`、`MaskReportExporter.toJson` 切入。
