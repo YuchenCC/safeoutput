@@ -1,9 +1,12 @@
 package com.safeoutput.dashboard.autoconfigure;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.safeoutput.dashboard.service.SafeOutputDashboardAssembler;
 import com.safeoutput.dashboard.web.SafeOutputDashboardController;
 import com.safeoutput.dashboard.web.SafeOutputDashboardWebMvcConfigurer;
+import com.safeoutput.report.MaskMetricsCollector;
 
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
@@ -20,9 +23,17 @@ import org.springframework.web.servlet.DispatcherServlet;
 public class SafeOutputDashboardAutoConfiguration {
 
     @Bean
-    public SafeOutputDashboardController safeOutputDashboardController(SafeOutputDashboardProperties properties,
-            ObjectMapper objectMapper) {
-        return new SafeOutputDashboardController(properties, objectMapper);
+    public SafeOutputDashboardAssembler safeOutputDashboardAssembler() {
+        return new SafeOutputDashboardAssembler();
+    }
+
+    @Bean
+    public SafeOutputDashboardController safeOutputDashboardController(
+            SafeOutputDashboardProperties properties,
+            ObjectMapper objectMapper,
+            SafeOutputDashboardAssembler dashboardAssembler,
+            ObjectProvider<MaskMetricsCollector> metricsCollectors) {
+        return new SafeOutputDashboardController(properties, objectMapper, dashboardAssembler, metricsCollectors);
     }
 
     @Bean
