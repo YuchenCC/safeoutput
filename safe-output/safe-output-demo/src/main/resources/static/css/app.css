@@ -204,7 +204,7 @@ pre {
 .dashboard-tab strong {
   font: 700 18px var(--font-display);
 }
-.dashboard-tab span, .dashboard-section-head p, .breakdown-item small, .report-file-item span {
+.dashboard-tab span, .dashboard-section-head p, .breakdown-item small {
   color: var(--muted);
   font-size: 12px;
   line-height: 1.45;
@@ -270,32 +270,16 @@ pre {
 }
 .history-layout {
   display: grid;
-  grid-template-columns: minmax(280px, 0.34fr) minmax(0, 0.66fr);
   gap: 16px;
   align-items: start;
 }
-.report-file-list {
-  display: grid;
-  gap: 10px;
-}
-.report-file-item {
+.report-file-select {
   width: 100%;
-  display: grid;
-  gap: 5px;
-  justify-items: start;
-  text-align: left;
-  padding: 12px;
+  min-height: 42px;
+  padding: 9px 10px;
   border: 1px solid var(--line-soft);
   border-radius: 6px;
   background: #fafbfd;
-}
-.report-file-item strong {
-  font: 700 13px var(--font-display);
-  word-break: break-word;
-}
-.report-file-item.active {
-  border-color: #8bb8ff;
-  background: #f7fbff;
 }
 .breakdown-list {
   display: grid;
@@ -316,7 +300,7 @@ pre {
 .breakdown-item strong {
   font: 700 18px var(--font-display);
 }
-.report-focus { margin-top: 16px; }
+.report-focus { margin-top: 0; }
 .log-hero {
   grid-template-columns: minmax(0, 1fr) 220px;
   align-items: center;

@@ -84,7 +84,7 @@
       '<section class="dashboard-section-head"><span class="badge">历史报告</span><h2>报告文件快照</h2><p>选择已导出的 JSON 报告后，页面只基于该文件中的聚合字段拆解展示。</p></section>',
       '<div class="toolbar no-print"><button class="primary" id="export-report">导出报告</button><span class="badge">' + esc(files.count || 0) + ' 份报告</span></div>',
       '<div class="history-layout">',
-      '<div class="panel"><h2>报告文件</h2>' + reportFileList(state.files) + '</div>',
+      '<div class="panel report-picker-panel"><div class="panel-head"><div><h2>报告文件</h2><p>从已导出的报告快照中选择一份查看聚合明细。</p></div></div>' + reportFileSelect(state.files) + '</div>',
       '<div id="report-detail"></div>',
       '</div>'
     ].join('');
@@ -93,7 +93,7 @@
       state.selectedReport = '';
       await renderHistory();
     };
-    bindReportButtons();
+    bindReportSelect();
     if (state.selectedReport) {
       await showReport(state.selectedReport);
     } else {
@@ -103,7 +103,7 @@
 
   async function showReport(name) {
     state.selectedReport = name;
-    markSelectedReport();
+    markSelectedReportSelect();
     const report = await window.SafeOutputApi.get('/demo/report/files/' + encodeURIComponent(name) + '/dashboard');
     const counts = report.maskTypeCounts || {};
     document.getElementById('print-report').disabled = false;
@@ -144,27 +144,33 @@
     });
   }
 
-  function reportFileList(files) {
+  function reportFileSelect(files) {
     if (!files.length) {
       return '<div class="empty-note">当前暂无报告文件。</div>';
     }
-    return '<div class="report-file-list">' + files.map(function (file) {
-      const active = file.name === state.selectedReport ? ' active' : '';
-      return '<button class="report-file-item' + active + '" data-report="' + esc(file.name) + '">' +
-        '<strong>' + esc(file.name) + '</strong><span>' + esc(file.size) + ' bytes · ' + esc(new Date(file.modifiedAt).toLocaleString()) + '</span></button>';
-    }).join('') + '</div>';
+    return '<select class="report-file-select" id="report-file-select">' + files.map(function (file) {
+      const selected = file.name === state.selectedReport ? ' selected' : '';
+      return '<option value="' + esc(file.name) + '"' + selected + '>' +
+        esc(file.name) + ' · ' + esc(file.size) + ' bytes · ' + esc(new Date(file.modifiedAt).toLocaleString()) +
+        '</option>';
+    }).join('') + '</select>';
   }
 
-  function bindReportButtons() {
-    Array.prototype.forEach.call(document.querySelectorAll('[data-report]'), function (button) {
-      button.onclick = function () { showReport(button.dataset.report); };
-    });
+  function bindReportSelect() {
+    const select = document.getElementById('report-file-select');
+    if (!select) {
+      return;
+    }
+    select.onchange = function () {
+      showReport(select.value);
+    };
   }
 
-  function markSelectedReport() {
-    Array.prototype.forEach.call(document.querySelectorAll('[data-report]'), function (button) {
-      button.className = 'report-file-item' + (button.dataset.report === state.selectedReport ? ' active' : '');
-    });
+  function markSelectedReportSelect() {
+    const select = document.getElementById('report-file-select');
+    if (select) {
+      select.value = state.selectedReport;
+    }
   }
 
   function containsReport(name) {
