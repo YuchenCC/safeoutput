@@ -3,7 +3,9 @@
 
   async function render() {
     const route = window.location.hash.replace('#', '') || 'overview';
-    if (route === 'log-suggestions') {
+    if (route === 'reports') {
+      await renderReports();
+    } else if (route === 'log-suggestions') {
       await renderLogSuggestions();
     } else if (route === 'risk') {
       await renderRisk();
@@ -52,6 +54,33 @@
         return '<tr><td>' + escapeHtml(item.key) + '</td><td>' + escapeHtml(item.suggestedType)
           + '</td><td>' + escapeHtml(item.confidence) + '</td></tr>';
       }).join('') + '</tbody></table>';
+  }
+
+  async function renderReports() {
+    const data = await window.SafeOutputDashboardApi.post('/reports/list', {});
+    const files = data.files || [];
+    root.innerHTML = '<section class="hero"><h1>历史报告</h1><p>报告文件名通过 POST body 传递。</p></section>'
+      + '<section class="panel"><h2>报告文件</h2>' + reportList(files) + '<div id="report-detail"></div></section>';
+    Array.prototype.forEach.call(document.querySelectorAll('[data-report-name]'), function (button) {
+      button.onclick = function () {
+        showReport(button.dataset.reportName);
+      };
+    });
+  }
+
+  function reportList(files) {
+    if (!files.length) {
+      return '<p>暂无历史报告。</p>';
+    }
+    return files.map(function (file) {
+      return '<button data-report-name="' + escapeHtml(file.name) + '">' + escapeHtml(file.name) + '</button>';
+    }).join('');
+  }
+
+  async function showReport(filename) {
+    const report = await window.SafeOutputDashboardApi.post('/reports/view', { filename: filename });
+    document.getElementById('report-detail').innerHTML = '<pre>' + escapeHtml(JSON.stringify(report, null, 2))
+      + '</pre>';
   }
 
   function escapeHtml(value) {

@@ -6,7 +6,12 @@ import com.safeoutput.core.MaskScene;
 import com.safeoutput.core.LogRuleSuggestionEvent;
 import com.safeoutput.core.ResponseRiskEvent;
 import com.safeoutput.report.MaskMetricsCollector;
+import com.safeoutput.report.MaskReportExporter;
 
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -21,6 +26,9 @@ import org.springframework.http.ResponseEntity;
         properties = {
                 "safe-output.dashboard.enabled=true",
                 "safe-output.report.enabled=true",
+                "safe-output.report.directory=target/safe-output-dashboard-test-reports",
+                "safe-output.report.file-prefix=dashboard-report",
+                "safe-output.report.interval-millis=600000",
                 "safe-output.rules[0].keys[0]=phoneNo",
                 "safe-output.rules[0].type=MOBILE"
         })
@@ -31,6 +39,9 @@ class DashboardWebIntegrationTest {
 
     @Autowired
     private MaskMetricsCollector metricsCollector;
+
+    @Autowired
+    private MaskReportExporter reportExporter;
 
     @Test
     void enabledDashboardExposesStaticEntryAndPostHealthApi() {
@@ -112,5 +123,48 @@ class DashboardWebIntegrationTest {
         assertTrue(!suggestions.getBody().contains("phoneNo"));
         assertTrue(!suggestions.getBody().contains("11010519491231002X"));
         assertTrue(getSuggestions.getStatusCode().is4xxClientError());
+    }
+
+    @Test
+    void reportDirectoryListsAndViewsReportsByPostBodyWithSafeFilenameChecks() throws Exception {
+        Map<String, Integer> counts = new LinkedHashMap<String, Integer>();
+        counts.put("EMAIL", 1);
+        metricsCollector.recordMask(MaskScene.RESPONSE, "EMAIL", 100);
+        metricsCollector.recordApi(new ResponseRiskEvent("GET", "/orders/1001", "/orders/{id}",
+                false, null, false, 1, counts, 100));
+        Path exported = reportExporter.exportNow();
+        Files.write(Paths.get("target/safe-output-dashboard-test-reports/dashboard-report.txt"),
+                "not-json".getBytes(StandardCharsets.UTF_8));
+
+        Map<String, Object> request = new LinkedHashMap<String, Object>();
+        request.put("filename", exported.getFileName().toString());
+        ResponseEntity<String> files = restTemplate.postForEntity("/safe-output/dashboard/api/reports/list",
+                new LinkedHashMap<String, Object>(), String.class);
+        ResponseEntity<String> dashboard = restTemplate.postForEntity("/safe-output/dashboard/api/reports/view",
+                request, String.class);
+        Map<String, Object> traversalRequest = new LinkedHashMap<String, Object>();
+        traversalRequest.put("filename", "../pom.xml");
+        ResponseEntity<String> traversal = restTemplate.postForEntity("/safe-output/dashboard/api/reports/view",
+                traversalRequest, String.class);
+        Map<String, Object> nonJsonRequest = new LinkedHashMap<String, Object>();
+        nonJsonRequest.put("filename", "dashboard-report.txt");
+        ResponseEntity<String> nonJson = restTemplate.postForEntity("/safe-output/dashboard/api/reports/view",
+                nonJsonRequest, String.class);
+        ResponseEntity<String> getView = restTemplate.getForEntity("/safe-output/dashboard/api/reports/view",
+                String.class);
+
+        assertTrue(files.getStatusCode().is2xxSuccessful());
+        assertTrue(files.getBody().contains("\"count\""));
+        assertTrue(files.getBody().contains("\"viewable\":true"));
+        assertTrue(files.getBody().contains(exported.getFileName().toString()));
+        assertTrue(dashboard.getStatusCode().is2xxSuccessful());
+        assertTrue(dashboard.getBody().contains("\"filename\""));
+        assertTrue(dashboard.getBody().contains("\"totalCount\""));
+        assertTrue(dashboard.getBody().contains("\"topRiskApis\""));
+        assertTrue(dashboard.getBody().contains("\"maskedFieldCount\""));
+        assertTrue(traversal.getStatusCode().is4xxClientError());
+        assertTrue(nonJson.getStatusCode().is4xxClientError());
+        assertTrue(getView.getStatusCode().is4xxClientError());
+        assertTrue(!dashboard.getBody().contains("foo@example.com"));
     }
 }

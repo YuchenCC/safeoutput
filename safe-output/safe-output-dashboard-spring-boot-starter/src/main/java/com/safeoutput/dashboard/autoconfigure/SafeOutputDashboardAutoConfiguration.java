@@ -2,6 +2,7 @@ package com.safeoutput.dashboard.autoconfigure;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.safeoutput.dashboard.service.SafeOutputDashboardAssembler;
+import com.safeoutput.dashboard.service.SafeOutputDashboardReportFileStore;
 import com.safeoutput.dashboard.web.SafeOutputDashboardController;
 import com.safeoutput.dashboard.web.SafeOutputDashboardWebMvcConfigurer;
 import com.safeoutput.report.MaskMetricsCollector;
@@ -29,14 +30,21 @@ public class SafeOutputDashboardAutoConfiguration {
     }
 
     @Bean
+    public SafeOutputDashboardReportFileStore safeOutputDashboardReportFileStore(
+            ObjectProvider<SafeOutputProperties> safeOutputProperties) {
+        return new SafeOutputDashboardReportFileStore(safeOutputProperties);
+    }
+
+    @Bean
     public SafeOutputDashboardController safeOutputDashboardController(
             SafeOutputDashboardProperties properties,
             ObjectMapper objectMapper,
             SafeOutputDashboardAssembler dashboardAssembler,
             ObjectProvider<MaskMetricsCollector> metricsCollectors,
-            ObjectProvider<SafeOutputProperties> safeOutputProperties) {
+            ObjectProvider<SafeOutputProperties> safeOutputProperties,
+            SafeOutputDashboardReportFileStore reportFileStore) {
         return new SafeOutputDashboardController(properties, objectMapper, dashboardAssembler, metricsCollectors,
-                safeOutputProperties);
+                safeOutputProperties, reportFileStore);
     }
 
     @Bean
