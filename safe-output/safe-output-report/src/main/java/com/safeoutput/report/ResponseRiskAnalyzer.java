@@ -34,7 +34,11 @@ public final class ResponseRiskAnalyzer {
         profiles.sort(new Comparator<ResponseRiskApiProfile>() {
             @Override
             public int compare(ResponseRiskApiProfile left, ResponseRiskApiProfile right) {
-                return right.getRiskScore() - left.getRiskScore();
+                int maskedFieldCompare = compareLong(right.getMaskedFieldCount(), left.getMaskedFieldCount());
+                if (maskedFieldCompare != 0) {
+                    return maskedFieldCompare;
+                }
+                return compareLong(right.getHitCount(), left.getHitCount());
             }
         });
         ResponseRiskSummary summary = new ResponseRiskSummary(report.getApiMetrics().size(), highRiskApiCount,
@@ -44,6 +48,7 @@ public final class ResponseRiskAnalyzer {
 
     private ResponseRiskApiProfile profile(ApiMaskMetrics metric) {
         List<String> reasons = new ArrayList<String>();
+        List<String> tags = new ArrayList<String>();
         List<String> advice = new ArrayList<String>();
         int score = 0;
         // 风险画像只基于聚合后的类型计数和接口指标，不读取原始响应内容。
@@ -52,27 +57,36 @@ public final class ResponseRiskAnalyzer {
         score += addTypeRisk(metric, MaskTypes.BANK_CARD, "BANK_CARD", 35, reasons);
         if (metric.getMaskedFieldCount() >= HIGH_FIELD_COUNT) {
             reasons.add("HIGH_FIELD_COUNT");
+            tags.add("多脱敏字段");
             score += 20;
         }
         if (metric.getHitCount() >= HIGH_FREQUENCY) {
             reasons.add("HIGH_FREQUENCY");
+            tags.add("高频接口");
             score += 15;
         }
         if (metric.isIgnored()) {
             reasons.add("IGNORED_RESPONSE");
-            advice.add("Review whether the ignored response still needs plaintext output.");
+            tags.add("明文豁免");
+            advice.add("复核该接口是否仍需要明文输出。");
             score += 30;
         }
         if (!reasons.isEmpty() && advice.isEmpty()) {
-            advice.add("Review response rules and confirm the interface only returns required fields.");
+            advice.add("复核响应字段和脱敏规则，确认接口只返回必要字段。");
         }
         PerformanceProfile performance = performance(metric);
         if (!performance.getWarnings().isEmpty()) {
-            advice.add("Review response object size and masking rule cost separately from sensitive risk.");
+            tags.add("慢脱敏");
+            advice.add("单独复核响应对象大小和脱敏规则成本。");
         }
+        addTypeTags(metric, tags);
         return new ResponseRiskApiProfile(metric.getMethod(), metric.getPath(), metric.isIgnored(),
-                metric.getIgnoreReason(), Math.min(100, score), level(score, metric), reasons, advice, performance,
-                metric.getMaskTypeCounts());
+                metric.getIgnoreReason(), metric.getHitCount(), metric.getMaskedFieldCount(), Math.min(100, score),
+                level(score, metric), reasons, tags, advice, performance, metric.getMaskTypeCounts());
+    }
+
+    private int compareLong(long left, long right) {
+        return left < right ? -1 : (left == right ? 0 : 1);
     }
 
     private int addTypeRisk(ApiMaskMetrics metric, String type, String reason, int score, List<String> reasons) {
@@ -81,6 +95,37 @@ public final class ResponseRiskAnalyzer {
             return score;
         }
         return 0;
+    }
+
+    private void addTypeTags(ApiMaskMetrics metric, List<String> tags) {
+        for (String type : metric.getMaskTypeCounts().keySet()) {
+            tags.add(typeTag(type));
+        }
+    }
+
+    private String typeTag(String type) {
+        if (MaskTypes.PASSWORD.equals(type)) {
+            return "密码脱敏";
+        }
+        if (MaskTypes.ID_CARD.equals(type)) {
+            return "身份证脱敏";
+        }
+        if (MaskTypes.BANK_CARD.equals(type)) {
+            return "银行卡脱敏";
+        }
+        if (MaskTypes.MOBILE.equals(type)) {
+            return "手机号脱敏";
+        }
+        if (MaskTypes.EMAIL.equals(type)) {
+            return "邮箱脱敏";
+        }
+        if (MaskTypes.CHINESE_NAME.equals(type)) {
+            return "姓名脱敏";
+        }
+        if (MaskTypes.ADDRESS.equals(type)) {
+            return "地址脱敏";
+        }
+        return type + " 脱敏";
     }
 
     private PerformanceProfile performance(ApiMaskMetrics metric) {

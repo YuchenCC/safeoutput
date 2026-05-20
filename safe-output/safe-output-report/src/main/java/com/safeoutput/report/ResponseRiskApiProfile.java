@@ -15,11 +15,17 @@ public final class ResponseRiskApiProfile {
 
     private final String ignoreReason;
 
+    private final long hitCount;
+
+    private final long maskedFieldCount;
+
     private final int riskScore;
 
     private final ApiRiskLevel riskLevel;
 
     private final List<String> riskReasons;
+
+    private final List<String> riskTags;
 
     private final List<String> governanceAdvice;
 
@@ -27,16 +33,20 @@ public final class ResponseRiskApiProfile {
 
     private final Map<String, Long> maskTypeCounts;
 
-    ResponseRiskApiProfile(String method, String path, boolean ignored, String ignoreReason, int riskScore,
-            ApiRiskLevel riskLevel, List<String> riskReasons, List<String> governanceAdvice,
-            PerformanceProfile performanceProfile, Map<String, Long> maskTypeCounts) {
+    ResponseRiskApiProfile(String method, String path, boolean ignored, String ignoreReason, long hitCount,
+            long maskedFieldCount, int riskScore, ApiRiskLevel riskLevel, List<String> riskReasons,
+            List<String> riskTags, List<String> governanceAdvice, PerformanceProfile performanceProfile,
+            Map<String, Long> maskTypeCounts) {
         this.method = method;
         this.path = path;
         this.ignored = ignored;
         this.ignoreReason = ignoreReason;
+        this.hitCount = hitCount;
+        this.maskedFieldCount = maskedFieldCount;
         this.riskScore = riskScore;
         this.riskLevel = riskLevel;
         this.riskReasons = Collections.unmodifiableList(riskReasons);
+        this.riskTags = Collections.unmodifiableList(riskTags);
         this.governanceAdvice = Collections.unmodifiableList(governanceAdvice);
         this.performanceProfile = performanceProfile;
         this.maskTypeCounts = Collections.unmodifiableMap(new LinkedHashMap<String, Long>(maskTypeCounts));
@@ -58,6 +68,14 @@ public final class ResponseRiskApiProfile {
         return ignoreReason;
     }
 
+    public long getHitCount() {
+        return hitCount;
+    }
+
+    public long getMaskedFieldCount() {
+        return maskedFieldCount;
+    }
+
     public int getRiskScore() {
         return riskScore;
     }
@@ -68,6 +86,10 @@ public final class ResponseRiskApiProfile {
 
     public List<String> getRiskReasons() {
         return riskReasons;
+    }
+
+    public List<String> getRiskTags() {
+        return riskTags;
     }
 
     public List<String> getGovernanceAdvice() {

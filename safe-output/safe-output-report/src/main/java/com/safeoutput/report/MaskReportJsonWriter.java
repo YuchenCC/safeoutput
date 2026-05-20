@@ -86,10 +86,14 @@ final class MaskReportJsonWriter {
         stringField(json, "path", api.getPath()).append(',');
         booleanField(json, "ignored", api.isIgnored()).append(',');
         stringField(json, "ignoreReason", api.getIgnoreReason()).append(',');
+        field(json, "hitCount", api.getHitCount()).append(',');
+        field(json, "maskedFieldCount", api.getMaskedFieldCount()).append(',');
         field(json, "riskScore", api.getRiskScore()).append(',');
         stringField(json, "riskLevel", api.getRiskLevel().name()).append(',');
         json.append("\"riskReasons\":");
         strings(json, api.getRiskReasons()).append(',');
+        json.append("\"riskTags\":");
+        strings(json, api.getRiskTags()).append(',');
         json.append("\"governanceAdvice\":");
         strings(json, api.getGovernanceAdvice()).append(',');
         json.append("\"performanceProfile\":");

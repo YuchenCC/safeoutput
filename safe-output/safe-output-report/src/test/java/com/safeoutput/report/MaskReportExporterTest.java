@@ -54,8 +54,11 @@ class MaskReportExporterTest {
         assertTrue(json.contains("\"path\":\"/customers\""));
         assertTrue(json.contains("\"responseRiskSummary\""));
         assertTrue(json.contains("\"topRiskApis\""));
+        assertTrue(json.contains("\"hitCount\""));
+        assertTrue(json.contains("\"maskedFieldCount\""));
         assertTrue(json.contains("\"riskScore\""));
         assertTrue(json.contains("\"riskReasons\""));
+        assertTrue(json.contains("\"riskTags\""));
         assertTrue(json.contains("\"governanceAdvice\""));
         assertTrue(json.contains("\"performanceProfile\""));
         assertTrue(json.contains("\"logRuleSuggestions\""));

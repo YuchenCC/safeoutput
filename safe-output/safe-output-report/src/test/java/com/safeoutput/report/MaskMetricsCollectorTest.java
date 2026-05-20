@@ -124,10 +124,15 @@ class MaskMetricsCollectorTest {
         assertEquals(1, analysis.getResponseRiskSummary().getIgnoredApiCount());
         assertEquals(1, analysis.getResponseRiskSummary().getSlowApiCount());
         assertEquals(ApiRiskLevel.CRITICAL, top.getRiskLevel());
+        assertEquals(1, top.getHitCount());
+        assertEquals(6, top.getMaskedFieldCount());
         assertEquals(true, top.getRiskReasons().contains("ID_CARD"));
         assertEquals(true, top.getRiskReasons().contains("BANK_CARD"));
         assertEquals(true, top.getRiskReasons().contains("PASSWORD"));
         assertEquals(true, top.getRiskReasons().contains("HIGH_FIELD_COUNT"));
+        assertEquals(true, top.getRiskTags().contains("多脱敏字段"));
+        assertEquals(true, top.getRiskTags().contains("慢脱敏"));
+        assertEquals(true, top.getRiskTags().contains("密码脱敏"));
         assertEquals(1, top.getPerformanceProfile().getSlowMaskCount());
         assertEquals(true, top.getPerformanceProfile().getWarnings().contains("SLOW_MASKING"));
         assertEquals("business plaintext", analysis.getIgnoredRiskApis().get(0).getIgnoreReason());
