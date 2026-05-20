@@ -1,8 +1,9 @@
 # Safe Output R2.5 Demo 前端设计文档
 
-版本：v0.2
+版本：v0.3
 适用范围：0047-0053 R2.5/R3 Demo 前端与展示体验
 关联 PRD：`doc/prd/safe-output-r25-prd.md`
+实现校准补充：`doc/prd/safe-output-r25-supplemental-prd.md`
 目标入口：`safe-output-demo/src/main/resources/static/index.html`
 
 ## 1. 设计目标
@@ -22,7 +23,7 @@ R2.5/R3 前端要把 Demo 从“功能验证控制台”升级为“真实业务
 
 ### 2.1 业务系统优先
 
-默认首屏保留治理 Dashboard，用于集中展示报告、统计和风险摘要；业务菜单统一命名为“工作台”，承载总览、接入说明、客户、订单、支付、工单和账户等业务页面。页面语言优先使用“客户、订单、工单、支付、账户、风险、治理建议”等业务词汇，底层 API 名称作为辅助信息出现。
+默认首屏保留治理 Dashboard，用于集中展示实时聚合、历史报告、统计和风险摘要；业务菜单统一命名为“工作台”，承载总览、客户、订单、支付、工单和账户等业务页面。工作台总览直接承载接入说明内容。页面语言优先使用“客户、订单、工单、支付、账户、风险、治理建议”等业务词汇，底层 API 名称作为辅助信息出现。
 
 ### 2.2 投屏可读
 
@@ -30,7 +31,7 @@ R2.5/R3 前端要把 Demo 从“功能验证控制台”升级为“真实业务
 
 ### 2.3 可演示闭环
 
-每个主页面都应有一个明确演示动作，例如“触发客户接口”“触发支付日志”“运行批量脱敏”“导出当前报告”。动作完成后必须有可见反馈，包括指标刷新、状态点亮、文件新增、建议新增或高亮。
+主演示页面应有明确动作，例如查看业务详情、查看 API ignore 明文、运行脱敏实验、导出当前报告。日志场景页不单独触发日志，而是只读展示业务工作台和脱敏实验室产生的真实 Log4j2 聚合结果。
 
 ### 2.4 轻量工程
 
@@ -38,7 +39,7 @@ R2.5/R3 前端要把 Demo 从“功能验证控制台”升级为“真实业务
 
 ### 2.5 安全边界前置
 
-前端可以展示虚构输入、脱敏结果、预设日志模板、聚合指标和脱敏 evidence，但不得读取或展示原始日志文件、完整原始 response、真实敏感值或可反推出敏感原文的大段上下文。
+前端可以展示虚构输入、脱敏结果、预设日志模板、聚合指标、脱敏 evidence 和 API ignore raw 面板中的 mock 明文字段；不得读取或展示原始日志文件、完整原始 response、真实敏感值或可反推出敏感原文的大段上下文。
 
 ## 3. 前端架构
 
@@ -66,9 +67,10 @@ safe-output-demo/src/main/resources/static/
       reports.js
     components/
       charts.js
+      formatters.js
 ```
 
-`index.html` 只保留壳层、导航和脚本引用。`guide.js` 不再作为主导航独立页使用，而是提供接入说明卡片渲染能力，由 `workbench.js` 在 `#workbench/integration` 内复用；旧 `#guide` 路由应重定向到该工作台内页。
+`index.html` 只保留壳层、导航和脚本引用。`guide.js` 不再作为主导航独立页使用，而是提供接入说明卡片渲染能力，由 `workbench.js` 在 `#workbench` 总览中复用；旧 `#guide` 和 `#workbench/integration` 路由都重定向到 `#workbench`。
 
 ### 3.2 模块职责
 
@@ -77,8 +79,8 @@ safe-output-demo/src/main/resources/static/
 | `app.js` | 初始化应用、绑定全局导航、处理 hash 路由和旧入口重定向。 |
 | `api.js` | 封装所有 Demo HTTP 调用、错误处理和 JSON 解析。 |
 | `views/*` | 各页面渲染、事件绑定和局部刷新。 |
-| `guide.js` | 接入说明卡片、代码片段高亮和旧 `#guide` 兼容渲染。 |
-| `components/*` | 可复用 UI 片段，目前包含图表封装。 |
+| `guide.js` | 接入说明卡片、代码片段高亮和旧入口兼容渲染。 |
+| `components/*` | 可复用 UI 片段，目前包含图表封装和耗时格式化。 |
 | `app.css` | 颜色、字号、布局、组件、代码高亮和打印样式。 |
 
 ### 3.3 路由设计
@@ -87,33 +89,41 @@ safe-output-demo/src/main/resources/static/
 
 | 路由 | 页面 | 对应 issue |
 |---|---|---|
-| `#dashboard` | 治理 Dashboard、报告文件中心与单报告视图 | 0051 / 0052 |
+| `#dashboard` | 治理 Dashboard，包含实时数据 Tab、历史报告 Tab、报告文件中心与单报告视图 | 0051 / 0052 |
 | `#workbench` | 工作台总览 | 0047 |
-| `#workbench/integration` | 工作台内接入说明 | 0048 |
 | `#workbench/{customers|orders|payments|tickets|accounts}` | 业务页面 | 0047 |
 | `#lab` | 主动脱敏实验室 | 0049 |
 | `#logs` | 日志场景与规则建议 | 0050 |
 
-`#dashboard` 是当前默认路由。旧 `#guide` 入口只做兼容跳转，主导航中不再出现独立“接入说明”菜单。
+`#dashboard` 是当前默认路由。旧 `#guide` 和 `#workbench/integration` 入口只做兼容跳转到 `#workbench`，主导航中不再出现独立“接入说明”菜单。
 
 ### 3.4 API 封装
 
-前端页面不应直接散落 `fetch`。建议由 `api.js` 统一封装：
+前端页面不应直接散落 `fetch`。当前由 `api.js` 统一封装为通用方法：
 
 ```text
-SafeApi.getWorkbench()
-SafeApi.runBusinessScenario(scenarioId)
-SafeApi.getIntegrationScenarios()
-SafeApi.runManualLab(payload)
-SafeApi.triggerLogScenario(scenarioId)
-SafeApi.getDashboard()
-SafeApi.exportReport()
-SafeApi.listReports()
-SafeApi.getReport(fileName)
-SafeApi.getReportDashboard(fileName)
+SafeOutputApi.get(path)
+SafeOutputApi.post(path, body)
 ```
 
-接口命名可随实际后端调整，但前端调用应保持“业务动作”语义，不把页面绑定到 controller 内部实现细节。
+当前主要调用包括：
+
+```text
+GET  /demo/integration-guide
+GET  /demo/business/{customers|orders|payments|tickets|accounts}
+GET  /demo/business/{domain}/{id}
+GET  /demo/business/{domain}/{id}/raw
+POST /demo/mask/by-type
+POST /demo/mask/object
+POST /demo/mask/strong
+GET  /demo/logs/scenarios
+GET  /demo/report/dashboard
+GET  /demo/report/export
+GET  /demo/report/files
+GET  /demo/report/files/{name}/dashboard
+```
+
+接口调用统一经过 `SafeOutputApi`，页面层可以直接使用业务路径，但不得绕过统一错误处理和 JSON 解析。
 
 ### 3.5 状态管理
 
@@ -121,9 +131,9 @@ SafeApi.getReportDashboard(fileName)
 
 ```text
 AppState.currentRoute
-AppState.selectedBusinessScenario
-AppState.lastDashboardSnapshot
-AppState.lastLogStats
+DashboardState.activeTab
+DashboardState.selectedReport
+LogState.activeScenario
 AppState.selectedReportName
 ```
 
@@ -140,51 +150,43 @@ AppState.selectedReportName
 3. 脱敏实验室
 4. 日志场景
 
-“工作台”是一个导航分组，包含总览、接入说明、客户档案、订单履约、支付核验、工单处理和账户安全。接入说明不再作为一级菜单。
+“工作台”是一个导航分组，包含总览、客户档案、订单履约、支付核验、工单处理和账户安全。接入说明不再作为一级菜单或独立内页，而是显示在工作台总览。
 
 ### 4.2 业务工作台
 
 目标：让评委第一眼看到“这是一个已接入 Safe Output 的业务系统”，并且能从同一组工作台菜单理解接入方式。
 
-推荐布局：
+实际布局：
 
 ```text
-左侧：业务场景列表
-中间：业务工作台主画布
-右侧：实时治理摘要
+业务模块页：
+左侧：业务列表表格
+右侧：业务详情和 API ignore 明文查看
+
+工作台总览：
+接入说明卡片网格
 ```
 
-业务场景至少覆盖客户、订单、工单、支付或账户中的四类；工作台总览还应包含一个“接入说明”入口卡片。每个业务场景卡片展示：
+业务场景覆盖客户、订单、支付、工单和账户五类。每个业务模块页面展示：
 
-- 业务对象名称。
-- 示例接口路径。
-- 规则来源：默认规则、YAML、注解、字段级 ignore、接口级 ignore。
-- 覆盖类型：`MOBILE`、`ID_CARD`、`BANK_CARD`、`EMAIL`、`CHINESE_NAME`、`ADDRESS`、`PASSWORD`、`DEFAULT`。
-- 脱敏状态和风险等级。
-- 触发按钮。
+- 业务列表字段和刷新按钮。
+- 业务详情字段，敏感字段用 `sensitive` 样式标记。
+- “查看”按钮调用 `/{id}/raw`，演示 API ignore 明文查看并进入风险统计。
+- 模块说明文案解释规则来源和覆盖类型，包括 `MOBILE`、`ID_CARD`、`BANK_CARD`、`EMAIL`、`CHINESE_NAME`、`ADDRESS`、`PASSWORD`、`DEFAULT`。
 
-右侧实时治理摘要展示：
-
-- Response 脱敏次数。
-- Log 脱敏次数。
-- Manual 脱敏次数。
-- 高风险接口数量。
-- ignore 风险数量。
-- 新发现日志 key 数量。
-
-触发业务接口后，对应场景卡片和受影响指标应短暂高亮。
+业务详情由真实 Response 脱敏链路返回，raw 查看由 API ignore 返回明文；前端不手写脱敏结果。
 
 ### 4.3 接入方式说明
 
-目标：把“为什么这样接入”讲清楚，而不是做静态长文档。该页面属于工作台内页，路由为 `#workbench/integration`。
+目标：把“为什么这样接入”讲清楚，而不是做静态长文档。该内容属于工作台总览，路由为 `#workbench`。
 
 核心结构：
 
 ```text
-业务场景 -> 接入方式 -> 示例接口 -> 字段或日志 key -> 规则来源 -> 输出效果
+业务场景 -> 接入方式 -> 示例接口 -> 字段 -> 规则来源 -> 输出效果
 ```
 
-工作台内接入说明当前聚焦业务页面真实用到的字段规则，必须覆盖：
+工作台总览接入说明当前聚焦业务页面真实用到的字段规则，必须覆盖：
 
 - YAML 配置规则。
 - 注解规则。
@@ -198,15 +200,16 @@ Log4j2 `%safeOutputMsg` 和 `SafeOutputMaskService` 主动脱敏分别在“日�
 
 ### 4.4 主动脱敏实验室
 
-目标：让接入方手动验证主动脱敏能力和性能特征。
+目标：让接入方手动验证主动脱敏能力、幂等性和单轮耗时。
 
-推荐布局：
+实际布局：
 
 ```text
-左侧：输入和参数
-中间：第一次脱敏结果 / 第二次脱敏结果
-右侧：幂等与性能指标
-底部：MANUAL 统计变化
+三列面板：
+按类型标签 / 业务对象 / 强文本扫描
+
+每个面板：
+输入控件 + 执行按钮 + Round 1 / Round 2 结果
 ```
 
 必须展示：
@@ -215,7 +218,7 @@ Log4j2 `%safeOutputMsg` 和 `SafeOutputMaskService` 主动脱敏分别在“日�
 - Demo 业务对象主动脱敏。
 - 非结构化文本强扫描。
 - 第一次结果、第二次结果、幂等判断。
-- 执行次数、总耗时、平均耗时。
+- 每轮 `elapsedNanos` 转换后的毫秒耗时。
 
 实验室可以显示用户当前输入用于交互，但报告和统计仍不得保存敏感原文。
 
@@ -223,49 +226,59 @@ Log4j2 `%safeOutputMsg` 和 `SafeOutputMaskService` 主动脱敏分别在“日�
 
 目标：证明日志脱敏来自真实 Log4j2 `%safeOutputMsg`，并展示规则建议变化。
 
-页面展示预设模板，不读取原始日志文件。场景包括：
+页面展示预设模板摘要，不读取原始日志文件，不提供日志页专用触发按钮。日志聚合来自业务工作台接口和脱敏实验室接口中的真实 Log4j2 logger。场景包括：
 
 - JSON-like 日志。
 - `key=value` 日志。
 - regex fallback。
-- 已配置 key。
-- 未配置 key。
 
 每个模板卡片展示：
 
 - 场景名称。
 - 预设日志形态摘要。
-- 预期命中类型。
-- 是否会产生规则建议。
-- 触发按钮。
+- 场景类别说明。
+- regex fallback 场景标记“可收集脱敏信息”。
 
-触发后展示：
+页面展示：
 
-- LOG 脱敏计数变化。
+- LOG 脱敏计数。
 - 日志规则建议列表。
 - YAML 配置片段。
-- 新增建议高亮。
+- LOW / MEDIUM / HIGH 置信度说明。
 
 不得展示完整原始 message。
 
-### 4.6 报告中心
+### 4.6 治理 Dashboard 与历史报告
 
-目标：把 JSON 报告从“文件产物”升级为可浏览、可演示、可打印的治理报告。
+目标：把 JSON 报告从“文件产物”升级为可浏览、可演示、可打印的治理报告，并区分当前进程实时数据与历史报告快照。
 
-报告中心展示：
+Dashboard 顶部展示：
+
+- 刷新当前视图按钮。
+- 打印历史报告按钮。
+- “实时数据”和“历史报告”两个 Tab。
+
+实时数据 Tab 展示：
+
+- 当前进程内存快照。
+- 总脱敏次数、覆盖接口、脱敏类型、日志建议。
+- 平均耗时、最大耗时、Ignore 接口、失败次数。
+- 场景分布图、类型 Top 图、API 脱敏统计、日志规则建议、明文豁免接口和性能异常拆解。
+
+历史报告 Tab 展示：
 
 - 手动导出按钮。
 - 当前报告数量。
 - 报告文件名。
 - 文件大小。
 - 修改时间。
-- 查看入口。
+- 选中报告后的单报告可视化详情。
 
 读取报告文件必须限制在 `safe-output.report.directory` 内，只允许 JSON 报告快照，拒绝路径穿越和非 JSON 文件。
 
 ### 4.7 单报告视图与打印
 
-单报告页面展示：
+单报告详情展示：
 
 - 总览指标。
 - Response / Log / Manual 场景分布。
@@ -277,7 +290,7 @@ Log4j2 `%safeOutputMsg` 和 `SafeOutputMaskService` 主动脱敏分别在“日�
 
 打印样式要求：
 
-- 隐藏侧边导航、触发按钮、复制按钮和页面交互控件。
+- 隐藏侧边导航、刷新按钮、导出按钮、Tab 控件和页面交互控件。
 - 保留标题、报告文件名、生成时间和关键指标。
 - 图表旁提供表格化数据，避免打印时图表不可读。
 - 不包含原始敏感值、完整日志或完整 response。
@@ -372,9 +385,9 @@ Log4j2 `%safeOutputMsg` 和 `SafeOutputMaskService` 主动脱敏分别在“日�
 
 按钮：
 
-- 主按钮用于触发当前页面核心动作。
+- 主按钮用于触发当前页面核心动作；日志场景页没有触发按钮，只提供场景切换。
 - 危险动作使用红色或琥珀色，但 Demo 中尽量避免真正危险动作。
-- 按钮文字要短，现场投屏可读，例如“触发接口”“运行实验”“导出报告”。
+- 按钮文字要短，现场投屏可读，例如“查看”“执行”“导出报告”。
 
 卡片：
 
@@ -402,9 +415,8 @@ Badge：
 
 动效只服务演示反馈：
 
-- 接口触发后，对应业务卡片边框高亮 1-2 秒。
-- 指标变化时数字短暂高亮。
-- 新日志建议出现时行高亮。
+- 详情切换和报告选择应有明确选中态。
+- 指标变化时数字可短暂高亮。
 - 新报告导出后列表第一行高亮。
 
 避免持续动画、背景粒子和大面积发光效果。动效不能影响图表可读性，也不能成为评审现场的注意力噪声。
@@ -416,24 +428,25 @@ Badge：
 前端应完成：
 
 - 默认入口保持 `#dashboard`，工作台从主导航分组进入。
-- 建立业务工作台布局。
+- 建立业务列表和业务详情双栏布局。
 - 展示客户、订单、工单、支付或账户等业务场景。
-- 场景卡片展示接口路径、规则来源、脱敏状态和风险摘要。
-- 触发业务接口后刷新治理摘要并高亮变化。
+- 业务详情展示脱敏后的字段，`查看` 按钮调用 raw 接口演示 API ignore 明文查看。
+- 工作台总览展示接入说明卡片。
 
 验收重点：
 
 - 首屏像业务系统，不像工具集合。
 - 不手写脱敏结果替代真实 Response 脱敏链路。
 
-### 6.2 0048 接入方式说明页
+### 6.2 0048 工作台总览接入说明
 
 前端应完成：
 
-- 接入矩阵作为 `#workbench/integration` 工作台内页。
-- 每条说明关联业务场景、接入方式、示例接口、字段/key、规则来源、输出效果。
+- 接入矩阵作为 `#workbench` 工作台总览内容。
+- 每条说明关联业务场景、接入方式、示例接口、字段、规则来源、输出效果。
 - 不展示跳转或触发入口，避免说明项和工作台菜单形成重复路径。
 - 代码片段提供轻量高亮。
+- `#guide` 和 `#workbench/integration` 兼容跳转到 `#workbench`。
 
 验收重点：
 
@@ -446,8 +459,7 @@ Badge：
 
 - 类型脱敏、对象脱敏、强文本扫描三类入口。
 - 展示第一次结果、第二次结果、幂等判断。
-- 展示执行次数、总耗时、平均耗时。
-- 展示 MANUAL 统计变化。
+- 展示每轮毫秒耗时。
 
 验收重点：
 
@@ -459,21 +471,23 @@ Badge：
 前端应完成：
 
 - 日志模板卡片。
-- 触发真实 Log4j2 logger 的按钮。
-- 展示 LOG 统计变化。
+- 只读展示真实 Log4j2 logger 聚合结果。
+- 展示 LOG 统计。
 - 展示日志规则建议和 YAML 片段。
-- 新建议高亮。
+- 展示置信度说明。
 
 验收重点：
 
 - 不读取原始日志文件。
 - 不展示完整原始 message。
 - 不在 controller 手工 seed 建议。
+- 不提供日志页专用触发接口。
 
-### 6.5 0051 报告文件中心与单报告视图
+### 6.5 0051 Dashboard 历史报告与单报告视图
 
 前端应完成：
 
+- Dashboard 实时数据和历史报告 Tab。
 - 报告导出按钮。
 - 报告文件列表。
 - 单报告可视化页面。
@@ -519,10 +533,10 @@ Badge：
 1. 启动 Demo 后打开 `http://localhost:8080/index.html`，默认进入治理 Dashboard。
 2. 在 1920x1080 视口下，Dashboard 首屏能看到治理摘要、报告操作和主指标；工作台首屏能看到总览卡片。
 3. 触发业务接口后，Response 统计或风险摘要有可见变化。
-4. 接入说明位于工作台菜单内，说明项不展示跳转入口，代码片段有高亮。
+4. 接入说明位于工作台总览，说明项不展示跳转入口，代码片段有高亮。
 5. 主动脱敏实验室能展示两次脱敏结果、幂等判断和耗时。
-6. 日志场景页触发后，LOG 统计或日志建议有可见变化。
-7. 报告中心可以导出、列出并打开报告。
+6. 访问业务工作台或运行脱敏实验室后，日志场景页能只读展示 LOG 统计或日志建议。
+7. Dashboard 历史报告 Tab 可以导出、列出并打开报告。
 8. 单报告页面可浏览器打印，打印预览无明显遮挡、重叠或敏感原文。
 
 ### 7.2 技术验收
@@ -530,7 +544,7 @@ Badge：
 1. 不新增前端构建链。
 2. 不新增后端 PDF 生成依赖。
 3. 不读取原始日志文件。
-4. 不展示完整原始 response 或完整日志 message。
+4. 不展示完整原始日志 message；API ignore 明文查看只在业务详情 raw 面板中演示，并进入风险统计。
 5. 前端调用通过统一 API 层组织。
 6. 受影响 Demo 集成测试通过。
 
@@ -553,8 +567,8 @@ R2.5 前端不做以下事项：
 1. 0047 先建立业务工作台和静态 SPA 骨架。
 2. 0048 复用业务场景元数据生成接入说明。
 3. 0049 独立实现实验室页面和主动脱敏 API。
-4. 0050 独立实现日志模板、触发和建议变化展示。
-5. 0051 实现报告中心和单报告视图。
+4. 0050 独立实现日志模板只读聚合和建议展示。
+5. 0051 实现 Dashboard 历史报告和单报告视图。
 6. 0052 做投屏视觉统一、打印样式和文案收口。
 7. 0053 做旧入口清理、人工验收和项目记忆更新。
 
