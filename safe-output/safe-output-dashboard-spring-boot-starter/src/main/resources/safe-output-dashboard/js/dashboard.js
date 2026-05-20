@@ -3,7 +3,9 @@
 
   async function render() {
     const route = window.location.hash.replace('#', '') || 'overview';
-    if (route === 'risk') {
+    if (route === 'log-suggestions') {
+      await renderLogSuggestions();
+    } else if (route === 'risk') {
       await renderRisk();
     } else {
       await renderOverview();
@@ -31,6 +33,25 @@
       + '，高风险：' + escapeHtml(summary.highRiskApiCount || 0)
       + '，Ignore：' + escapeHtml(summary.ignoredApiCount || 0)
       + '，慢接口：' + escapeHtml(summary.slowApiCount || 0) + '</p></section>';
+  }
+
+  async function renderLogSuggestions() {
+    const data = await window.SafeOutputDashboardApi.post('/log-suggestions', {});
+    const suggestions = data.logRuleSuggestions || [];
+    root.innerHTML = '<section class="hero"><h1>日志规则建议</h1><p>候选规则默认关闭，人工复核后再采纳。</p></section>'
+      + '<section class="panel"><h2>建议</h2>' + suggestionTable(suggestions)
+      + '<pre>' + escapeHtml(data.configSnippet || '') + '</pre></section>';
+  }
+
+  function suggestionTable(items) {
+    if (!items.length) {
+      return '<p>暂无日志规则建议。</p>';
+    }
+    return '<table><thead><tr><th>Key</th><th>建议类型</th><th>置信度</th></tr></thead><tbody>'
+      + items.map(function (item) {
+        return '<tr><td>' + escapeHtml(item.key) + '</td><td>' + escapeHtml(item.suggestedType)
+          + '</td><td>' + escapeHtml(item.confidence) + '</td></tr>';
+      }).join('') + '</tbody></table>';
   }
 
   function escapeHtml(value) {

@@ -3,6 +3,7 @@ package com.safeoutput.dashboard;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.safeoutput.core.MaskScene;
+import com.safeoutput.core.LogRuleSuggestionEvent;
 import com.safeoutput.core.ResponseRiskEvent;
 import com.safeoutput.report.MaskMetricsCollector;
 
@@ -19,7 +20,9 @@ import org.springframework.http.ResponseEntity;
 @SpringBootTest(classes = TestDashboardApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
         properties = {
                 "safe-output.dashboard.enabled=true",
-                "safe-output.report.enabled=true"
+                "safe-output.report.enabled=true",
+                "safe-output.rules[0].keys[0]=phoneNo",
+                "safe-output.rules[0].type=MOBILE"
         })
 class DashboardWebIntegrationTest {
 
@@ -83,5 +86,31 @@ class DashboardWebIntegrationTest {
         assertTrue(getOverview.getStatusCode().is4xxClientError());
         assertTrue(!overview.getBody().contains("13800138000"));
         assertTrue(!risk.getBody().contains("13800138000"));
+    }
+
+    @Test
+    void logSuggestionsExposeYamlCandidatesAndFilterConfiguredKeysThroughPost() {
+        metricsCollector.record(new LogRuleSuggestionEvent("certNum", "ID_CARD", "certNum=ID_CARD",
+                System.currentTimeMillis()));
+        metricsCollector.record(new LogRuleSuggestionEvent("certNum", "ID_CARD", "certNum=ID_CARD",
+                System.currentTimeMillis()));
+        metricsCollector.record(new LogRuleSuggestionEvent("phoneNo", "MOBILE", "phoneNo=MOBILE",
+                System.currentTimeMillis()));
+
+        ResponseEntity<String> suggestions = restTemplate.postForEntity(
+                "/safe-output/dashboard/api/log-suggestions", new LinkedHashMap<String, Object>(), String.class);
+        ResponseEntity<String> getSuggestions = restTemplate.getForEntity(
+                "/safe-output/dashboard/api/log-suggestions", String.class);
+
+        assertTrue(suggestions.getStatusCode().is2xxSuccessful());
+        assertTrue(suggestions.getBody().contains("\"logRuleSuggestions\""));
+        assertTrue(suggestions.getBody().contains("\"configSnippet\""));
+        assertTrue(suggestions.getBody().contains("\"key\":\"certnum\""));
+        assertTrue(suggestions.getBody().contains("\"suggestedType\":\"id_card\""));
+        assertTrue(suggestions.getBody().contains("\"confidence\":\"MEDIUM\""));
+        assertTrue(suggestions.getBody().contains("enabled: false"));
+        assertTrue(!suggestions.getBody().contains("phoneNo"));
+        assertTrue(!suggestions.getBody().contains("11010519491231002X"));
+        assertTrue(getSuggestions.getStatusCode().is4xxClientError());
     }
 }
