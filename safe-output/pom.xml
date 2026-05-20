@@ -17,6 +17,7 @@
     <module>safe-output-log4j2</module>
     <module>safe-output-report</module>
     <module>safe-output-spring-boot-starter</module>
+    <module>safe-output-dashboard-spring-boot-starter</module>
     <module>safe-output-demo</module>
   </modules>
 

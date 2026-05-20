@@ -1,0 +1,67 @@
+body {
+  margin: 0;
+  background: #f6f8fb;
+  color: #162033;
+  font-family: Arial, "Helvetica Neue", sans-serif;
+}
+
+.shell-nav {
+  position: fixed;
+  inset: 0 auto 0 0;
+  width: 240px;
+  padding: 24px 18px;
+  box-sizing: border-box;
+  background: #ffffff;
+  border-right: 1px solid #d9e2ef;
+}
+
+.brand {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 28px;
+}
+
+.brand strong {
+  font-size: 20px;
+}
+
+.brand span {
+  color: #637083;
+  font-size: 13px;
+}
+
+.shell-nav a {
+  display: block;
+  padding: 10px 12px;
+  color: #24476f;
+  text-decoration: none;
+  border-radius: 6px;
+}
+
+.shell-nav a.active {
+  background: #e8f1ff;
+  color: #0f58c8;
+}
+
+.shell-main {
+  margin-left: 240px;
+  padding: 32px;
+}
+
+.hero,
+.panel {
+  background: #ffffff;
+  border: 1px solid #d9e2ef;
+  border-radius: 8px;
+  padding: 24px;
+}
+
+.hero h1 {
+  margin: 0 0 8px;
+  font-size: 30px;
+}
+
+.hero p {
+  margin: 0;
+  color: #59677a;
+}

@@ -24,6 +24,7 @@ class ProjectSkeletonTest {
             "safe-output-log4j2",
             "safe-output-report",
             "safe-output-spring-boot-starter",
+            "safe-output-dashboard-spring-boot-starter",
             "safe-output-demo");
 
     @Test
