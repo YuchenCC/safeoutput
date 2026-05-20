@@ -8,15 +8,21 @@
 - wbs: R2.5-01
 - blocked_by: None
 
+## Current status
+
+Completed and still valid as the R2.5/R3 business workbench foundation. 当前默认入口已由后续 Dashboard 校准为 `#dashboard`；业务工作台主路径为 `#workbench`、`#workbench/customers`、`#workbench/orders`、`#workbench/payments`、`#workbench/tickets`、`#workbench/accounts`。工作台总览同时承载接入说明内容。
+
+客户、订单、支付、工单、账户 mock 域仍通过真实 Response 脱敏链路展示业务接口输出；raw 查看接口走 API ignore 并进入风险统计。
+
 ## What to build
 
 把 Demo 的主入口从功能验证控制台升级为真实接入系统的业务工作台。建立客户、订单、工单、支付或账户等模拟业务域，让 Demo 拥有自己的 mock 数据源、业务服务和前端工作台。工作台必须通过真实 Response 脱敏链路展示业务接口输出，不允许手写脱敏结果替代 `ResponseBodyAdvice`。
 
-本切片也负责建立新的 Demo 分层结构和页面入口。旧 Demo API 或旧页面可暂时保留，但不能继续作为默认首屏或主要演示路径。
+本切片也负责建立新的 Demo 分层结构和工作台页面入口。旧 Demo API 或旧页面可暂时保留，但不能继续作为主要演示路径；默认首屏由后续 Dashboard 校准为 `#dashboard`。
 
 ## Acceptance criteria
 
-- [x] Demo 首屏展示业务工作台，而不是孤立的功能按钮集合。
+- [x] Demo 主路径包含业务工作台，而不是孤立的功能按钮集合。
 - [x] 业务工作台至少包含客户、订单、工单、支付或账户中的四类模拟业务场景。
 - [x] Demo 有明确的 mock 数据源和业务服务边界，controller 不再承担全部样例数据构造。
 - [x] 业务字段覆盖 `MOBILE`、`ID_CARD`、`BANK_CARD`、`EMAIL`、`CHINESE_NAME`、`ADDRESS`、`PASSWORD`、`DEFAULT` 的代表样例。
@@ -25,7 +31,7 @@
 - [x] 至少一个场景展示字段级 ignore，且不破坏其它字段脱敏。
 - [x] 至少一个场景展示接口级 ignore，且该接口仍进入风险统计。
 - [x] 工作台页面能从业务视角展示主要对象、脱敏状态和风险摘要。
-- [x] 新页面入口替代旧 Demo 控制台作为默认演示入口。
+- [x] 新工作台页面替代旧 Demo 控制台作为主要业务演示入口；默认首屏由 Dashboard 承载。
 
 ## Blocked by
 
@@ -33,7 +39,7 @@ None - can start immediately
 
 ## Test requirements
 
-- 覆盖主要业务接口的 HTTP 集成测试。
-- 验证代表字段完成脱敏，且响应中不出现敏感原文。
-- 验证 ignore 场景的外部行为和风险统计边界。
-- 运行 `mvn -pl safe-output-demo -am test`。
+- [x] 覆盖主要业务接口的 HTTP 集成测试。
+- [x] 验证代表字段完成脱敏，且响应中不出现敏感原文。
+- [x] 验证 ignore 场景的外部行为和风险统计边界。
+- [x] 运行 `mvn -pl safe-output-demo -am test`。

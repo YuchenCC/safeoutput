@@ -8,24 +8,31 @@
 - wbs: R2.5-05
 - blocked_by: 0047-r25-business-workbench-and-mock-domain.md
 
+## Current status
+
+Completed and calibrated to the latest R2.5/R3 Demo shape. 报告文件能力不再作为独立主演示入口；当前入口位于 `#dashboard` 的“历史报告” Tab。实时数据和历史报告共用 Dashboard 视觉模型，历史报告通过选择已导出的 JSON 快照查看单报告聚合明细。
+
+后端仍保留 `/demo/report/files`、`/demo/report/files/{name}` 和 `/demo/report/files/{name}/dashboard`，并限制读取配置报告目录内符合前缀的 JSON 报告文件。
+
 ## What to build
 
-把 Demo 报告能力升级为报告文件中心。用户可以导出脱敏统计 JSON 报告，查看当前 `safe-output.report.directory` 下有多少 JSON 报告文件，点击单个报告查看可视化报表。JSON 报告继续作为权威数据源，页面只基于聚合指标和脱敏 evidence 渲染。
+把 Demo 报告文件能力升级到 Dashboard 的“历史报告” Tab。用户可以导出脱敏统计 JSON 报告，查看当前 `safe-output.report.directory` 下有多少 JSON 报告文件，选择单个报告查看可视化报表。JSON 报告继续作为权威数据源，页面只基于聚合指标和脱敏 evidence 渲染。
 
 报告文件读取能力必须限制在配置的报告目录内，只允许读取 JSON 报告快照，避免路径穿越和任意文件读取。
 
 ## Acceptance criteria
 
-- [x] 报告中心可以手动触发 JSON 报告导出。
-- [x] 报告中心可以列出报告目录下的 JSON 报告文件数量。
-- [x] 报告列表展示文件名、大小、修改时间和可查看入口。
+- [x] Dashboard 历史报告 Tab 可以手动触发 JSON 报告导出。
+- [x] Dashboard 历史报告 Tab 可以列出报告目录下的 JSON 报告文件数量。
+- [x] 历史报告列表展示文件名、大小、修改时间和可查看入口。
 - [x] 可以读取指定 JSON 报告并渲染单报告视图。
 - [x] 单报告视图展示总量、Response/Log/Manual 场景分布和平均耗时。
 - [x] 单报告视图展示脱敏类型 Top 排名。
 - [x] 单报告视图展示高风险接口和 ignore 风险接口。
 - [x] 单报告视图展示日志规则建议、遗漏清单或治理建议。
 - [x] 报告文件读取接口拒绝路径穿越和非 JSON 报告读取。
-- [x] 报告中心不展示原始 response、完整日志或敏感命中值。
+- [x] Dashboard 历史报告视图不展示原始 response、完整日志或敏感命中值。
+- [x] 不再要求独立报告文件页面作为主演示入口。
 
 ## Blocked by
 

@@ -8,23 +8,30 @@
 - wbs: R2.5-04
 - blocked_by: 0047-r25-business-workbench-and-mock-domain.md
 
+## Current status
+
+Completed and calibrated to the latest R2.5/R3 Demo shape. `#logs` 是只读日志场景与规则建议视图，不再提供日志页专用触发接口或触发按钮。真实 Log4j2 聚合结果来自业务工作台和脱敏实验室调用产生的 `%safeOutputMsg` 日志。
+
+当前保留 `/demo/logs/scenarios` 作为只读聚合接口，用于展示 JSON-like、key=value、regex fallback 三类场景说明、LOG 脱敏计数、日志规则建议和 YAML 片段。
+
 ## What to build
 
-在 Demo 中增加日志场景演示页和触发接口，通过真实 Log4j2 logger 输出触发 `%safeOutputMsg`。场景应覆盖 JSON-like 日志、key=value 日志、regex fallback、已配置 key 和未配置 key，并在页面展示触发后的 LOG 统计和日志规则建议变化。
+在 Demo 中增加日志场景演示页，通过业务工作台和脱敏实验室产生的真实 Log4j2 logger 输出观察 `%safeOutputMsg`。场景应覆盖 JSON-like 日志、key=value 日志、regex fallback、已配置 key 和未配置 key，并在页面展示当前 LOG 统计和日志规则建议。
 
 本切片不得读取、展示或导出原始业务日志文件内容。页面可以展示预设日志模板、脱敏预期、统计结果和规则建议。
 
 ## Acceptance criteria
 
-- [x] 日志场景通过真实 Log4j2 logger 触发，不在 controller 中手工 seed 规则建议。
-- [x] 支持触发 JSON-like 日志样例。
-- [x] 支持触发 key=value 日志样例。
-- [x] 支持触发 regex fallback 日志样例。
-- [x] 支持触发已配置 key 和未配置 key 的对比样例。
-- [x] 页面展示 LOG 脱敏计数或相关聚合指标变化。
+- [x] 日志场景通过真实 Log4j2 logger 采集，不在 controller 中手工 seed 规则建议。
+- [x] 展示 JSON-like 日志样例说明。
+- [x] 展示 key=value 日志样例说明。
+- [x] 展示 regex fallback 日志样例说明。
+- [x] 展示已配置 key 和未配置 key 的对比样例。
+- [x] 页面只读展示 LOG 脱敏计数或相关聚合指标。
 - [x] 页面展示日志规则建议列表和配置片段。
 - [x] 日志演示不读取原始日志文件，不展示完整原始 message。
 - [x] 日志演示继续遵守不保存敏感原文的报告边界。
+- [x] 不再要求日志页专用触发接口、触发按钮或 `/demo/logs/scenarios/{id}/trigger`。
 
 ## Blocked by
 
@@ -32,8 +39,8 @@
 
 ## Test requirements
 
-- 覆盖日志触发接口的 HTTP 集成测试。
-- 验证触发后 LOG 场景统计可观察。
-- 验证未配置 key 能进入日志规则建议。
-- 验证接口不返回完整原始日志 message。
-- 运行 `mvn -pl safe-output-demo -am test`。
+- [x] 覆盖 `/demo/logs/scenarios` 只读接口的 HTTP 集成测试。
+- [x] 验证业务工作台和脱敏实验室调用后 LOG 场景统计可观察。
+- [x] 验证未配置 key 能进入日志规则建议。
+- [x] 验证接口不返回完整原始日志 message。
+- [x] 运行 `mvn -pl safe-output-demo -am test`。

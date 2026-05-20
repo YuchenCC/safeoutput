@@ -8,9 +8,13 @@
 - wbs: R2.5-07
 - blocked_by: 0048-r25-integration-scenarios-guide.md, 0049-r25-manual-mask-lab-and-performance.md, 0050-r25-log-scenarios-and-rule-suggestions.md, 0051-r25-report-file-center-and-single-report-view.md, 0052-r25-printable-report-and-demo-polish.md
 
+## Current status
+
+Completed for automated regression and memory handoff. 当前 Demo 主路径为 `#dashboard`、`#workbench`、`#lab`、`#logs`；工作台总览承载接入说明，Dashboard 的“历史报告” Tab 承载报告文件查看和打印。浏览器插件执行工具未暴露，人工视觉验收缺口继续保留。
+
 ## What to build
 
-完成 R2.5 Demo 的回归验证、遗留清理和项目记忆交接。清理已经被新业务工作台、接入说明、日志场景、实验室和报告中心替代的旧 Demo 页面残留、过时路由或重复 controller。保留兼容入口时必须有明确理由，不能让旧功能继续成为主演示路径。
+完成 R2.5 Demo 的回归验证、遗留清理和项目记忆交接。清理已经被 Dashboard、工作台总览、日志场景和脱敏实验室替代的旧 Demo 页面残留、过时路由或重复 controller。保留兼容入口时必须有明确理由，不能让旧功能继续成为主演示路径。
 
 如果 R2.5 改变 Demo 能力、运行命令、测试命令、模块职责或第三轮交接信息，需要同步更新 `.codex-memory` 对应文档。
 
@@ -24,6 +28,7 @@
 - [x] 报告、日志和页面展示仍不保存或展示敏感原文。
 - [x] Demo 运行入口仍为 `mvn -pl safe-output-demo -am spring-boot:run`。
 - [x] 浏览器入口仍可通过 `http://localhost:8080/index.html` 访问。
+- [x] 回归与交接说明引用当前主路径：`#dashboard`、`#workbench`、`#lab`、`#logs`。
 
 ## Blocked by
 
@@ -37,5 +42,5 @@
 
 - [x] 运行 `mvn -pl safe-output-demo -am test`。
 - [x] 如改动 starter、report 或 log4j2 模块，运行对应受影响模块测试。本轮只改 Demo 源码和配置，`-am` 已覆盖依赖模块测试。
-- [ ] 人工打开 Demo 页面，验证业务工作台、接入说明、日志场景、脱敏实验室和报告中心主路径。浏览器插件执行工具未暴露，已完成本地 HTTP 与静态资源加载验证。
+- [ ] 人工打开 Demo 页面，验证 `#dashboard`、`#workbench`、`#lab`、`#logs` 主路径。浏览器插件执行工具未暴露，已完成本地 HTTP 与静态资源加载验证。
 - [x] 检查 `.codex-memory` 与最终实现一致。

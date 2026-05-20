@@ -8,19 +8,26 @@
 - wbs: R2.5-06
 - blocked_by: 0051-r25-report-file-center-and-single-report-view.md
 
+## Current status
+
+Completed for the automated/documented acceptance path and calibrated to the latest R2.5/R3 Demo shape. 当前主导航为 `#dashboard`、`#workbench`、`#workbench/{customers|orders|payments|tickets|accounts}`、`#lab`、`#logs`；报告文件查看和打印入口位于 `#dashboard` 的“历史报告” Tab。
+
+浏览器截图工具未暴露，常见桌面宽度、打印样式和主路径视觉仍保留人工验收缺口。
+
 ## What to build
 
-为单报告可视化增加适合浏览器打印的报告版式，并整理 Demo 的导航、首屏表达和演示路径。用户可以在报告页面使用浏览器打印或导出 PDF，用于评审和演示材料。R2.5 不引入后端 PDF 生成依赖。
+为 Dashboard 历史报告视图增加适合浏览器打印的报告版式，并整理 Demo 的导航、首屏表达和演示路径。用户可以在历史报告视图使用浏览器打印或导出 PDF，用于评审和演示材料。R2.5 不引入后端 PDF 生成依赖。
 
 本切片应确保 Demo 看起来像一个已接入 Safe Output 的业务系统，而不是分散的工具集合。
 
 ## Acceptance criteria
 
-- [x] 单报告页面提供打印入口。
+- [x] Dashboard 历史报告视图提供打印入口。
 - [x] 页面包含适合浏览器打印的样式。
 - [x] 打印版报告包含总览、场景分布、类型 Top、高风险接口、ignore 风险、日志规则建议和性能指标。
 - [x] 打印版报告不包含原始敏感值、完整日志或完整 response。
-- [x] Demo 导航能清晰进入业务工作台、接入说明、日志场景、脱敏实验室和报告中心。
+- [x] Demo 导航能清晰进入 Dashboard、工作台总览、脱敏实验室和日志场景。
+- [x] 工作台总览承载接入说明，Dashboard 历史报告 Tab 承载报告文件查看和打印。
 - [x] 首页文案和布局突出接入系统视角。
 - [x] 页面不引入后端 PDF 生成依赖。
 - [ ] 页面在常见桌面宽度下无明显文本重叠或图表遮挡。浏览器截图工具未暴露，已完成静态资源和 HTTP 加载验证，等待人工桌面视觉验收。
@@ -31,7 +38,7 @@
 
 ## Test requirements
 
-- [ ] 人工验证报告页面浏览器打印效果。浏览器截图工具未暴露，等待人工验收。
-- [ ] 人工验证主要页面导航和演示路径。已完成 HTTP 静态资源验证，等待人工浏览器验收。
+- [ ] 人工验证 Dashboard 历史报告浏览器打印效果。浏览器截图工具未暴露，等待人工验收。
+- [ ] 人工验证 `#dashboard`、`#workbench`、`#lab`、`#logs` 主路径。已完成 HTTP 静态资源验证，等待人工浏览器验收。
 - [x] 验证项目依赖未新增后端 PDF 生成库。
 - [x] 运行 `mvn -pl safe-output-demo -am test`。

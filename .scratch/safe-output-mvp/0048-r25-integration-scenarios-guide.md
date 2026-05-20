@@ -8,23 +8,29 @@
 - wbs: R2.5-02
 - blocked_by: 0047-r25-business-workbench-and-mock-domain.md
 
+## Current status
+
+Completed and calibrated to the latest R2.5/R3 Demo shape. 接入说明不再作为独立 `#workbench/integration` 页面实现，也不再提供说明项触发入口；当前内容位于 `#workbench` 工作台总览，旧 `#guide` 和 `#workbench/integration` 路由仅兼容跳转到 `#workbench`。
+
+当前说明聚焦业务工作台里真实使用的 YAML 规则、注解规则、默认规则、字段 ignore 和 API ignore。Log4j2 `%safeOutputMsg` 由 `#logs` 只读日志场景承载，`SafeOutputMaskService` 由 `#lab` 脱敏实验室承载。
+
 ## What to build
 
-在 Demo 中增加接入方式场景说明页，用业务语言解释每个脱敏能力为什么这样接入。页面和接口应围绕“业务场景 -> 接入方式 -> 示例接口 -> 字段或日志 key -> 规则来源 -> 输出效果”组织，覆盖 YAML、注解、默认规则、ignore、Log4j2 PatternConverter 和主动脱敏服务。
+在 Demo 工作台总览中展示接入方式场景说明，用业务语言解释业务字段为什么这样接入。页面和接口应围绕“业务场景 -> 接入方式 -> 示例接口 -> 字段 -> 规则来源 -> 输出效果”组织，覆盖 YAML、注解、默认规则、字段 ignore 和 API ignore。
 
-该页不是长篇静态文档，而是可点击、可触发、可对照业务接口结果的接入说明。
+该说明不是独立接入页，也不是触发中心；它应作为 `#workbench` 总览的一部分，帮助接入方对照业务工作台、日志场景和脱敏实验室的当前主路径。
 
 ## Acceptance criteria
 
-- [x] 页面列出 Demo 中所有主要业务场景及其接入方式。
+- [x] `#workbench` 总览列出 Demo 中主要业务场景及其接入方式。
 - [x] YAML 配置规则有对应业务字段、示例接口和输出效果。
 - [x] 注解规则有对应歧义字段、示例接口和输出效果。
 - [x] 默认规则库命中有对应字段和输出效果。
 - [x] 字段级 ignore 和接口级 ignore 均有对应场景说明。
-- [x] Log4j2 `%safeOutputMsg` 接入有对应日志场景说明。
-- [x] `SafeOutputMaskService` 主动脱敏接入有对应业务或实验室场景说明。
+- [x] Log4j2 `%safeOutputMsg` 接入由 `#logs` 只读日志场景说明。
+- [x] `SafeOutputMaskService` 主动脱敏接入由 `#lab` 脱敏实验室说明。
 - [x] 每条说明能标明规则来源，不把类型标签、字段名和规则名混淆。
-- [x] 页面可从说明项跳转或触发对应 Demo 场景。
+- [x] 不再要求说明项跳转、触发对应 Demo 场景或实现独立 `#workbench/integration` 页面。
 
 ## Blocked by
 
@@ -32,7 +38,8 @@
 
 ## Test requirements
 
-- 覆盖接入说明接口返回结构的测试。
-- 验证说明项覆盖 YAML、注解、默认规则、ignore、Log4j2 和主动脱敏。
-- 验证说明中的示例接口或场景标识在 Demo 中存在。
-- 运行 `mvn -pl safe-output-demo -am test`。
+- [x] 覆盖接入说明接口返回结构的测试。
+- [x] 验证说明项覆盖 YAML、注解、默认规则和 ignore。
+- [x] 验证说明中的示例接口或场景标识在 Demo 中存在。
+- [x] 验证旧 `#guide` 和 `#workbench/integration` 仅兼容跳转到 `#workbench`。
+- [x] 运行 `mvn -pl safe-output-demo -am test`。
