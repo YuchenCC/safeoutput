@@ -35,6 +35,7 @@
     <animal.sniffer.signature.version>1.0</animal.sniffer.signature.version>
     <maven.checkstyle.plugin.version>3.3.1</maven.checkstyle.plugin.version>
     <checkstyle.version>8.45.1</checkstyle.version>
+    <spring.boot.maven.plugin.version>${spring.boot.version}</spring.boot.maven.plugin.version>
   </properties>
 
   <dependencyManagement>
@@ -94,6 +95,14 @@
               <version>${checkstyle.version}</version>
             </dependency>
           </dependencies>
+        </plugin>
+        <plugin>
+          <groupId>org.springframework.boot</groupId>
+          <artifactId>spring-boot-maven-plugin</artifactId>
+          <version>${spring.boot.maven.plugin.version}</version>
+          <configuration>
+            <skip>true</skip>
+          </configuration>
         </plugin>
       </plugins>
     </pluginManagement>

@@ -154,6 +154,12 @@ R2 新增 Demo 验证路径包括 `POST /demo/mask/by-type`、`POST /demo/mask/o
 
 ## Demo 验证
 
+从父工程启动 demo:
+
+```sh
+mvn -pl safe-output-demo -am spring-boot:run
+```
+
 运行 demo 集成测试:
 
 ```sh

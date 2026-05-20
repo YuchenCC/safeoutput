@@ -11,6 +11,7 @@
 - report exporter 与 Demo 规则建议入口已复用 `safe-output.rules[].keys` 过滤已配置日志 key；若后续扩展建议采纳流，应继续使用同一 configured-key 提取逻辑。
 - Log 规则建议的 YAML 片段会覆盖所有未配置候选 key，包括 `LOW` 置信度建议；候选规则默认 `enabled:false`，由人工复核后再采纳。
 - demo 端到端测试覆盖 Response、Log、Manual、Report，以及 R2.5 业务工作台、接入说明、日志场景、报告文件中心和安全读取边界。
+- 父工程已在 pluginManagement 管理 `spring-boot-maven-plugin`，非 demo 模块默认 skip，`safe-output-demo` 显式启用；可直接从父工程运行 `mvn -pl safe-output-demo -am spring-boot:run` 启动 demo。
 
 ## 当前最适合扩展的模块
 
