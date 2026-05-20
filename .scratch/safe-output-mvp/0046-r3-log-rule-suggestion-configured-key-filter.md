@@ -22,6 +22,10 @@
 - [x] 报告、Demo 接口和 JSON 快照不包含完整日志、敏感原文或 raw value。
 - [x] 现有 `LogRuleSuggestionAnalyzer.analyze(metrics, configuredKeys)` 语义保持兼容。
 
+## Current status
+
+Completed and still valid. The configured-key filter is reused by report export, `/demo/report/log-suggestions`, `/demo/report/dashboard`, and `/demo/logs/scenarios`. Low-confidence candidates may still appear in YAML snippets with `enabled: false`; this is intentional and remains a manual-review flow, not automatic adoption.
+
 ## Blocked by
 
 - 0035-r2-log-rule-suggestion-collector.md

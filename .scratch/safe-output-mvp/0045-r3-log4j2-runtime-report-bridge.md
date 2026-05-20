@@ -22,6 +22,10 @@ starter 开启 `safe-output.report.enabled=true` 后，真实 Log4j2 `%safeOutpu
 - [x] `/demo/logs` 后访问 `/demo/report/log-suggestions` 和 `/demo/report/dashboard`，能看到真实日志建议和非零 `logCount`。
 - [x] 线索、报告和导出 JSON 不包含敏感原文、完整日志 message 或完整 response。
 
+## Current status
+
+Completed and still valid. Later R2.5/R3 Demo work replaced the old `/demo/logs` trigger path with real log sources from the business workbench and mask lab. Current observation points are `/demo/logs/scenarios`, `/demo/report/log-suggestions`, and `/demo/report/dashboard`; the log scenario page is read-only and no longer provides a dedicated trigger endpoint.
+
 ## Blocked by
 
 - 0035-r2-log-rule-suggestion-collector.md
