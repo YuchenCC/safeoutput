@@ -20,15 +20,20 @@ import java.util.Map;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("${safe-output.dashboard.path-prefix:/safe-output/dashboard}/api")
 public class SafeOutputDashboardController {
+
+    private static final long MAX_UPLOAD_BYTES = 1024L * 1024L;
 
     private final SafeOutputDashboardProperties properties;
 
@@ -102,6 +107,24 @@ public class SafeOutputDashboardController {
         return ResponseEntity.ok(dashboardAssembler.historical(path.getFileName().toString(), report));
     }
 
+    @PostMapping(value = "/reports/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Map<String, Object>> reportUpload(@RequestParam(value = "file", required = false)
+            MultipartFile file)
+            throws IOException {
+        if (file == null || file.isEmpty() || !isJsonFilename(file.getOriginalFilename())) {
+            return ResponseEntity.badRequest().body(error("invalid_report_file"));
+        }
+        if (file.getSize() > MAX_UPLOAD_BYTES) {
+            return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(error("report_file_too_large"));
+        }
+        Map<String, Object> report = objectMapper.readValue(file.getBytes(),
+                new TypeReference<Map<String, Object>>() { });
+        if (!isReportShape(report)) {
+            return ResponseEntity.badRequest().body(error("invalid_report_shape"));
+        }
+        return ResponseEntity.ok(dashboardAssembler.historical(file.getOriginalFilename(), report));
+    }
+
     private MaskReport snapshot() {
         MaskMetricsCollector collector = metricsCollectors.getIfAvailable();
         if (collector == null) {
@@ -133,6 +156,21 @@ public class SafeOutputDashboardController {
         Map<String, Object> error = new LinkedHashMap<String, Object>();
         error.put("error", code);
         return error;
+    }
+
+    private static boolean isJsonFilename(String filename) {
+        return filename != null && filename.toLowerCase(java.util.Locale.ENGLISH).endsWith(".json");
+    }
+
+    private static boolean isReportShape(Map<String, Object> report) {
+        return report != null
+                && report.containsKey("totalCount")
+                && report.containsKey("responseCount")
+                && report.containsKey("logCount")
+                && report.containsKey("manualCount")
+                && report.containsKey("failureCount")
+                && report.containsKey("maskTypeCounts")
+                && report.containsKey("responseRiskSummary");
     }
 
     public static final class ReportViewRequest {

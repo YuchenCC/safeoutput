@@ -16,6 +16,13 @@
   window.SafeOutputDashboardApi = {
     post: function (path, body) {
       return request(path, { method: 'POST', body: JSON.stringify(body || {}) });
+    },
+    postForm: async function (path, formData) {
+      const response = await fetch(basePath() + '/api' + path, { method: 'POST', body: formData });
+      if (!response.ok) {
+        throw new Error(path + ' -> HTTP ' + response.status);
+      }
+      return response.json();
     }
   };
 })(window);

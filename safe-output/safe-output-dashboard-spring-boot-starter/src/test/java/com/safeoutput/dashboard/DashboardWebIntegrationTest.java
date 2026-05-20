@@ -20,7 +20,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.core.io.ByteArrayResource;
 
 @SpringBootTest(classes = TestDashboardApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
         properties = {
@@ -29,6 +35,8 @@ import org.springframework.http.ResponseEntity;
                 "safe-output.report.directory=target/safe-output-dashboard-test-reports",
                 "safe-output.report.file-prefix=dashboard-report",
                 "safe-output.report.interval-millis=600000",
+                "spring.servlet.multipart.max-file-size=2MB",
+                "spring.servlet.multipart.max-request-size=2MB",
                 "safe-output.rules[0].keys[0]=phoneNo",
                 "safe-output.rules[0].type=MOBILE"
         })
@@ -166,5 +174,58 @@ class DashboardWebIntegrationTest {
         assertTrue(nonJson.getStatusCode().is4xxClientError());
         assertTrue(getView.getStatusCode().is4xxClientError());
         assertTrue(!dashboard.getBody().contains("foo@example.com"));
+    }
+
+    @Test
+    void uploadedReportReturnsTemporaryDashboardWithoutWritingReportDirectory() throws Exception {
+        metricsCollector.recordMask(MaskScene.RESPONSE, "MOBILE", 100);
+        Path exported = reportExporter.exportNow();
+        String json = new String(Files.readAllBytes(exported), StandardCharsets.UTF_8);
+        String before = restTemplate.postForObject("/safe-output/dashboard/api/reports/list",
+                new LinkedHashMap<String, Object>(), String.class);
+
+        ResponseEntity<String> uploaded = restTemplate.postForEntity("/safe-output/dashboard/api/reports/upload",
+                multipart("upload.json", json.getBytes(StandardCharsets.UTF_8)), String.class);
+        ResponseEntity<String> textFile = restTemplate.postForEntity("/safe-output/dashboard/api/reports/upload",
+                multipart("upload.txt", json.getBytes(StandardCharsets.UTF_8)), String.class);
+        ResponseEntity<String> tooLarge = restTemplate.postForEntity("/safe-output/dashboard/api/reports/upload",
+                multipart("large.json", new byte[1024 * 1024 + 1]), String.class);
+        ResponseEntity<String> badShape = restTemplate.postForEntity("/safe-output/dashboard/api/reports/upload",
+                multipart("bad.json", "{}".getBytes(StandardCharsets.UTF_8)), String.class);
+        String after = restTemplate.postForObject("/safe-output/dashboard/api/reports/list",
+                new LinkedHashMap<String, Object>(), String.class);
+
+        assertTrue(uploaded.getStatusCode().is2xxSuccessful());
+        assertTrue(uploaded.getBody().contains("\"filename\":\"upload.json\""));
+        assertTrue(uploaded.getBody().contains("\"totalCount\""));
+        assertTrue(textFile.getStatusCode().is4xxClientError());
+        assertTrue(tooLarge.getStatusCode() == HttpStatus.PAYLOAD_TOO_LARGE);
+        assertTrue(badShape.getStatusCode().is4xxClientError());
+        assertTrue(before.equals(after));
+        assertTrue(!after.contains("upload.json"));
+        assertTrue(!uploaded.getBody().contains("13800138000"));
+    }
+
+    private static HttpEntity<MultiValueMap<String, Object>> multipart(String filename, byte[] content) {
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<String, Object>();
+        body.add("file", new NamedByteArrayResource(filename, content));
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+        return new HttpEntity<MultiValueMap<String, Object>>(body, headers);
+    }
+
+    private static final class NamedByteArrayResource extends ByteArrayResource {
+
+        private final String filename;
+
+        NamedByteArrayResource(String filename, byte[] byteArray) {
+            super(byteArray);
+            this.filename = filename;
+        }
+
+        @Override
+        public String getFilename() {
+            return filename;
+        }
     }
 }

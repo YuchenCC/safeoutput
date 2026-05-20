@@ -60,12 +60,15 @@
     const data = await window.SafeOutputDashboardApi.post('/reports/list', {});
     const files = data.files || [];
     root.innerHTML = '<section class="hero"><h1>历史报告</h1><p>报告文件名通过 POST body 传递。</p></section>'
-      + '<section class="panel"><h2>报告文件</h2>' + reportList(files) + '<div id="report-detail"></div></section>';
+      + '<section class="panel"><h2>报告文件</h2>' + reportList(files)
+      + '<div><input type="file" id="report-upload" accept=".json"><button id="report-upload-run">上传查看</button></div>'
+      + '<div id="report-detail"></div></section>';
     Array.prototype.forEach.call(document.querySelectorAll('[data-report-name]'), function (button) {
       button.onclick = function () {
         showReport(button.dataset.reportName);
       };
     });
+    document.getElementById('report-upload-run').onclick = uploadReport;
   }
 
   function reportList(files) {
@@ -79,6 +82,18 @@
 
   async function showReport(filename) {
     const report = await window.SafeOutputDashboardApi.post('/reports/view', { filename: filename });
+    document.getElementById('report-detail').innerHTML = '<pre>' + escapeHtml(JSON.stringify(report, null, 2))
+      + '</pre>';
+  }
+
+  async function uploadReport() {
+    const input = document.getElementById('report-upload');
+    if (!input.files || !input.files.length) {
+      return;
+    }
+    const form = new FormData();
+    form.append('file', input.files[0]);
+    const report = await window.SafeOutputDashboardApi.postForm('/reports/upload', form);
     document.getElementById('report-detail').innerHTML = '<pre>' + escapeHtml(JSON.stringify(report, null, 2))
       + '</pre>';
   }
