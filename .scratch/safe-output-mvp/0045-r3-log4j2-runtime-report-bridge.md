@@ -19,7 +19,7 @@ starter 开启 `safe-output.report.enabled=true` 后，真实 Log4j2 `%safeOutpu
 - [x] 真实 `%safeOutputMsg` 处理未配置 key 的 regex fallback 命中时，`snapshotSuggestions()` 出现脱敏 evidence。
 - [x] 真实 `%safeOutputMsg` 每次成功脱敏 key-value 或 regex fallback 值时，`snapshot().getLogCount()` 增加，类型分布记录 normalized type。
 - [x] 已配置 key 不重复生成日志规则建议，但成功脱敏仍计入 `LOG` 场景。
-- [x] `/demo/logs` 后访问 `/demo/report/log-suggestions` 和 `/demo/report/dashboard`，能看到真实日志建议和非零 `logCount`。
+- [x] 业务工作台或脱敏实验室产生真实日志后，访问 `/demo/logs/scenarios`、`/demo/report/log-suggestions` 和 `/demo/report/dashboard`，能看到真实日志建议和非零 `logCount`。
 - [x] 线索、报告和导出 JSON 不包含敏感原文、完整日志 message 或完整 response。
 
 ## Current status
@@ -35,5 +35,5 @@ Completed and still valid. Later R2.5/R3 Demo work replaced the old `/demo/logs`
 
 - [x] starter 集成测试覆盖真实 `PatternLayout %safeOutputMsg` 写入 `MaskMetricsCollector` 的 `phoneno=<mobile>` evidence。
 - [x] starter 集成测试覆盖 key-value 和 regex fallback 日志脱敏增加 `logCount` 和类型分布。
-- [x] demo HTTP 集成测试先调用 `/demo/logs`，再断言 `/demo/report/log-suggestions` 返回 `phoneno`、`certnum`、`mailaddr`。
+- [x] demo HTTP 集成测试先调用业务工作台和脱敏实验室接口，再断言 `/demo/logs/scenarios` 与 `/demo/report/log-suggestions` 返回 `certnum`、`mailaddr` 等未配置 key 建议。
 - [x] demo HTTP 集成测试断言报告接口和导出报告不包含 raw 手机号、邮箱、身份证号。

@@ -35,5 +35,6 @@ Current code already exposes `topRiskApis`, `ignoredRiskApis`, `riskScore`, `ris
 
 ## Test requirements
 
-- 验证风险画像页面渲染和数据展示。
-- 验证后端 API 返回 topRiskApis 含 riskScore/riskLevel/riskReasons/governanceAdvice/performanceProfile。
+- [x] 验证 Dashboard 实时/历史视图渲染风险画像聚合数据。
+- [x] 验证后端 API 返回 topRiskApis 含 riskScore/riskLevel/riskReasons/governanceAdvice/performanceProfile。
+- [x] 不再要求独立 Response 风险画像页面测试。

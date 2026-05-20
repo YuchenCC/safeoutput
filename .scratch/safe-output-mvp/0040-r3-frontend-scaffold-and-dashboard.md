@@ -8,20 +8,27 @@
 - wbs: R3-01
 - blocked_by: None
 
+## Current status
+
+Completed through the R2.5/R3 Demo rewrite. The latest frontend is a static SPA served by `safe-output-demo` at `http://localhost:8080/index.html`, with `#dashboard` as the default route. Dashboard now combines realtime process metrics and historical report views instead of a separate old R3 homepage shape.
+
+The page uses `/demo/report/dashboard` for realtime aggregation and `/demo/report/files/{name}/dashboard` for single-report historical details. It does not render raw JSON reports, original response bodies, complete log messages, or sensitive hit values.
+
 ## What to build
 
-搭建 Demo 前端工程骨架（可选用轻量 SPA 方案），实现首页总览 Dashboard 页面。首页通过调用后端统计 API 展示脱敏总量、场景分布、高风险接口数、配置建议数、平均耗时和最近报告时间，并提供脱敏类型分布饼图、场景趋势图、高风险接口 Top 5 和性能耗时分布柱状图。
+搭建 Demo 前端工程骨架（可选用轻量 SPA 方案），实现治理 Dashboard 页面。当前实现以 `#dashboard` 作为默认入口，通过 Dashboard 实时数据/历史报告 Tab 展示脱敏总量、场景分布、高风险接口数、配置建议数、平均耗时、最近报告时间、脱敏类型分布、高风险接口和性能耗时拆解。
 
 ## Acceptance criteria
 
-- [ ] 前端工程可独立启动，访问首页 Dashboard 页面。
-- [ ] Dashboard 展示已脱敏总次数、Response/Log/Manual 分场景次数。
-- [ ] Dashboard 展示高风险接口数、已发现配置建议数、平均脱敏耗时、最近报告生成时间。
-- [ ] Dashboard 包含脱敏类型分布饼图。
-- [ ] Dashboard 包含 Response/Log/Manual 场景趋势图。
-- [ ] Dashboard 包含高风险接口 Top 5 列表。
-- [ ] Dashboard 包含性能耗时分布柱状图。
-- [ ] 后端提供首页所需的统计汇总 API。
+- [x] Demo 静态前端可通过 Spring Boot Demo 访问 `http://localhost:8080/index.html`。
+- [x] 默认路由为 `#dashboard`。
+- [x] Dashboard 展示已脱敏总次数、Response/Log/Manual 分场景次数。
+- [x] Dashboard 展示高风险接口数、已发现配置建议数、平均脱敏耗时、最近报告生成时间。
+- [x] Dashboard 展示脱敏类型分布。
+- [x] Dashboard 展示 Response/Log/Manual 场景分布和历史报告视图。
+- [x] Dashboard 展示高风险接口和 ignore 风险接口。
+- [x] Dashboard 展示性能耗时和失败拆解。
+- [x] 后端提供 Dashboard 所需的实时和历史报告 API。
 
 ## Blocked by
 
@@ -29,5 +36,6 @@ None - can start immediately
 
 ## Test requirements
 
-- 验证前端启动和首页渲染。
-- 验证统计 API 返回数据格式与前端图表一致。
+- [x] 验证 Demo 静态资源可加载。
+- [x] 验证 Dashboard API 返回数据格式与前端图表/表格一致。
+- [ ] 人工打开 `#dashboard` 验证首屏视觉和图表布局；浏览器截图工具未暴露，保留人工视觉验收缺口。

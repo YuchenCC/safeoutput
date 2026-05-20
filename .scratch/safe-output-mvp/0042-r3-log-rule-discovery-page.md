@@ -34,6 +34,6 @@ Current code exposes `/demo/logs/scenarios` and `/demo/report/log-suggestions`, 
 
 ## Test requirements
 
-- 验证规则发现页面渲染和建议列表展示。
-- 验证 YAML 配置片段复制功能。
-- 验证后端 API 返回 logRuleSuggestions 和 configSnippet。
+- [x] 验证日志场景页和 Dashboard 展示规则建议列表。
+- [x] 验证后端 API 返回 logRuleSuggestions 和 configSnippet。
+- [x] 不再要求独立规则发现页面、一键复制或采纳状态测试。

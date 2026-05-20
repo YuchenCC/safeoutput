@@ -35,7 +35,8 @@ Current implementation uses `SafeOutputMaskService` through `/demo/mask/by-type`
 
 ## Test requirements
 
-- 验证三个 Tab 页面渲染和交互。
-- 验证指定 type 脱敏可输入 value 和 type 并展示结果。
-- 验证对象规则脱敏可输入 JSON 对象并展示结果。
-- 验证强扫描脱敏可输入文本并展示结果。
+- [x] 验证 `#lab` 三类入口渲染和交互。
+- [x] 验证指定 type 脱敏可输入 value 和 type 并展示两轮结果。
+- [x] 验证对象规则脱敏可输入业务对象字段并展示两轮结果。
+- [x] 验证强扫描脱敏可输入文本并展示两轮结果。
+- [x] 验证接口返回固定两轮 `{round,result,elapsedNanos,sameAsPrevious}`。
