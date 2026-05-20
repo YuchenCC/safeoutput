@@ -239,6 +239,9 @@ pre {
 .api-stat-panel {
   margin-top: 16px;
 }
+.dashboard-follow-panel {
+  margin-top: 16px;
+}
 .api-stat-table table {
   min-width: 920px;
 }

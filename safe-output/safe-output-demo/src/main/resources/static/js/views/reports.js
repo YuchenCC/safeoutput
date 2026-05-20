@@ -63,7 +63,7 @@
       '<div class="panel"><div class="panel-head"><div><h2>日志规则建议</h2><p>来自日志 fallback 线索聚合，候选规则默认人工复核。</p></div></div>' + suggestionTable(dashboard.logRuleSuggestions || []) + '</div>',
       '<div class="panel"><h2>明文豁免接口</h2>' + riskTable(dashboard.ignoredRiskApis || []) + '</div>',
       '</div>',
-      '<div class="panel"><h2>性能与异常拆解</h2>' + healthBreakdown(dashboard) + '</div>',
+      '<div class="panel dashboard-follow-panel"><h2>性能与异常拆解</h2>' + healthBreakdown(dashboard) + '</div>',
     ].join('');
     window.SafeOutputCharts.doughnut('live-scene-chart', ['Response', 'Log', 'Manual'],
       [dashboard.responseCount || 0, dashboard.logCount || 0, dashboard.manualCount || 0]);
@@ -118,7 +118,7 @@
       '<div class="grid two"><div class="panel"><h2>报告场景分布</h2><div class="chart-box"><canvas id="report-scene-chart"></canvas></div></div><div class="panel"><h2>报告类型 Top</h2><div class="chart-box"><canvas id="report-type-chart"></canvas></div></div></div>',
       '<div class="panel api-stat-panel"><h2>API 脱敏统计</h2>' + riskTable(report.topRiskApis || []) + '</div>',
       '<div class="grid two"><div class="panel"><h2>明文豁免接口</h2>' + riskTable(report.ignoredRiskApis || []) + '</div><div class="panel"><h2>日志规则建议</h2>' + suggestionTable(report.logRuleSuggestions || []) + '</div></div>',
-      '<div class="panel"><h2>性能拆解</h2>' + healthBreakdown(report) + '</div>',
+      '<div class="panel dashboard-follow-panel"><h2>性能拆解</h2>' + healthBreakdown(report) + '</div>',
       '</div>'
     ].join('');
     window.SafeOutputCharts.doughnut('report-scene-chart', ['Response', 'Log', 'Manual'], [report.responseCount || 0, report.logCount || 0, report.manualCount || 0]);
