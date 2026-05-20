@@ -1,6 +1,6 @@
 # Safe Output 组件接入手册
 
-本文面向需要在 Spring Boot 2.x 业务系统中接入 Safe Output 的开发者，覆盖核心脱敏组件、Spring Boot starter、Response 脱敏、Log4j2 日志脱敏、主动脱敏、自定义策略和聚合报告配置。
+本文面向需要在 Spring Boot 2.x 业务系统中接入 Safe Output 的开发者，覆盖核心脱敏组件、Spring Boot starter、Response 脱敏、Log4j2 日志脱敏、主动脱敏、自定义策略、聚合报告配置和可选治理 Dashboard。
 
 文档定位：本文是业务接入手册。代码结构和模块职责见根目录 `doc/safe-output-project-overview.md`；Report 模块内部数据流见根目录 `doc/safe-output-report-module-guide.md`；Response 拦截与 core 原理见 `safe-output/doc/core.md`。
 
@@ -36,6 +36,16 @@ mvn install
 <dependency>
   <groupId>com.safeoutput</groupId>
   <artifactId>safe-output-spring-boot-starter</artifactId>
+  <version>0.1.0-SNAPSHOT</version>
+</dependency>
+```
+
+如需在应用内启用治理 Dashboard，可额外依赖 dashboard starter。该附加包默认关闭，不影响只接入脱敏能力的业务系统。
+
+```xml
+<dependency>
+  <groupId>com.safeoutput</groupId>
+  <artifactId>safe-output-dashboard-spring-boot-starter</artifactId>
   <version>0.1.0-SNAPSHOT</version>
 </dependency>
 ```
@@ -440,6 +450,9 @@ safe-output:
     file-prefix: safe-output-report
     interval-millis: 60000
     retain-files: 10
+  dashboard:
+    enabled: false
+    path-prefix: /safe-output/dashboard
 ```
 
 报告配置说明：
@@ -454,7 +467,60 @@ safe-output:
 
 报告只保存聚合指标、类型分布、接口风险、ignored 次数、失败次数和耗时信息，不应保存敏感原文。
 
-## 8. 通用配置参考
+## 8. 可选治理 Dashboard
+
+`safe-output-dashboard-spring-boot-starter` 是可选治理界面附加包，用于在同一个 Spring Boot 2.x 应用内查看当前进程聚合指标、Response 风险画像、Log 规则建议、历史报告和通用脱敏实验室。它默认关闭，仅支持 Spring MVC Servlet Web 应用；非 Web 应用、WebFlux 应用或未设置 `safe-output.dashboard.enabled=true` 时不会装配。
+
+依赖：
+
+```xml
+<dependency>
+  <groupId>com.safeoutput</groupId>
+  <artifactId>safe-output-dashboard-spring-boot-starter</artifactId>
+  <version>0.1.0-SNAPSHOT</version>
+</dependency>
+```
+
+启用：
+
+```yaml
+safe-output:
+  dashboard:
+    enabled: true
+    path-prefix: /safe-output/dashboard
+```
+
+默认静态入口为：
+
+```text
+GET /safe-output/dashboard/index.html
+```
+
+后端 API 全部使用 POST，并挂在 `/safe-output/dashboard/api` 下：
+
+| API | 说明 |
+|---|---|
+| `POST /overview` | 当前进程聚合概览、类型分布、风险摘要和 Log 规则建议 |
+| `POST /response-risk` | Response 接口风险画像 |
+| `POST /log-suggestions` | Log fallback 规则建议和默认关闭的 YAML 候选片段 |
+| `POST /reports/list` | 列出报告目录内符合 `file-prefix-*.json` 的报告文件 |
+| `POST /reports/view` | 按请求体中的文件名读取单个报告，拒绝路径穿越和非报告文件 |
+| `POST /reports/upload` | 临时查看单个 JSON 报告，限制大小，不写入报告目录，不进入历史列表 |
+| `POST /lab/by-type` | 按指定 type 主动脱敏字符串，固定执行两轮 |
+| `POST /lab/object` | 对内置样例对象执行规则脱敏，固定执行两轮 |
+| `POST /lab/strong` | 对文本执行强扫描脱敏，固定执行两轮 |
+
+Dashboard 只读取 `MaskMetricsCollector` 当前聚合快照、`safe-output.report.directory` 下的报告文件、脱敏后的 evidence 和用户当前请求体，不保存敏感原文、完整 response 或完整日志。上传报告只在本次请求内解析，不写入磁盘，也不会进入历史报告列表。
+
+安全边界：
+
+- Dashboard 不提供登录、权限、审计、多租户、数据库或公网防护。
+- 接入方应通过内网、网关、Spring Security 或运维平台保护 `/safe-output/dashboard/**`。
+- Dashboard 不包含 Demo 业务工作台、小眼睛明文查看或 mock 业务数据。
+- Log 规则建议只生成候选配置，不自动改写 YAML，不自动启用规则。
+- 读取历史报告时只允许配置目录下符合 `safe-output.report.file-prefix` 的 JSON 文件。
+
+## 9. 通用配置参考
 
 ```yaml
 safe-output:
@@ -518,8 +584,10 @@ safe-output:
 | `log.regex-fallback.id-card-check-code-enabled` | `true` | 身份证兜底识别是否校验校验位，默认开启，只影响无字段名上下文的孤立身份证号 |
 | `manual.strong-scan.types` | 空 | 主动强扫描 fallback 类型清单；为空时默认 `MOBILE`、`EMAIL`、`ID_CARD`，配置后以清单为准 |
 | `rules.default-enabled` | `true` | 是否启用内置默认字段规则 |
+| `dashboard.enabled` | `false` | 是否启用可选治理 Dashboard |
+| `dashboard.path-prefix` | `/safe-output/dashboard` | Dashboard 静态资源和 API 路径前缀，API 固定在 `{path-prefix}/api` 下 |
 
-## 9. 安全边界
+## 10. 安全边界
 
 - Response 脱敏异常会 fail-open，返回原始业务结果，避免影响接口可用性。
 - 对象递归支持 Bean、Map、Collection、数组，并带最大深度、集合上限和循环引用保护。
@@ -528,45 +596,50 @@ safe-output:
 - 日志脱敏只做轻量 JSON-like/key-value 识别和有限 fallback，不强制依赖 JSON Parser。
 - API ignore 可以返回明文，但必须配置明确 reason，并进入风险统计。
 - 统计和报告应只保存聚合信息，不保存原始 response 或敏感字段值。
+- 可选 Dashboard 默认关闭，且自身不提供鉴权；启用后需要由接入方保护入口。
 - 未知 type 默认回退到 `DEFAULT`，同时记录 warning 和未知类型聚合统计，避免配置错误静默丢失。
 
-## 10. 常见问题排查
+## 11. 常见问题排查
 
-### 10.1 引入依赖后没有自动脱敏
+### 11.1 引入依赖后没有自动脱敏
 
 检查业务应用是否是 Spring Boot 2.x，并确认依赖的是 `safe-output-spring-boot-starter`。如果关闭了 `safe-output.enabled` 或 `safe-output.response.enabled`，Response 不会被处理。
 
-### 10.2 字段没有命中默认规则
+### 11.2 字段没有命中默认规则
 
 默认规则只覆盖第 2 节列出的字段名。对 `name`、`id`、`code`、`no`、`address` 等字段，需要使用 `@Desensitize` 或 `safe-output.rules[]` 显式声明。如果已配置 `safe-output.rules.default-enabled=false`，所有默认字段规则都会关闭。
 
-### 10.3 配置规则没有生效
+### 11.3 配置规则没有生效
 
 检查 `rules[].enabled` 是否为 `true`，`keys` 是否与字段名或 Map key 一致，`paths` 是否与实际递归路径一致。集合或数组下标可用 `[*]` 匹配任意数字下标段。还需要确认 `type` 是否存在对应内置策略或自定义 `MaskStrategy`。
 
-### 10.4 `body-data-path` 配置后仍未脱敏
+### 11.4 `body-data-path` 配置后仍未脱敏
 
 确认路径是否从响应对象根节点开始，并使用点分隔，例如 `data` 或 `result.data`。路径不存在时组件会 fail-open，不会抛出业务异常。
 
-### 10.5 日志没有脱敏
+### 11.5 日志没有脱敏
 
 确认业务日志 pattern 中使用了 `%safeOutputMsg` 或 `%safeOutputMessage`，并且 `safe-output.log.enabled=true`。如果日志字段只配置在 `rules[].paths` 中，不会参与日志文本匹配；日志 key-value 脱敏需要配置 `rules[].keys` 或命中默认字段名。若 `safe-output.rules.default-enabled=false`，默认字段名不会参与日志 key-value 脱敏。
 
-### 10.6 日志中孤立手机号、邮箱或身份证没有脱敏
+### 11.6 日志中孤立手机号、邮箱或身份证没有脱敏
 
 确认是否启用了 `safe-output.log.regex-fallback.enabled=true`。默认推荐依赖字段名上下文处理 key-value 日志，fallback 应只用于边界明确的类型。
 
 孤立身份证号还会额外经过大陆身份证轻量校验：格式、出生日期和年份范围始终校验；`safe-output.log.regex-fallback.id-card-check-code-enabled` 默认值为 `true`，默认还会校验第 18 位校验码。只有在明确需要兼容历史脏数据或测试数据、并能接受更多 18 位编号被识别为身份证时，才建议改为 `false`。
 
-### 10.7 接口返回了明文
+### 11.7 接口返回了明文
 
 检查是否命中了 `safe-output.ignore.apis`。接口级 ignore 命中后会直接返回原 body，但会记录 ignored 风险统计。
 
-### 10.8 报告没有生成
+### 11.8 报告没有生成
 
 确认 `safe-output.report.enabled=true`，输出目录有写入权限，且应用运行时间超过 `interval-millis`。报告导出失败不会影响业务接口，会记录失败统计。
 
-## 11. Report 模块接入摘要
+### 11.9 Dashboard 访问 404 或没有数据
+
+确认已经额外依赖 `safe-output-dashboard-spring-boot-starter`，并设置 `safe-output.dashboard.enabled=true`。Dashboard 只在 Spring MVC Servlet Web 应用中装配，默认入口是 `/safe-output/dashboard/index.html`；后端接口必须使用 POST。若页面可访问但数据为空，通常表示当前进程还没有发生 Response、Log 或 Manual 场景脱敏，或未启用 `safe-output.report.enabled=true` 导出历史报告。
+
+## 12. Report 模块接入摘要
 
 `safe-output-report` 是统计和报告模块，业务系统通常不需要直接依赖。通过 `safe-output-spring-boot-starter` 接入并开启报告后，starter 会自动创建 `MaskMetricsCollector` 和 `MaskReportExporter`，用于采集脱敏聚合指标并导出本地 JSON 快照。
 
@@ -580,7 +653,7 @@ safe-output:
 
 报告只保存聚合指标、类型标签、接口维度、耗时、失败次数和脱敏后的 evidence，不保存敏感原文、完整 response 或完整日志。
 
-### 11.1 启用报告
+### 12.1 启用报告
 
 业务系统继续只依赖 starter：
 
@@ -619,7 +692,7 @@ safe-output:
 
 报告默认关闭。未开启时，starter 不会创建报告采集器和导出器，也不会生成 Response 风险画像、Log 规则建议或 JSON 快照。
 
-### 11.2 统计来源和用法
+### 12.2 统计来源和用法
 
 开启报告后，starter 会把同一个 `MaskMetricsCollector` 接入 Response、Log4j2、主动脱敏和报告导出链路。常见统计来源如下：
 
@@ -642,7 +715,7 @@ public void recordManualMaskMetric(long elapsedNanos) {
 
 手工统计只应传入场景、类型和耗时等聚合信息，不要把原始值、完整响应体、完整日志或敏感样本写入报告链路。
 
-### 11.3 导出和读取报告
+### 12.3 导出和读取报告
 
 启用报告后，`MaskReportExporter` 会按 `safe-output.report.interval-millis` 定时导出 JSON 快照。应用启动后不会立即写第一份报告，而是在第一个间隔后导出。每次导出的文件是当前进程内聚合快照，不是从上次导出到本次导出的增量。
 
@@ -675,7 +748,7 @@ ResponseRiskAnalysis analysis = report.getResponseRiskAnalysis();
 
 快照对象只包含聚合指标，不能从中恢复原始 response、日志或敏感值。
 
-### 11.4 报告可提供的信息
+### 12.4 报告可提供的信息
 
 | 信息 | 说明 | 常见用途 |
 |---|---|---|
@@ -689,7 +762,7 @@ ResponseRiskAnalysis analysis = report.getResponseRiskAnalysis();
 
 Log 规则建议默认只提出候选配置，不自动改配置、不自动启用规则。建议片段中的 evidence 只使用 `key=<type>` 形态，不包含命中的日志原文或敏感值。
 
-### 11.5 使用注意事项
+### 12.5 使用注意事项
 
 - 报告是进程内内存聚合，没有数据库持久化；应用重启后内存计数会从 0 开始。
 - 导出的 JSON 是快照文件，不是实时查询存储，也不是长期完整指标仓库。

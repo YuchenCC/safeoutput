@@ -1,8 +1,8 @@
 # Safe Output
 
-Safe Output 是面向 Spring Boot 2.x 的 Java 8 starter，用于在不改 Controller 业务代码的前提下，对 response 和 Log4j2 日志做敏感信息脱敏，并输出聚合统计报告。
+Safe Output 是面向 Spring Boot 2.x 的 Java 8 starter，用于在不改 Controller 业务代码的前提下，对 response 和 Log4j2 日志做敏感信息脱敏，并输出聚合统计报告和可选治理 Dashboard。
 
-当前实现已覆盖 String 类型标签、自定义策略、主动脱敏、Response 风险画像、性能画像、Log 规则建议和 Demo 前端控制台。
+当前实现已覆盖 String 类型标签、自定义策略、主动脱敏、Response 风险画像、性能画像、Log 规则建议、可选 Dashboard starter 和 Demo 前端控制台。
 
 ## 模块
 
@@ -10,7 +10,8 @@ Safe Output 是面向 Spring Boot 2.x 的 Java 8 starter，用于在不改 Contr
 - `safe-output-log4j2`: 内部模块，Log4j2 `PatternConverter` 和日志 key-value/regex 脱敏。
 - `safe-output-report`: 内部模块，指标聚合和本地 JSON 报告快照。
 - `safe-output-spring-boot-starter`: 对外入口，业务系统只需要直接引用这个 starter。
-- `safe-output-demo`: Spring Boot 2.x demo，演示 response、Log4j2 和 report 场景。
+- `safe-output-dashboard-spring-boot-starter`: 可选治理 Dashboard 附加包，默认关闭，复用 starter 的聚合统计、报告和主动脱敏能力。
+- `safe-output-demo`: Spring Boot 2.x demo，演示 response、Log4j2、report 和 dashboard 场景。
 
 ## 引用方式
 
@@ -39,6 +40,23 @@ mvn install
 ```
 
 业务系统不需要手动声明 `safe-output-core`、`safe-output-log4j2` 或 `safe-output-report`；这些由 starter 聚合。
+
+如需启用治理 Dashboard，可额外依赖 dashboard starter：
+
+```xml
+<dependency>
+  <groupId>com.safeoutput</groupId>
+  <artifactId>safe-output-dashboard-spring-boot-starter</artifactId>
+  <version>0.1.0-SNAPSHOT</version>
+</dependency>
+```
+
+```yaml
+safe-output:
+  dashboard:
+    enabled: true
+    path-prefix: /safe-output/dashboard
+```
 
 ## 最小接入
 
@@ -138,7 +156,7 @@ regex fallback 命中后可提取 nearbyKey 规则线索。开启 `safe-output.r
 
 启用 `safe-output.report.enabled=true` 后，starter 会创建 `MaskMetricsCollector` 和定时 `MaskReportExporter`。报告只包含聚合指标、接口风险等级、ignored 统计、失败次数、耗时、Response 风险画像、性能画像、Log 脱敏计数和 Log 规则建议，不保存敏感原文、完整 response 或完整日志。
 
-报告导出、Demo Dashboard 和 `GET /demo/report/log-suggestions` 生成 Log 规则建议时，会复用当前 `safe-output.rules[].keys` 过滤已配置字段，避免对已经配置过的日志 key 重复输出治理建议。过滤只发生在报告分析阶段，不改变 Log4j2 在线脱敏和聚合计数。
+报告导出、Dashboard 和 `GET /demo/report/log-suggestions` 生成 Log 规则建议时，会复用当前 `safe-output.rules[].keys` 过滤已配置字段，避免对已经配置过的日志 key 重复输出治理建议。过滤只发生在报告分析阶段，不改变 Log4j2 在线脱敏和聚合计数。
 
 主动脱敏调用计入 `MANUAL` 场景统计，用于评估显式调用量和类型分布；它不默认进入 Response 接口风险统计。Response 风险统计只聚合响应场景的稳定接口标识、脱敏字段数量、类型分布、耗时、ignore 和失败状态。
 
@@ -152,6 +170,22 @@ GET /demo/report/export
 
 R2 新增 Demo 验证路径包括 `POST /demo/mask/by-type`、`POST /demo/mask/object`、`POST /demo/mask/strong`、`GET /demo/report/response-risk` 和 `GET /demo/report/log-suggestions`。
 
+## 可选治理 Dashboard
+
+`safe-output-dashboard-spring-boot-starter` 是可选附加包，默认关闭，仅在 Spring MVC Servlet Web 应用中通过 `safe-output.dashboard.enabled=true` 启用。默认入口为 `GET /safe-output/dashboard/index.html`，后端 API 固定使用 POST，默认路径前缀为 `/safe-output/dashboard/api`。
+
+Dashboard 首期提供这些 API：
+
+- `POST /overview`: 当前进程聚合概览、类型分布、风险摘要和 Log 规则建议。
+- `POST /response-risk`: Response 接口风险画像。
+- `POST /log-suggestions`: Log fallback 规则建议和默认关闭的 YAML 候选片段。
+- `POST /reports/list`: 列出 `safe-output.report.directory` 下符合 `file-prefix-*.json` 的报告。
+- `POST /reports/view`: 按请求体中的文件名读取单个报告，拒绝路径穿越和非报告文件。
+- `POST /reports/upload`: 临时查看单个 JSON 报告，限制大小，不写入报告目录，不进入历史列表。
+- `POST /lab/by-type`、`POST /lab/object`、`POST /lab/strong`: 通用脱敏实验室，每次固定执行两轮用于验证幂等性。
+
+Dashboard 只读取聚合指标、脱敏后的 evidence、报告快照和用户当前请求体，不保存敏感原文、完整 response 或完整日志。它不包含 Demo 业务工作台、小眼睛明文查看、权限系统、审计、数据库、多租户或公网防护；接入方需要通过内网、网关或 Spring Security 等方式保护入口。规则建议只输出候选配置，不自动改写 YAML，也不自动启用规则。
+
 ## Demo 验证
 
 从父工程启动 demo:
@@ -160,10 +194,18 @@ R2 新增 Demo 验证路径包括 `POST /demo/mask/by-type`、`POST /demo/mask/o
 mvn -pl safe-output-demo -am spring-boot:run
 ```
 
+启动 demo 后，业务工作台入口为 `http://localhost:8080/index.html`，可选治理 Dashboard 入口为 `http://localhost:8080/safe-output/dashboard/index.html`。
+
 运行 demo 集成测试:
 
 ```sh
 mvn -pl safe-output-demo -am test
+```
+
+运行 dashboard starter 测试:
+
+```sh
+mvn -pl safe-output-dashboard-spring-boot-starter -am test
 ```
 
 完整验证和本地安装:
@@ -181,7 +223,8 @@ mvn install
 - 主动脱敏: 指定 type、对象规则和强扫描可通过服务与 Demo 接口验证，MANUAL 场景统计生效。
 - 统计: mask 次数、类型标签、接口维度、ignored 风险、失败次数、字段数、平均/最大耗时可聚合。
 - 报告: 本地 JSON 快照、Response 风险画像、性能画像、Log 规则建议、保留数量、失败 fail-open、不包含敏感原文。
-- Starter: `spring.factories` 自动装配、starter jar 可 `mvn install`、demo 只直接引用 starter。
+- Dashboard: 默认关闭、Spring MVC 条件装配、GET 静态资源、POST API、报告安全读取、临时上传不落盘、无敏感原文。
+- Starter: `spring.factories` 自动装配、starter jar 可 `mvn install`、demo 只直接引用业务 starter 和可选 dashboard starter。
 
 ## 测试覆盖
 
@@ -189,4 +232,5 @@ mvn install
 - `safe-output-log4j2`: PatternConverter 发现、开关、JSON-like/key-value、regex fallback 和边界。
 - `safe-output-report`: 聚合模型、风险等级、overflow、JSON 快照、保留数量、写入失败。
 - `safe-output-spring-boot-starter`: 属性绑定、自动装配、response advice、API ignore、Log4j2 starter 引用。
+- `safe-output-dashboard-spring-boot-starter`: dashboard 自动装配、静态资源、POST API、报告目录安全读取、临时上传和脱敏实验室。
 - `safe-output-demo`: Spring Boot 2.x response、log、report 端到端场景。

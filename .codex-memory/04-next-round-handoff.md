@@ -10,6 +10,7 @@
 - report 聚合指标、Response 风险画像、真实 Log4j2 `LOG` 计数和 fallback 规则线索、本地 JSON 快照。
 - report exporter 与 Demo 规则建议入口已复用 `safe-output.rules[].keys` 过滤已配置日志 key；若后续扩展建议采纳流，应继续使用同一 configured-key 提取逻辑。
 - Log 规则建议的 YAML 片段会覆盖所有未配置候选 key，包括 `LOW` 置信度建议；候选规则默认 `enabled:false`，由人工复核后再采纳。
+- 可选 Dashboard starter 已实现：`safe-output-dashboard-spring-boot-starter` 默认关闭，`safe-output.dashboard.enabled=true` 时在 Spring MVC Servlet Web 应用中提供 `/safe-output/dashboard/index.html` 和 POST API，覆盖实时概览、接口风险、Log 规则建议、历史报告、临时报告上传和通用脱敏实验室。
 - demo 端到端测试覆盖 Response、Log、Manual、Report，以及 R2.5 业务工作台、接入说明、日志场景、报告文件中心和安全读取边界。
 - 父工程已在 pluginManagement 管理 `spring-boot-maven-plugin`，非 demo 模块默认 skip，`safe-output-demo` 显式启用；可直接从父工程运行 `mvn -pl safe-output-demo -am spring-boot:run` 启动 demo。
 
@@ -27,7 +28,7 @@
 
 ## 第三轮切入建议
 
-- R2.6 Dashboard 模块边界收敛：已新增 PRD `doc/prd/safe-output-r26-dashboard-prd.md`，建议新增 `safe-output-dashboard-spring-boot-starter` 可选附加包。Dashboard 默认关闭，通过 `safe-output.dashboard.enabled=true` 启用，默认路径前缀 `/safe-output/dashboard`，仅支持 Spring MVC Web 应用；后端 API 全部使用 POST，静态页面/资源仍使用 GET。第一期包含实时概览、接口风险、日志规则建议、历史报告、默认支持报告上传临时查看、通用脱敏实验室；不包含 Demo 业务工作台、小眼睛明文查看、权限系统、数据库、多报告趋势或规则自动采纳。Demo 第一阶段保留 `/demo/report/**` 和 `/demo/mask/**` 兼容接口。
+- R2.6 Dashboard 模块边界收敛已完成：`safe-output-dashboard-spring-boot-starter` 是可选附加包。Dashboard 默认关闭，通过 `safe-output.dashboard.enabled=true` 启用，默认路径前缀 `/safe-output/dashboard`，仅支持 Spring MVC Servlet Web 应用；后端 API 全部使用 POST，静态页面/资源仍使用 GET。第一期包含实时概览、接口风险、日志规则建议、历史报告、报告上传临时查看、通用脱敏实验室；不包含 Demo 业务工作台、小眼睛明文查看、权限系统、数据库、多报告趋势或规则自动采纳。Demo 仍保留 `/demo/report/**` 和 `/demo/mask/**` 兼容接口。
 - 日志长度策略增强：新增 R3 PRD `doc/prd/safe-output-r3-prd.md`，要求支持 `maxMessageLength` 整条超限跳过模式与 `max-scan-length` 前缀扫描窗口模式切换；默认应兼容 R2，不截断最终日志输出，不保存原始日志。
 - 增强 Demo：R2.5/R3 后从 `safe-output-demo/src/main/resources/static/js/views/*`、`static/css/app.css`、`business/DemoBusinessController`、`guide/DemoIntegrationGuideController`、`report/DemoReportController`、`lab/DemoManualMaskController` 切入；`index.html` 只是静态壳层，`DemoApplication` 只作为根包扫描入口。
 - 增强风险画像：从 `ResponseRiskAnalyzer`、`ApiMaskMetrics`、`ResponseRiskApiProfile`、`MaskReportExporter.toJson` 切入。
@@ -37,7 +38,7 @@
 - Log4j2 report bridge 已补齐：业务工作台接口和脱敏实验室接口会产生真实 `LOG` 计数和 `certNum` / `mailAddr` fallback 规则线索，后续不要再用 Demo controller 手动 seed 日志建议。
 - R3 日志场景保留 `/demo/logs/scenarios` 作为只读聚合接口，返回 JSON-like、key=value、regex fallback 三类模板摘要、聚合计数、建议和 YAML 片段；已移除 `/demo/logs` 与 `/demo/logs/scenarios/{id}/trigger`，日志场景页不再提供触发日志功能。
 - R2.5/R3 报告中心包含 `/demo/report/files`、`/demo/report/files/{name}`、`/demo/report/files/{name}/dashboard`；安全读取只接受配置前缀 JSON 文件，逻辑集中在 `report/DemoReportFileStore`，继续禁止报告和页面展示敏感原文。
-- R3 导航与 Dashboard：默认入口已改为 `#dashboard`，原风险摘要和报告中心整合为治理 Dashboard；页面分为“实时数据”和“历史报告”两个 Tab，实时数据默认使用当前进程内存聚合快照，历史报告选择已导出的 JSON 文件后展示单报告拆解。实时/历史均以指标、图表、风险表和日志规则建议表呈现，页面已去掉 JSON 原文展示，原 `reports.js` 仍作为 dashboard view 载体。
+- R3 导航与 Dashboard：demo 默认入口已改为 `#workbench`，顶部 Dashboard 导航跳转到独立 `/safe-output/dashboard/index.html`；通用治理 Dashboard 已从 demo 抽到 dashboard starter。demo 原业务工作台、mock 域、raw 明文演示和旧 `/demo/report/**`、`/demo/mask/**` 兼容接口仍保留。
 - R3 工作台侧边栏“工作台”分组包含总览、客户档案、订单履约、支付核验、工单处理、账户安全：`#workbench`、`#workbench/customers`、`#workbench/orders`、`#workbench/payments`、`#workbench/tickets`、`#workbench/accounts`。工作台总览直接展示 `/demo/integration-guide` 的接入说明内容，不再保留接入说明子菜单；旧 `#guide` 和 `#workbench/integration` 兼容跳转到 `#workbench`。后端新增对应 `/demo/business/{domain}`、`/demo/business/{domain}/{id}`、`/demo/business/{domain}/{id}/raw`；raw 接口通过 `safe-output.ignore.apis` 的 Ant pattern 配置为 API ignore，用于“小眼睛查看明文”演示，并保留风险统计。
 - Demo 脱敏实验室当前约定：前端不再暴露 `iterations`，三类主动脱敏接口固定执行两轮；响应是数组，第一条为首次脱敏结果，第二条为对首次结果再次脱敏后的结果，每条包含 `round`、`result`、`elapsedNanos`、`sameAsPrevious`；前端通过 `static/js/components/formatters.js` 将 `elapsedNanos` / `*ElapsedNanos` 转为 `ms` 展示；业务对象面板提交 `realName`、`mobile`、`name` 表单字段，空值回退默认样例。
 - R3 前端整体风格已切换为白底业务后台：浅色侧边栏、白色面板、细边框、蓝/青/绿语义图表色和浅底代码块。后续 UI polish 应基于该白底风格，不再恢复深色驾驶舱。
@@ -62,4 +63,5 @@
 - 快速验证：`cd safe-output && mvn test`
 - 指定 demo：`cd safe-output && mvn -pl safe-output-demo -am test`
 - 指定 starter：`cd safe-output && mvn -pl safe-output-spring-boot-starter -am test`
+- 指定 dashboard starter：`cd safe-output && mvn -pl safe-output-dashboard-spring-boot-starter -am test`
 - 发布前完整验证：`cd safe-output && mvn verify`

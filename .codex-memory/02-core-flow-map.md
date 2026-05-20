@@ -24,6 +24,10 @@ Log4j2 PatternLayout `%safeOutputMsg{...}` -> `SafeOutputMessagePatternConverter
 
 `ObjectMasker.applyStrategy` / `DefaultSafeOutputMaskService` / `SafeOutputLogMessageMasker` -> `MaskEventRecorder.recordMask` -> `MaskMetricsCollector` 聚合总量、场景、类型、耗时 -> `SafeOutputResponseBodyAdvice.recordRisk` -> `ResponseRiskRecorder.record` -> API 维度指标 -> `MaskReportExporter.exportNow` -> `MaskReport.snapshot` + `ResponseRiskAnalyzer` + `LogRuleSuggestionAnalyzer` -> 本地 JSON 文件。风险点：内存聚合，无持久化；接口维度超过上限进入 overflow；`logCount` 统计成功脱敏的日志值次数，不是日志行数。
 
+## Dashboard 调用链
+
+`SafeOutputDashboardAutoConfiguration` -> `safe-output.dashboard.enabled=true` + Spring MVC Servlet Web 条件 -> 注册静态资源 handler 和 `SafeOutputDashboardController` -> `SafeOutputDashboardAssembler` 读取 `MaskMetricsCollector.snapshot()`、`ResponseRiskAnalyzer`、`LogRuleSuggestionAnalyzer` 和 `SafeOutputConfiguredKeys` -> `SafeOutputDashboardReportFileStore` 读取 `safe-output.report.directory` 下的 `file-prefix-*.json` -> `SafeOutputMaskService` 执行通用脱敏实验室。风险点：Dashboard 默认关闭且自身不提供鉴权；API 全部使用 POST，静态资源使用 GET；报告查看文件名只从请求体读取并限制在配置目录内；上传报告只在请求内解析，不写入磁盘；缺少 collector 或读取失败时返回空快照/诊断信息，不影响业务链路。
+
 ## ignore 生效链路
 
 字段级：`safe-output.ignore.keys/paths` -> `MaskRuleMatcher.matchFieldIgnore` -> `RuleAction.IGNORE` -> `ObjectMasker` 不脱敏该字段。接口级：`safe-output.ignore.apis` -> `ApiIgnoreMatcher.match(method,path,RESPONSE)` -> `beforeBodyWrite` 直接返回原 body -> `recordRisk(ignored=true)`。风险点：字段 path 是精确匹配加 `[*]` 数字下标段通配；API ignore 缺少 path/pattern 不会扩大成全局豁免。

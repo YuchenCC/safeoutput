@@ -22,3 +22,9 @@
 - `logCount` 统计单位是成功脱敏的日志值次数，不是日志行数；日志脱敏禁用、超长 message fail-open 或策略异常 fail-open 不记录成功计数。
 - 日志长文本只在 `maxMessageLength` 限制内完整处理多个 key-value 和 fallback；超过限制整条 fail-open，避免不可控扫描成本。
 - 报告只做聚合快照和建议生成，不做自动治理决策。
+- Dashboard 是可选附加包，不放入业务 starter 的默认行为：`safe-output-dashboard-spring-boot-starter` 默认关闭，只在 Spring MVC Servlet Web 应用并设置 `safe-output.dashboard.enabled=true` 时装配。
+- Dashboard 静态资源使用 GET，后端 API 全部使用 POST；报告查看文件名必须来自请求体，避免通过路径段读取任意文件。
+- Dashboard 不提供登录、权限、审计、多租户、数据库或公网防护；启用后应由接入方通过内网、网关、Spring Security 或运维平台保护入口。
+- Dashboard 不承载 Demo 业务工作台、小眼睛明文查看或 mock 业务数据；这些演示能力留在 `safe-output-demo`。
+- Dashboard 临时报告上传只在请求内解析，不写入报告目录，不进入历史报告列表；历史报告读取只允许配置目录内符合 `safe-output.report.file-prefix` 的 JSON 文件。
+- Dashboard Log 规则建议只生成 `enabled:false` 候选片段，不自动采纳配置、不写 YAML、不启用规则。
