@@ -45,7 +45,7 @@
       '<div class="grid dashboard-metrics">',
       metric('总脱敏次数', dashboard.totalCount, 'Response / Log / Manual 聚合命中'),
       metric('覆盖接口', dashboard.apiCount, '已进入 Response 风险画像的接口数'),
-      metric('高风险接口', dashboard.highRiskApiCount, '优先复核的数据出口'),
+      metric('脱敏类型', Object.keys(counts).length, '当前快照命中的类型数'),
       metric('日志建议', dashboard.suggestionCount, '未配置 key 的聚合线索'),
       '</div>',
       '<div class="grid dashboard-metrics">',
@@ -58,14 +58,12 @@
       '<div class="panel"><h2>实时场景分布</h2><div class="chart-box"><canvas id="live-scene-chart"></canvas></div></div>',
       '<div class="panel"><h2>敏感类型 Top</h2><div class="chart-box"><canvas id="live-type-chart"></canvas></div></div>',
       '</div>',
+      '<div class="panel api-stat-panel"><div class="panel-head"><div><h2>API 脱敏统计</h2><p>按脱敏字段数和调用次数排序，展示接口维度的聚合命中情况。</p></div></div>' + riskTable(dashboard.topRiskApis || []) + '</div>',
       '<div class="grid two dashboard-action-grid">',
-      '<div class="panel"><div class="panel-head"><div><h2>Top 风险接口</h2><p>按风险分数排序，聚焦当前运行态需要优先治理的响应出口。</p></div></div>' + riskTable(dashboard.topRiskApis || []) + '</div>',
       '<div class="panel"><div class="panel-head"><div><h2>日志规则建议</h2><p>来自日志 fallback 线索聚合，候选规则默认人工复核。</p></div></div>' + suggestionTable(dashboard.logRuleSuggestions || []) + '</div>',
+      '<div class="panel"><h2>明文豁免接口</h2>' + riskTable(dashboard.ignoredRiskApis || []) + '</div>',
       '</div>',
-      '<div class="grid two">',
-      '<div class="panel"><h2>Ignore 风险</h2>' + riskTable(dashboard.ignoredRiskApis || []) + '</div>',
       '<div class="panel"><h2>性能与异常拆解</h2>' + healthBreakdown(dashboard) + '</div>',
-      '</div>'
     ].join('');
     window.SafeOutputCharts.doughnut('live-scene-chart', ['Response', 'Log', 'Manual'],
       [dashboard.responseCount || 0, dashboard.logCount || 0, dashboard.manualCount || 0]);
@@ -118,8 +116,9 @@
       metric('最大耗时', window.SafeOutputFormat.nanosToMs(report.maxElapsedNanos), '报告记录的单次峰值'),
       '</div>',
       '<div class="grid two"><div class="panel"><h2>报告场景分布</h2><div class="chart-box"><canvas id="report-scene-chart"></canvas></div></div><div class="panel"><h2>报告类型 Top</h2><div class="chart-box"><canvas id="report-type-chart"></canvas></div></div></div>',
-      '<div class="grid two"><div class="panel"><h2>高风险接口</h2>' + riskTable(report.topRiskApis || []) + '</div><div class="panel"><h2>Ignore 风险</h2>' + riskTable(report.ignoredRiskApis || []) + '</div></div>',
-      '<div class="grid two"><div class="panel"><h2>日志规则建议</h2>' + suggestionTable(report.logRuleSuggestions || []) + '</div><div class="panel"><h2>性能拆解</h2>' + healthBreakdown(report) + '</div></div>',
+      '<div class="panel api-stat-panel"><h2>API 脱敏统计</h2>' + riskTable(report.topRiskApis || []) + '</div>',
+      '<div class="grid two"><div class="panel"><h2>明文豁免接口</h2>' + riskTable(report.ignoredRiskApis || []) + '</div><div class="panel"><h2>日志规则建议</h2>' + suggestionTable(report.logRuleSuggestions || []) + '</div></div>',
+      '<div class="panel"><h2>性能拆解</h2>' + healthBreakdown(report) + '</div>',
       '</div>'
     ].join('');
     window.SafeOutputCharts.doughnut('report-scene-chart', ['Response', 'Log', 'Manual'], [report.responseCount || 0, report.logCount || 0, report.manualCount || 0]);
@@ -196,15 +195,18 @@
 
   function riskTable(items) {
     if (!items || !items.length) {
-      return '<div class="empty-note">当前暂无风险接口。访问业务工作台或导出报告后，这里会按聚合指标生成治理优先级。</div>';
+      return '<div class="empty-note">当前暂无接口脱敏统计。访问业务工作台或导出报告后，这里会按聚合指标展示。</div>';
     }
-    return '<div class="dashboard-table"><table><thead><tr><th>接口</th><th>等级</th><th>分数</th><th>敏感类型</th><th>治理动作</th></tr></thead><tbody>' +
+    return '<div class="dashboard-table api-stat-table"><table><thead><tr><th>接口</th><th>调用次数</th><th>脱敏字段</th><th>脱敏类型</th><th>标签</th></tr></thead><tbody>' +
       items.slice(0, 6).map(function (item) {
-        const advice = firstText(item.governanceAdvice, item.ignored ? '复核明文豁免必要性' : '复核响应字段与规则配置');
+        const tags = item.riskTags || item.riskReasons || [];
+        const typeCounts = item.maskTypeCounts || {};
+        const maskedFieldCount = item.maskedFieldCount == null ? totalCount(typeCounts) : item.maskedFieldCount;
+        const hitCount = item.hitCount == null ? '-' : item.hitCount;
         return '<tr><td><strong>' + esc((item.method || 'GET') + ' ' + (item.path || '-')) + '</strong>' +
           (item.ignored ? '<div class="table-note">API ignore：' + esc(item.ignoreReason || '已豁免') + '</div>' : '') +
-          '</td><td>' + riskBadge(item.riskLevel) + '</td><td><strong>' + esc(item.riskScore || 0) + '</strong></td><td>' +
-          typeChips(item.maskTypeCounts || {}) + '</td><td>' + esc(advice) + '</td></tr>';
+          '</td><td><strong>' + esc(hitCount) + '</strong></td><td><strong>' + esc(maskedFieldCount) + '</strong></td><td>' +
+          typeChips(typeCounts) + '</td><td>' + tagChips(tags) + '</td></tr>';
       }).join('') +
       '</tbody></table></div>';
   }
@@ -227,7 +229,7 @@
     if (!keys.length) {
       return '<span class="badge">无</span>';
     }
-    return keys.slice(0, 3).map(function (key) {
+    return keys.map(function (key) {
       return typeChip(key, counts[key]);
     }).join('');
   }
@@ -236,20 +238,25 @@
     return '<span class="type-chip">' + esc(type) + (count == null ? '' : ' · ' + esc(count)) + '</span>';
   }
 
-  function riskBadge(level) {
-    const value = level || 'LOW';
-    const tone = value === 'CRITICAL' || value === 'IGNORED_HIGH' ? 'danger' : (value === 'HIGH' ? 'warn' : (value === 'MEDIUM' ? 'medium' : 'ok'));
-    return '<span class="badge ' + tone + '">' + esc(value) + '</span>';
+  function tagChips(tags) {
+    if (!tags || !tags.length) {
+      return '<span class="badge">常规接口</span>';
+    }
+    return tags.map(function (tag) {
+      return '<span class="type-chip">' + esc(tag) + '</span>';
+    }).join('');
+  }
+
+  function totalCount(counts) {
+    return Object.keys(counts || {}).reduce(function (sum, key) {
+      return sum + Number(counts[key] || 0);
+    }, 0);
   }
 
   function confidenceBadge(confidence) {
     const value = confidence || 'LOW';
     const tone = value === 'HIGH' ? 'danger' : (value === 'MEDIUM' ? 'warn' : 'ok');
     return '<span class="badge ' + tone + '">' + esc(value) + '</span>';
-  }
-
-  function firstText(values, fallback) {
-    return values && values.length ? values[0] : fallback;
   }
 
   window.SafeOutputViews = window.SafeOutputViews || {};

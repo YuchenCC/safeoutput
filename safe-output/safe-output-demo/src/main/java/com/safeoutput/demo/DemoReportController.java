@@ -133,8 +133,8 @@ public class DemoReportController {
         dashboard.put("maxElapsedNanos", report.get("maxElapsedNanos"));
         dashboard.put("maskTypeCounts", report.get("maskTypeCounts"));
         addRiskSummary(dashboard, report.get("responseRiskSummary"));
-        dashboard.put("topRiskApis", report.get("topRiskApis"));
-        dashboard.put("ignoredRiskApis", report.get("ignoredRiskApis"));
+        dashboard.put("topRiskApis", enrichRiskApis(report.get("topRiskApis"), report.get("apiMetrics")));
+        dashboard.put("ignoredRiskApis", enrichRiskApis(report.get("ignoredRiskApis"), report.get("apiMetrics")));
         dashboard.put("logRuleSuggestions", report.get("logRuleSuggestions"));
         dashboard.put("configSnippet", report.get("configSnippet"));
         return ResponseEntity.ok(dashboard);
@@ -212,6 +212,41 @@ public class DemoReportController {
         dashboard.put("highRiskApiCount", values.get("highRiskApiCount"));
         dashboard.put("ignoredApiCount", values.get("ignoredApiCount"));
         dashboard.put("slowApiCount", values.get("slowApiCount"));
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Object enrichRiskApis(Object apis, Object apiMetrics) {
+        if (!(apis instanceof Iterable) || !(apiMetrics instanceof Iterable)) {
+            return apis;
+        }
+        Map<String, Map<String, Object>> metrics = new LinkedHashMap<String, Map<String, Object>>();
+        for (Object metric : (Iterable<Object>) apiMetrics) {
+            if (metric instanceof Map) {
+                Map<String, Object> values = (Map<String, Object>) metric;
+                metrics.put(apiKey(values), values);
+            }
+        }
+        for (Object api : (Iterable<Object>) apis) {
+            if (api instanceof Map) {
+                Map<String, Object> values = (Map<String, Object>) api;
+                Map<String, Object> metric = metrics.get(apiKey(values));
+                if (metric != null) {
+                    putIfMissing(values, "hitCount", metric.get("hitCount"));
+                    putIfMissing(values, "maskedFieldCount", metric.get("maskedFieldCount"));
+                }
+            }
+        }
+        return apis;
+    }
+
+    private static void putIfMissing(Map<String, Object> values, String key, Object value) {
+        if (!values.containsKey(key) && value != null) {
+            values.put(key, value);
+        }
+    }
+
+    private static String apiKey(Map<String, Object> values) {
+        return String.valueOf(values.get("method")) + " " + String.valueOf(values.get("path"));
     }
 
     private static Map<String, Object> error(String code) {

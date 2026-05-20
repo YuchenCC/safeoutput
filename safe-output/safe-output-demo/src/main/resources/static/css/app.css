@@ -236,6 +236,12 @@ pre {
 .dashboard-table table {
   min-width: 620px;
 }
+.api-stat-panel {
+  margin-top: 16px;
+}
+.api-stat-table table {
+  min-width: 920px;
+}
 .dashboard-table td strong {
   font-family: var(--font-display);
 }

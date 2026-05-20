@@ -351,6 +351,9 @@ class DemoResponseIntegrationTest {
         assertTrue(dashboard.contains("\"maxElapsedNanos\""));
         assertTrue(dashboard.contains("\"maskTypeCounts\""));
         assertTrue(dashboard.contains("\"topRiskApis\""));
+        assertTrue(dashboard.contains("\"hitCount\""));
+        assertTrue(dashboard.contains("\"maskedFieldCount\""));
+        assertFalse(dashboard.contains("\"hitCount\":0"));
         assertTrue(dashboard.contains("\"ignoredRiskApis\""));
         assertTrue(dashboard.contains("\"logRuleSuggestions\""));
         assertTrue(dashboard.contains("\"sceneTrend\""));
@@ -369,6 +372,8 @@ class DemoResponseIntegrationTest {
         assertTrue(risk.contains("\"averageElapsedNanos\""));
         assertTrue(risk.contains("\"slowMaskCount\""));
         assertTrue(risk.contains("\"maskTypeCounts\""));
+        assertTrue(risk.contains("\"hitCount\""));
+        assertTrue(risk.contains("\"maskedFieldCount\""));
         assertTrue(risk.contains("\"ignored\""));
         assertFalse(risk.contains("13800138000"));
     }
@@ -474,6 +479,9 @@ class DemoResponseIntegrationTest {
         assertTrue(dashboard.contains("\"slowApiCount\""));
         assertTrue(dashboard.contains("\"maskTypeCounts\""));
         assertTrue(dashboard.contains("\"topRiskApis\""));
+        assertTrue(dashboard.contains("\"hitCount\""));
+        assertTrue(dashboard.contains("\"maskedFieldCount\""));
+        assertFalse(dashboard.contains("\"hitCount\":0"));
         assertTrue(dashboard.contains("\"ignoredRiskApis\""));
         assertTrue(dashboard.contains("\"logRuleSuggestions\""));
         assertTrue(traversal.getStatusCode().is4xxClientError() || traversal.getStatusCode() == HttpStatus.NOT_FOUND);
