@@ -71,6 +71,51 @@ class DashboardWebIntegrationTest {
     }
 
     @Test
+    void frontendAssetsUseDashboardPostApiAndRenderAggregatedViewsWithoutDemoDependencies() {
+        String page = restTemplate.getForObject("/safe-output/dashboard/index.html", String.class);
+        String api = restTemplate.getForObject("/safe-output/dashboard/js/api.js", String.class);
+        String script = restTemplate.getForObject("/safe-output/dashboard/js/dashboard.js", String.class);
+        String css = restTemplate.getForObject("/safe-output/dashboard/css/dashboard.css", String.class);
+        String charts = restTemplate.getForObject("/safe-output/dashboard/js/charts.js", String.class);
+        String formatters = restTemplate.getForObject("/safe-output/dashboard/js/formatters.js", String.class);
+
+        assertTrue(page.contains("vendor/chart.min.js"));
+        assertTrue(page.contains("js/charts.js"));
+        assertTrue(page.contains("js/formatters.js"));
+        assertTrue(page.contains("#dashboard"));
+        assertTrue(page.contains("治理 Dashboard"));
+        assertTrue(!page.contains("#overview"));
+        assertTrue(!page.contains("#risk"));
+        assertTrue(!page.contains("#log-suggestions"));
+        assertTrue(!page.contains("#reports"));
+        assertTrue(!page.contains("#lab"));
+        assertTrue(api.contains("SafeOutputDashboardApi"));
+        assertTrue(api.contains("method: 'POST'"));
+        assertTrue(charts.contains("SafeOutputCharts"));
+        assertTrue(formatters.contains("SafeOutputFormat"));
+        assertTrue(script.contains("dashboard-tabs"));
+        assertTrue(script.contains("data-dashboard-tab"));
+        assertTrue(script.contains("实时数据"));
+        assertTrue(script.contains("历史报告"));
+        assertTrue(script.contains("Chart"));
+        assertTrue(script.contains("nanosToMs"));
+        assertTrue(script.contains("人工复核后启用"));
+        assertTrue(script.contains("/reports/view"));
+        assertTrue(script.contains("/reports/export"));
+        assertTrue(!script.contains("/reports/upload"));
+        assertTrue(!script.contains("/lab/by-type"));
+        assertTrue(!script.contains("/lab/object"));
+        assertTrue(!script.contains("/lab/strong"));
+        assertTrue(!script.contains("/demo/"));
+        assertTrue(!script.contains("JSON.stringify(report, null, 2)"));
+        assertTrue(css.contains(".dashboard-tabs"));
+        assertTrue(css.contains(".chart-box"));
+        assertTrue(css.contains("@media (max-width: 820px)"));
+        assertTrue(css.contains("@media print"));
+        assertTrue(css.contains(".no-print"));
+    }
+
+    @Test
     void overviewAndResponseRiskExposeAggregatedRuntimeMetricsOnlyThroughPost() {
         Map<String, Integer> counts = new LinkedHashMap<String, Integer>();
         counts.put("MOBILE", 2);
@@ -150,6 +195,8 @@ class DashboardWebIntegrationTest {
         request.put("filename", exported.getFileName().toString());
         ResponseEntity<String> files = restTemplate.postForEntity("/safe-output/dashboard/api/reports/list",
                 new LinkedHashMap<String, Object>(), String.class);
+        ResponseEntity<String> export = restTemplate.postForEntity("/safe-output/dashboard/api/reports/export",
+                new LinkedHashMap<String, Object>(), String.class);
         ResponseEntity<String> dashboard = restTemplate.postForEntity("/safe-output/dashboard/api/reports/view",
                 request, String.class);
         Map<String, Object> traversalRequest = new LinkedHashMap<String, Object>();
@@ -162,11 +209,15 @@ class DashboardWebIntegrationTest {
                 nonJsonRequest, String.class);
         ResponseEntity<String> getView = restTemplate.getForEntity("/safe-output/dashboard/api/reports/view",
                 String.class);
+        ResponseEntity<String> getExport = restTemplate.getForEntity("/safe-output/dashboard/api/reports/export",
+                String.class);
 
         assertTrue(files.getStatusCode().is2xxSuccessful());
         assertTrue(files.getBody().contains("\"count\""));
         assertTrue(files.getBody().contains("\"viewable\":true"));
         assertTrue(files.getBody().contains(exported.getFileName().toString()));
+        assertTrue(export.getStatusCode().is2xxSuccessful());
+        assertTrue(export.getBody().contains("\"path\""));
         assertTrue(dashboard.getStatusCode().is2xxSuccessful());
         assertTrue(dashboard.getBody().contains("\"filename\""));
         assertTrue(dashboard.getBody().contains("\"totalCount\""));
@@ -175,6 +226,7 @@ class DashboardWebIntegrationTest {
         assertTrue(traversal.getStatusCode().is4xxClientError());
         assertTrue(nonJson.getStatusCode().is4xxClientError());
         assertTrue(getView.getStatusCode().is4xxClientError());
+        assertTrue(getExport.getStatusCode().is4xxClientError());
         assertTrue(!dashboard.getBody().contains("foo@example.com"));
     }
 

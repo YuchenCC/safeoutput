@@ -7,6 +7,7 @@ import com.safeoutput.dashboard.web.SafeOutputDashboardController;
 import com.safeoutput.dashboard.web.SafeOutputDashboardWebMvcConfigurer;
 import com.safeoutput.core.SafeOutputMaskService;
 import com.safeoutput.report.MaskMetricsCollector;
+import com.safeoutput.report.MaskReportExporter;
 import com.safeoutput.spring.boot.autoconfigure.SafeOutputProperties;
 
 import org.springframework.beans.factory.ObjectProvider;
@@ -44,9 +45,10 @@ public class SafeOutputDashboardAutoConfiguration {
             ObjectProvider<MaskMetricsCollector> metricsCollectors,
             ObjectProvider<SafeOutputProperties> safeOutputProperties,
             SafeOutputDashboardReportFileStore reportFileStore,
-            ObjectProvider<SafeOutputMaskService> maskServices) {
+            ObjectProvider<SafeOutputMaskService> maskServices,
+            ObjectProvider<MaskReportExporter> reportExporters) {
         return new SafeOutputDashboardController(properties, objectMapper, dashboardAssembler, metricsCollectors,
-                safeOutputProperties, reportFileStore, maskServices);
+                safeOutputProperties, reportFileStore, maskServices, reportExporters);
     }
 
     @Bean

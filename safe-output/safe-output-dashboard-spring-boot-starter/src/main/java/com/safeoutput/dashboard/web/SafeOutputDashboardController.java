@@ -7,6 +7,7 @@ import com.safeoutput.dashboard.service.SafeOutputDashboardAssembler;
 import com.safeoutput.dashboard.service.SafeOutputDashboardReportFileStore;
 import com.safeoutput.report.MaskMetricsCollector;
 import com.safeoutput.report.MaskReport;
+import com.safeoutput.report.MaskReportExporter;
 import com.safeoutput.spring.boot.autoconfigure.SafeOutputConfiguredKeys;
 import com.safeoutput.spring.boot.autoconfigure.SafeOutputProperties;
 import com.safeoutput.report.LogRuleSuggestionAnalyzer;
@@ -52,11 +53,14 @@ public class SafeOutputDashboardController {
 
     private final ObjectProvider<SafeOutputMaskService> maskServices;
 
+    private final ObjectProvider<MaskReportExporter> reportExporters;
+
     public SafeOutputDashboardController(SafeOutputDashboardProperties properties, ObjectMapper objectMapper,
             SafeOutputDashboardAssembler dashboardAssembler, ObjectProvider<MaskMetricsCollector> metricsCollectors,
             ObjectProvider<SafeOutputProperties> safeOutputProperties,
             SafeOutputDashboardReportFileStore reportFileStore,
-            ObjectProvider<SafeOutputMaskService> maskServices) {
+            ObjectProvider<SafeOutputMaskService> maskServices,
+            ObjectProvider<MaskReportExporter> reportExporters) {
         this.properties = properties;
         this.objectMapper = objectMapper;
         this.dashboardAssembler = dashboardAssembler;
@@ -64,6 +68,7 @@ public class SafeOutputDashboardController {
         this.safeOutputProperties = safeOutputProperties;
         this.reportFileStore = reportFileStore;
         this.maskServices = maskServices;
+        this.reportExporters = reportExporters;
     }
 
     @PostMapping("/health")
@@ -100,6 +105,19 @@ public class SafeOutputDashboardController {
         Map<String, Object> response = new LinkedHashMap<String, Object>();
         response.put("count", files.size());
         response.put("files", files);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/reports/export")
+    public ResponseEntity<Map<String, String>> reportExport() {
+        MaskReportExporter exporter = reportExporters.getIfAvailable();
+        Map<String, String> response = new LinkedHashMap<String, String>();
+        if (exporter == null) {
+            response.put("path", "");
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(response);
+        }
+        Path path = exporter.exportNow();
+        response.put("path", path == null ? "" : path.toString());
         return ResponseEntity.ok(response);
     }
 

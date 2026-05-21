@@ -4,24 +4,24 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Safe Output Dashboard</title>
+  <link rel="stylesheet" href="vendor/fonts/fonts.css">
   <link rel="stylesheet" href="css/dashboard.css">
+  <script src="vendor/chart.min.js"></script>
 </head>
 <body>
   <nav class="shell-nav" aria-label="Dashboard 导航">
     <div class="brand">
       <strong>Safe Output</strong>
-      <span>治理 Dashboard</span>
+      <span>业务系统敏感数据治理工作台</span>
     </div>
-    <a href="#overview" data-route="overview">实时概览</a>
-    <a href="#risk" data-route="risk">接口风险</a>
-    <a href="#log-suggestions" data-route="log-suggestions">日志建议</a>
-    <a href="#reports" data-route="reports">历史报告</a>
-    <a href="#lab" data-route="lab">脱敏实验室</a>
+    <a href="#dashboard" data-route="dashboard" class="active">治理 Dashboard</a>
   </nav>
   <main class="shell-main">
     <section id="app" class="app-view"></section>
   </main>
   <script src="js/api.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/formatters.js"></script>
   <script src="js/dashboard.js"></script>
 </body>
 </html>
