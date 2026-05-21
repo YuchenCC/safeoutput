@@ -42,6 +42,44 @@ Dashboard 附加包面向 Spring MVC Web 应用，默认关闭。接入方显式
 10. Dashboard 不保存、不读取、不展示敏感原文、完整 response 或完整日志 message。
 11. `safe-output-demo` 后续可以像普通业务系统一样引入 Dashboard starter 并开启页面；旧 `/demo/report/**` 和 `/demo/mask/**` 第一阶段保留兼容。
 
+## Dashboard Frontend Design
+
+R2.6 Dashboard starter 不只是提供后端 POST API，还必须提供可直接访问的本地治理前端页面。页面入口为 `{path-prefix}/index.html`，默认是 `/safe-output/dashboard/index.html`；CSS、JavaScript 和静态资源按浏览器机制使用 GET 加载，所有治理数据、报告查看、报告上传和实验室请求都通过 `{path-prefix}/api/...` 的 POST API 获取。
+
+Dashboard starter 前端应复用 R2.5/R3 Demo 存量 Dashboard 的成熟布局和视觉经验，尤其是 `safe-output-demo/src/main/resources/static/js/views/reports.js` 中已经验证过的治理信息结构：Hero 摘要、工具栏、实时/历史数据切换、指标卡、图表区、接口风险表、日志建议表、报告文件选择、单报告详情和打印入口。复用的是布局结构、信息层级、组件语义和安全展示边界，不复用 Demo 专属接口路径、业务 mock 数据、小眼睛 raw 明文面板或客户/订单/支付/工单/账户工作台。
+
+Dashboard starter 前端信息架构采用左侧固定导航：
+
+1. 实时概览：当前进程内存聚合快照。
+2. 接口风险：Response 风险画像、ignore 接口和慢接口。
+3. 日志建议：日志 fallback 聚合线索、置信度和 YAML 候选片段。
+4. 历史报告：报告目录、单报告可视化和临时上传报告查看。
+5. 脱敏实验室：按类型标签、对象脱敏和强文本扫描三类主动验证。
+
+### Frontend Layout Requirements
+
+实时概览页面必须在首屏展示当前页面标题、刷新动作和至少四个关键指标。指标卡应包含总脱敏次数、Response/Log/Manual 场景计数、失败次数、平均耗时和最大耗时；主体区域展示场景分布、类型 Top、高风险接口摘要、日志建议摘要和性能/异常拆解。图表可以使用轻量 Canvas 或表格替代，但必须保留与 Demo Dashboard 一致的可扫描信息层级。
+
+接口风险页面应以聚合表格为主，展示接口、调用次数、脱敏字段数、类型标签、风险标签和 ignore 原因。高风险接口、ignore 接口和慢接口需要分区展示或通过清晰的 badge 区分。页面不得展示原始 response 或可反推出敏感值的上下文。
+
+日志建议页面应展示建议 key、建议类型、命中次数、置信度、脱敏 evidence 摘要和默认 `enabled:false` 的 YAML 候选片段。低置信度建议可以展示，但文案必须保持“人工复核后启用”的语义，不提供自动采纳按钮。
+
+历史报告页面应包含报告文件列表和单报告详情区域。报告列表展示文件名、大小、修改时间和可查看状态；报告查看通过 POST body 传递文件名。单报告详情复用 Demo Dashboard 的报告视图结构：总览指标、Response/Log/Manual 场景分布、类型 Top、高风险接口、ignore 风险接口、日志规则建议和性能指标。页面不得展示 JSON 报告原文。
+
+报告上传查看应与历史单报告详情复用同一套可视化模型。上传后的报告只在当前请求内解析和展示，不写入报告目录，不进入报告列表，不产生上传历史。上传页不展示原始 JSON 内容，只展示聚合后的 dashboard 模型或可诊断错误。
+
+脱敏实验室页面采用三块并列或响应式堆叠的实验面板：按类型标签、对象脱敏、强文本扫描。每个面板展示输入控件、执行按钮、Round 1 / Round 2 脱敏结果、`elapsedNanos` 转换后的耗时和 `sameAsPrevious` 幂等判断。响应区域不得回显原始输入，只展示脱敏结果和必要规则摘要。
+
+### Frontend Visual Requirements
+
+Dashboard starter 前端沿用 R2.5/R3 Demo 的“白底业务后台 + 治理实证卡片”风格：浅色侧边栏、白色面板、细边框、蓝/青/绿/琥珀/红语义色、可扫描表格和浅底代码块。避免深色指挥舱、大面积紫蓝渐变、粒子背景、玻璃拟态和营销页式 hero。
+
+桌面端优先保证 1920x1080 投屏可读，首屏必须能看到页面标题、主操作、至少四个关键指标和当前场景状态。卡片圆角控制在 6-8px；按钮文案短且面向动作；风险等级和置信度 badge 同时使用颜色和文字表达。打印历史报告时应隐藏侧边导航、刷新按钮、上传控件、Tab 控件和其他交互控件，保留报告标题、文件名、关键指标、图表旁的表格化数据和风险/建议摘要。
+
+### Frontend Safety Requirements
+
+Dashboard starter 前端可以展示聚合指标、脱敏 evidence、脱敏后的实验结果、接口路径、类型标签、置信度和候选 YAML；不得展示原始 response、完整日志 message、原始业务日志文件、敏感命中值、上传报告 JSON 原文或 Demo raw 明文字段。小眼睛明文查看只能留在 Demo 业务工作台，不进入 Dashboard starter 前端。
+
 ## User Stories
 
 1. As a 接入方开发者, I want 通过一个可选附加包启用 Safe Output Dashboard, so that 我不需要复制 Demo 中的 Dashboard 代码。
@@ -101,6 +139,9 @@ Dashboard 附加包面向 Spring MVC Web 应用，默认关闭。接入方显式
 - Dashboard API 路径统一挂在 `path-prefix + /api/...` 下。
 - Dashboard 后端 API 全部使用 POST，包括实时概览、报告列表、报告查看、报告上传和实验室调用。
 - Dashboard 静态页面与静态资源继续使用浏览器 GET 加载，不纳入“API 全 POST”约束。
+- Dashboard 前端页面随 dashboard starter 一起交付，默认入口为 `path-prefix + /index.html`，不依赖 Demo 静态资源或 Demo controller。
+- Dashboard 前端布局复用 R2.5/R3 Demo 存量 Dashboard 的信息架构和视觉规范，包括指标卡、图表区、风险表、日志建议表、报告列表、单报告详情和打印样式。
+- Dashboard 前端必须替换 Demo 内置 Dashboard 的接口层，统一调用 `path-prefix + /api/...` POST API，不调用 `/demo/report/**`、`/demo/mask/**` 或 Demo 业务接口作为通用能力。
 - 建议 Dashboard API 命名为概览、报告列表、报告查看、报告上传、按类型脱敏、对象脱敏、强文本扫描七类能力。
 - 报告查看的文件名通过请求体传递，不放入 URL path 或 query string。
 - 报告上传默认支持，不提供单独的 `upload.enabled` 开关；第一阶段上传大小使用代码默认值，后续如有需要再开放配置。
@@ -129,6 +170,9 @@ Dashboard 附加包面向 Spring MVC Web 应用，默认关闭。接入方显式
 - Dashboard 自动装配测试需要验证非 Web 或非 Spring MVC 场景不会暴露 Dashboard API。
 - Dashboard API 测试需要验证通用 API 全部使用 POST；GET 调用业务 API 应被拒绝或不可用。
 - Dashboard 静态资源测试需要验证页面和静态资源仍可通过浏览器 GET 正常加载。
+- Dashboard 前端验收需要人工或浏览器检查默认入口、左侧导航、实时概览、接口风险、日志建议、历史报告、上传报告和脱敏实验室页面均可访问。
+- Dashboard 前端验收需要确认页面不展示 JSON 报告原文、原始 response、完整日志 message、敏感命中值或 Demo raw 明文字段。
+- Dashboard 前端验收需要确认 1920x1080 桌面视口下首屏可见页面标题、主操作、至少四个关键指标和当前场景状态。
 - Dashboard 概览测试需要覆盖总脱敏次数、场景分布、类型计数、失败次数和耗时指标。
 - Dashboard 接口风险测试需要覆盖高风险接口、ignore 接口和慢接口聚合展示。
 - Dashboard 日志规则建议测试需要覆盖建议列表、置信度、候选类型和默认关闭的 YAML 片段。

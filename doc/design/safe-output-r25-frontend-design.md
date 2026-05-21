@@ -1,10 +1,10 @@
 # Safe Output R2.5 Demo 前端设计文档
 
 版本：v0.3
-适用范围：0047-0053 R2.5/R3 Demo 前端与展示体验
+适用范围：0047-0053 R2.5/R3 Demo 前端与展示体验；R2.6 Dashboard starter 前端布局基线
 关联 PRD：`doc/prd/safe-output-r25-prd.md`
 实现校准补充：`doc/prd/safe-output-r25-supplemental-prd.md`
-目标入口：`safe-output-demo/src/main/resources/static/index.html`
+目标入口：R2.5 Demo 为 `safe-output-demo/src/main/resources/static/index.html`；R2.6 通用 Dashboard 为 `/safe-output/dashboard/index.html`
 
 ## 1. 设计目标
 
@@ -23,7 +23,7 @@ R2.5/R3 前端要把 Demo 从“功能验证控制台”升级为“真实业务
 
 ### 2.1 业务系统优先
 
-默认首屏保留治理 Dashboard，用于集中展示实时聚合、历史报告、统计和风险摘要；业务菜单统一命名为“工作台”，承载总览、客户、订单、支付、工单和账户等业务页面。工作台总览直接承载接入说明内容。页面语言优先使用“客户、订单、工单、支付、账户、风险、治理建议”等业务词汇，底层 API 名称作为辅助信息出现。
+R2.5 设计阶段默认首屏保留治理 Dashboard，用于集中展示实时聚合、历史报告、统计和风险摘要；R2.6 抽离后，Demo 默认入口调整为“工作台”，顶部“治理 Dashboard”跳转到 dashboard starter 提供的独立页面。业务菜单统一命名为“工作台”，承载总览、客户、订单、支付、工单和账户等业务页面。工作台总览直接承载接入说明内容。页面语言优先使用“客户、订单、工单、支付、账户、风险、治理建议”等业务词汇，底层 API 名称作为辅助信息出现。
 
 ### 2.2 投屏可读
 
@@ -45,7 +45,7 @@ R2.5/R3 前端要把 Demo 从“功能验证控制台”升级为“真实业务
 
 ### 3.1 静态资源结构
 
-当前静态资源已从单文件页面拆分为以下结构：
+R2.5 Demo 静态资源已从单文件页面拆分为以下结构：
 
 ```text
 safe-output-demo/src/main/resources/static/
@@ -70,7 +70,7 @@ safe-output-demo/src/main/resources/static/
       formatters.js
 ```
 
-`index.html` 只保留壳层、导航和脚本引用。`guide.js` 不再作为主导航独立页使用，而是提供接入说明卡片渲染能力，由 `workbench.js` 在 `#workbench` 总览中复用；旧 `#guide` 和 `#workbench/integration` 路由都重定向到 `#workbench`。
+`index.html` 只保留壳层、导航和脚本引用。`guide.js` 不再作为主导航独立页使用，而是提供接入说明卡片渲染能力，由 `workbench.js` 在 `#workbench` 总览中复用；旧 `#guide` 和 `#workbench/integration` 路由都重定向到 `#workbench`。R2.6 后，通用治理 Dashboard 的静态资源迁移到 `safe-output-dashboard-spring-boot-starter/src/main/resources/safe-output-dashboard/`，Demo 顶部导航只跳转到 `/safe-output/dashboard/index.html`。
 
 ### 3.2 模块职责
 
@@ -85,7 +85,7 @@ safe-output-demo/src/main/resources/static/
 
 ### 3.3 路由设计
 
-建议使用 hash 路由，保持静态部署简单：
+R2.5 Demo 建议使用 hash 路由，保持静态部署简单：
 
 | 路由 | 页面 | 对应 issue |
 |---|---|---|
@@ -95,7 +95,17 @@ safe-output-demo/src/main/resources/static/
 | `#lab` | 主动脱敏实验室 | 0049 |
 | `#logs` | 日志场景与规则建议 | 0050 |
 
-`#dashboard` 是当前默认路由。旧 `#guide` 和 `#workbench/integration` 入口只做兼容跳转到 `#workbench`，主导航中不再出现独立“接入说明”菜单。
+`#dashboard` 是 R2.5 Demo 内置 Dashboard 的历史默认路由。R2.6 抽离后，Demo 当前默认路由为 `#workbench`，通用治理 Dashboard 入口为 `/safe-output/dashboard/index.html`，由 dashboard starter 提供。旧 `#guide` 和 `#workbench/integration` 入口只做兼容跳转到 `#workbench`，主导航中不再出现独立“接入说明”菜单。
+
+R2.6 Dashboard starter 使用独立 hash 路由或等效客户端路由，推荐主路径为：
+
+| 路由 | 页面 |
+|---|---|
+| `#overview` | 实时概览 |
+| `#risk` | 接口风险 |
+| `#log-suggestions` | 日志建议 |
+| `#reports` | 历史报告、单报告视图和上传报告临时查看 |
+| `#lab` | 通用脱敏实验室 |
 
 ### 3.4 API 封装
 
@@ -106,7 +116,7 @@ SafeOutputApi.get(path)
 SafeOutputApi.post(path, body)
 ```
 
-当前主要调用包括：
+R2.5 Demo 当前主要调用包括：
 
 ```text
 GET  /demo/integration-guide
@@ -124,6 +134,20 @@ GET  /demo/report/files/{name}/dashboard
 ```
 
 接口调用统一经过 `SafeOutputApi`，页面层可以直接使用业务路径，但不得绕过统一错误处理和 JSON 解析。
+
+R2.6 Dashboard starter 前端不得继续调用 `/demo/report/**` 或 `/demo/mask/**` 作为通用治理能力。它必须通过 `SafeOutputDashboardApi` 或等效统一 API 层调用 `{path-prefix}/api/...` POST 接口：
+
+```text
+POST /safe-output/dashboard/api/overview
+POST /safe-output/dashboard/api/response-risk
+POST /safe-output/dashboard/api/log-suggestions
+POST /safe-output/dashboard/api/reports/list
+POST /safe-output/dashboard/api/reports/view
+POST /safe-output/dashboard/api/reports/upload
+POST /safe-output/dashboard/api/lab/by-type
+POST /safe-output/dashboard/api/lab/object
+POST /safe-output/dashboard/api/lab/strong
+```
 
 ### 3.5 状态管理
 
@@ -143,7 +167,7 @@ AppState.selectedReportName
 
 ### 4.1 全局导航
 
-导航固定展示当前主路径：
+R2.5 Demo 导航固定展示当前主路径：
 
 1. 治理 Dashboard
 2. 工作台
@@ -151,6 +175,8 @@ AppState.selectedReportName
 4. 日志场景
 
 “工作台”是一个导航分组，包含总览、客户档案、订单履约、支付核验、工单处理和账户安全。接入说明不再作为一级菜单或独立内页，而是显示在工作台总览。
+
+R2.6 Dashboard starter 导航独立于 Demo 业务工作台，固定展示实时概览、接口风险、日志建议、历史报告和脱敏实验室，不展示客户、订单、支付、工单、账户或小眼睛明文查看入口。
 
 ### 4.2 业务工作台
 
@@ -248,15 +274,15 @@ Log4j2 `%safeOutputMsg` 和 `SafeOutputMaskService` 主动脱敏分别在“日�
 
 不得展示完整原始 message。
 
-### 4.6 治理 Dashboard 与历史报告
+### 4.6 可复用治理 Dashboard 与历史报告布局基线
 
-目标：把 JSON 报告从“文件产物”升级为可浏览、可演示、可打印的治理报告，并区分当前进程实时数据与历史报告快照。
+目标：把 JSON 报告从“文件产物”升级为可浏览、可演示、可打印的治理报告，并区分当前进程实时数据与历史报告快照。本节最初服务于 R2.5 Demo 内置 Dashboard；R2.6 后作为 `safe-output-dashboard-spring-boot-starter` 前端页面的布局基线继续复用。
 
 Dashboard 顶部展示：
 
 - 刷新当前视图按钮。
 - 打印历史报告按钮。
-- “实时数据”和“历史报告”两个 Tab。
+- “实时数据”和“历史报告”两个 Tab，或在 R2.6 starter 中拆分为左侧导航下的“实时概览”和“历史报告”页面。
 
 实时数据 Tab 展示：
 
@@ -267,14 +293,17 @@ Dashboard 顶部展示：
 
 历史报告 Tab 展示：
 
-- 手动导出按钮。
+- 报告文件列表刷新或手动导出按钮；R2.6 starter 第一阶段不要求提供导出按钮，导出能力可以继续留在宿主应用或 Demo 兼容接口。
 - 当前报告数量。
 - 报告文件名。
 - 文件大小。
 - 修改时间。
 - 选中报告后的单报告可视化详情。
+- 上传 JSON 报告临时查看入口；上传结果必须复用单报告可视化模型，不展示 JSON 原文。
 
 读取报告文件必须限制在 `safe-output.report.directory` 内，只允许 JSON 报告快照，拒绝路径穿越和非 JSON 文件。
+
+R2.6 starter 前端复用 Demo 存量 `reports.js` 的布局结构时，必须替换接口层：实时概览使用 `POST /overview`，报告列表使用 `POST /reports/list`，报告查看使用 `POST /reports/view` 且文件名放在请求体，上传查看使用 `POST /reports/upload`。
 
 ### 4.7 单报告视图与打印
 
@@ -427,7 +456,7 @@ Badge：
 
 前端应完成：
 
-- 默认入口保持 `#dashboard`，工作台从主导航分组进入。
+- R2.5 历史设计中默认入口为 `#dashboard`；R2.6 抽离后 Demo 默认入口为 `#workbench`，工作台从主导航分组进入。
 - 建立业务列表和业务详情双栏布局。
 - 展示客户、订单、工单、支付或账户等业务场景。
 - 业务详情展示脱敏后的字段，`查看` 按钮调用 raw 接口演示 API ignore 明文查看。
@@ -487,11 +516,13 @@ Badge：
 
 前端应完成：
 
-- Dashboard 实时数据和历史报告 Tab。
-- 报告导出按钮。
+- R2.5 Demo 内置 Dashboard 保留实时数据和历史报告 Tab 的布局经验。
+- R2.6 Dashboard starter 复用该布局经验，但入口迁移到 `/safe-output/dashboard/index.html`，API 迁移到 `{path-prefix}/api/...` POST。
+- R2.5 Demo 内置 Dashboard 保留报告导出按钮；R2.6 Dashboard starter 第一阶段可只提供报告列表刷新和上传查看，导出能力由宿主应用或 Demo 兼容接口提供。
 - 报告文件列表。
 - 单报告可视化页面。
 - 报告 dashboard 图表与表格。
+- 上传报告临时查看入口，上传结果复用单报告可视化页面。
 
 验收重点：
 
@@ -530,13 +561,13 @@ Badge：
 
 ### 7.1 人工演示验收
 
-1. 启动 Demo 后打开 `http://localhost:8080/index.html`，默认进入治理 Dashboard。
+1. 启动 Demo 后打开 `http://localhost:8080/index.html`，默认进入业务工作台总览；点击顶部“治理 Dashboard”进入 `/safe-output/dashboard/index.html`。
 2. 在 1920x1080 视口下，Dashboard 首屏能看到治理摘要、报告操作和主指标；工作台首屏能看到总览卡片。
 3. 触发业务接口后，Response 统计或风险摘要有可见变化。
 4. 接入说明位于工作台总览，说明项不展示跳转入口，代码片段有高亮。
 5. 主动脱敏实验室能展示两次脱敏结果、幂等判断和耗时。
 6. 访问业务工作台或运行脱敏实验室后，日志场景页能只读展示 LOG 统计或日志建议。
-7. Dashboard 历史报告 Tab 可以导出、列出并打开报告。
+7. Dashboard 历史报告页面可以列出、打开和临时上传报告；Demo 兼容路径仍可导出报告。
 8. 单报告页面可浏览器打印，打印预览无明显遮挡、重叠或敏感原文。
 
 ### 7.2 技术验收
