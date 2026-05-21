@@ -3,7 +3,7 @@
   "version": 1,
   "allowedPaths": [
     {
-      "path": ".",
+      "path": "/Users/celia/Documents/project/codex-project/safeoutput-java",
       "allowReadWrite": true,
       "description": "safeoutput-java"
     }

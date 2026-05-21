@@ -1,3 +1,0 @@
-# CodeBuddy 本地索引与运行日志，勿提交
-*.db
-logs/
