@@ -56,7 +56,7 @@ public class SafeOutputDashboardAssembler {
         dashboard.put("averageElapsedNanos", report.get("averageElapsedNanos"));
         dashboard.put("maxElapsedNanos", report.get("maxElapsedNanos"));
         dashboard.put("maskTypeCounts", report.get("maskTypeCounts"));
-        addRiskSummary(dashboard, report.get("responseRiskSummary"));
+        addRiskSummary(dashboard, report);
         dashboard.put("topRiskApis", enrichRiskApis(report.get("topRiskApis"), report.get("apiMetrics")));
         dashboard.put("ignoredRiskApis", enrichRiskApis(report.get("ignoredRiskApis"), report.get("apiMetrics")));
         dashboard.put("logRuleSuggestions", report.get("logRuleSuggestions"));
@@ -73,8 +73,13 @@ public class SafeOutputDashboardAssembler {
     }
 
     @SuppressWarnings("unchecked")
-    private static void addRiskSummary(Map<String, Object> dashboard, Object summary) {
+    private static void addRiskSummary(Map<String, Object> dashboard, Map<String, Object> report) {
+        Object summary = report.get("responseRiskSummary");
         if (!(summary instanceof Map)) {
+            putIfPresent(dashboard, "apiCount", report.get("apiCount"));
+            putIfPresent(dashboard, "highRiskApiCount", report.get("highRiskApiCount"));
+            putIfPresent(dashboard, "ignoredApiCount", report.get("ignoredApiCount"));
+            putIfPresent(dashboard, "slowApiCount", report.get("slowApiCount"));
             return;
         }
         Map<String, Object> values = (Map<String, Object>) summary;
@@ -82,6 +87,12 @@ public class SafeOutputDashboardAssembler {
         dashboard.put("highRiskApiCount", values.get("highRiskApiCount"));
         dashboard.put("ignoredApiCount", values.get("ignoredApiCount"));
         dashboard.put("slowApiCount", values.get("slowApiCount"));
+    }
+
+    private static void putIfPresent(Map<String, Object> values, String key, Object value) {
+        if (value != null) {
+            values.put(key, value);
+        }
     }
 
     @SuppressWarnings("unchecked")

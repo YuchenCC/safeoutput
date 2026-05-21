@@ -82,8 +82,13 @@ class DashboardWebIntegrationTest {
         assertTrue(page.contains("vendor/chart.min.js"));
         assertTrue(page.contains("js/charts.js"));
         assertTrue(page.contains("js/formatters.js"));
-        assertTrue(page.contains("#dashboard"));
+        assertTrue(page.contains("#dashboard/realtime"));
+        assertTrue(page.contains("#dashboard/history"));
+        assertTrue(page.contains("data-dashboard-nav=\"realtime\""));
+        assertTrue(page.contains("data-dashboard-nav=\"history\""));
         assertTrue(page.contains("治理 Dashboard"));
+        assertTrue(page.contains("返回业务系统"));
+        assertTrue(page.contains("id=\"back-to-business\""));
         assertTrue(!page.contains("#overview"));
         assertTrue(!page.contains("#risk"));
         assertTrue(!page.contains("#log-suggestions"));
@@ -93,23 +98,39 @@ class DashboardWebIntegrationTest {
         assertTrue(api.contains("method: 'POST'"));
         assertTrue(charts.contains("SafeOutputCharts"));
         assertTrue(formatters.contains("SafeOutputFormat"));
-        assertTrue(script.contains("dashboard-tabs"));
-        assertTrue(script.contains("data-dashboard-tab"));
+        assertTrue(!script.contains("dashboard-tabs"));
+        assertTrue(!script.contains("data-dashboard-tab"));
+        assertTrue(script.contains("activeTabFromHash"));
+        assertTrue(script.contains("bindBackToBusiness"));
+        assertTrue(script.contains("window.history.back()"));
+        assertTrue(script.contains("window.location.href = '/index.html'"));
+        assertTrue(script.contains("document.referrer"));
         assertTrue(script.contains("实时数据"));
         assertTrue(script.contains("历史报告"));
+        assertTrue(script.contains("上传查看"));
+        assertTrue(script.contains("上传报告临时视图"));
+        assertTrue(script.contains("下载当前 JSON"));
         assertTrue(script.contains("Chart"));
         assertTrue(script.contains("nanosToMs"));
         assertTrue(script.contains("人工复核后启用"));
         assertTrue(script.contains("/reports/view"));
         assertTrue(script.contains("/reports/export"));
-        assertTrue(!script.contains("/reports/upload"));
+        assertTrue(script.contains("/reports/upload"));
+        assertTrue(script.contains("downloadCurrentReport"));
+        assertTrue(script.contains("JSON.stringify(downloadableReport(state.currentReport), null, 2)"));
+        assertTrue(script.contains("responseRiskSummary"));
         assertTrue(!script.contains("/lab/by-type"));
         assertTrue(!script.contains("/lab/object"));
         assertTrue(!script.contains("/lab/strong"));
         assertTrue(!script.contains("/demo/"));
         assertTrue(!script.contains("JSON.stringify(report, null, 2)"));
-        assertTrue(css.contains(".dashboard-tabs"));
+        assertTrue(!css.contains(".dashboard-tabs"));
+        assertTrue(!css.contains(".dashboard-tab {"));
         assertTrue(css.contains(".chart-box"));
+        assertTrue(!css.contains(".upload-report-panel"));
+        assertTrue(css.contains(".report-picker-actions"));
+        assertTrue(css.contains(".report-detail-actions"));
+        assertTrue(css.contains(".nav-back"));
         assertTrue(css.contains("@media (max-width: 820px)"));
         assertTrue(css.contains("@media print"));
         assertTrue(css.contains(".no-print"));
@@ -240,6 +261,9 @@ class DashboardWebIntegrationTest {
 
         ResponseEntity<String> uploaded = restTemplate.postForEntity("/safe-output/dashboard/api/reports/upload",
                 multipart("upload.json", json.getBytes(StandardCharsets.UTF_8)), String.class);
+        ResponseEntity<String> reuploadedDashboardJson = restTemplate.postForEntity(
+                "/safe-output/dashboard/api/reports/upload",
+                multipart("downloaded.json", uploaded.getBody().getBytes(StandardCharsets.UTF_8)), String.class);
         ResponseEntity<String> textFile = restTemplate.postForEntity("/safe-output/dashboard/api/reports/upload",
                 multipart("upload.txt", json.getBytes(StandardCharsets.UTF_8)), String.class);
         ResponseEntity<String> tooLarge = restTemplate.postForEntity("/safe-output/dashboard/api/reports/upload",
@@ -252,6 +276,10 @@ class DashboardWebIntegrationTest {
         assertTrue(uploaded.getStatusCode().is2xxSuccessful());
         assertTrue(uploaded.getBody().contains("\"filename\":\"upload.json\""));
         assertTrue(uploaded.getBody().contains("\"totalCount\""));
+        assertTrue(!uploaded.getBody().contains("\"responseRiskSummary\""));
+        assertTrue(reuploadedDashboardJson.getStatusCode().is2xxSuccessful());
+        assertTrue(reuploadedDashboardJson.getBody().contains("\"filename\":\"downloaded.json\""));
+        assertTrue(reuploadedDashboardJson.getBody().contains("\"totalCount\""));
         assertTrue(textFile.getStatusCode().is4xxClientError());
         assertTrue(tooLarge.getStatusCode() == HttpStatus.PAYLOAD_TOO_LARGE);
         assertTrue(badShape.getStatusCode().is4xxClientError());

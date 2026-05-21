@@ -35,11 +35,15 @@ class DemoResponseIntegrationTest {
 
     @Test
     void demoEndpointsMaskCommonResponseShapesWithoutControllerCalls() {
+        String page = restTemplate.getForObject("/index.html", String.class);
         String bean = restTemplate.getForObject("/demo/bean", String.class);
         String map = restTemplate.getForObject("/demo/map", String.class);
         String list = restTemplate.getForObject("/demo/list", String.class);
         String nested = restTemplate.getForObject("/demo/nested", String.class);
 
+        assertTrue(page.contains("href=\"/safe-output/dashboard/index.html\""));
+        assertTrue(page.contains("target=\"_blank\""));
+        assertTrue(page.contains("rel=\"noopener\""));
         assertTrue(bean.contains("138****8000"));
         assertTrue(bean.contains("\"name\":\"张*\""));
         assertTrue(bean.contains("\"plainNote\":\"demo note 13800138000\""));

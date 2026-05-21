@@ -250,7 +250,16 @@ public class SafeOutputDashboardController {
                 && report.containsKey("manualCount")
                 && report.containsKey("failureCount")
                 && report.containsKey("maskTypeCounts")
-                && report.containsKey("responseRiskSummary");
+                && (report.containsKey("responseRiskSummary") || isDashboardReportShape(report));
+    }
+
+    private static boolean isDashboardReportShape(Map<String, Object> report) {
+        return report.containsKey("apiCount")
+                && report.containsKey("highRiskApiCount")
+                && report.containsKey("ignoredApiCount")
+                && report.containsKey("slowApiCount")
+                && report.containsKey("topRiskApis")
+                && report.containsKey("ignoredRiskApis");
     }
 
     private static void appendRound(List<Map<String, Object>> response, int round, Object result, long elapsedNanos,
