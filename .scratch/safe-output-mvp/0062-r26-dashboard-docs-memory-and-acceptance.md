@@ -12,6 +12,8 @@
 
 已完成代码与文档校准。文档明确 Dashboard starter 是默认关闭的 Spring MVC 可选附加包，静态资源使用 GET，后端 API 全部使用 POST，不内置鉴权或公网保护，不包含 Demo 业务工作台，不保存敏感原文，历史报告只做安全读取，上传报告只做临时预览。`.codex-memory` 已同步新增模块、调用链、边界、Demo 交接和测试命令。
 
+2026-05-21 复核 0055-0062 完成状态：`mvn -pl safe-output-dashboard-spring-boot-starter -am test`、`mvn -pl safe-output-demo -am test` 与 `mvn verify` 均通过；0055-0061 的 AC/TR 已按实现和测试结果补齐勾选。
+
 ## What to build
 
 完成 R2.6 Dashboard 附加包的交付校准。更新接入文档、Demo 说明、运行命令、测试命令和 `.codex-memory` 中受影响的模块地图、核心调用链、设计边界与下一轮交接信息，确保后续 agent 能准确区分 Demo 业务系统与可复用 Dashboard starter。
@@ -35,7 +37,7 @@
 
 ## Test requirements
 
-- [x] 运行 `mvn -pl safe-output-dashboard-spring-boot-starter -am test`。
-- [x] 运行 `mvn -pl safe-output-demo -am test`。
+- [x] 运行 `mvn -pl safe-output-dashboard-spring-boot-starter -am test`，2026-05-21 通过，dashboard starter 9 tests，reactor BUILD SUCCESS。
+- [x] 运行 `mvn -pl safe-output-demo -am test`，2026-05-21 通过，demo 19 tests，reactor BUILD SUCCESS。
 - [x] 如改动 starter、report 或 core，同步运行对应受影响模块测试。
-- [x] 发布前运行 `mvn verify`。
+- [x] 发布前运行 `mvn verify`，2026-05-21 通过，full reactor BUILD SUCCESS。
