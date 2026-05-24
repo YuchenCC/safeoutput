@@ -2,7 +2,7 @@
 
 ## 项目目标
 
-Safe Output 是面向 Spring Boot 2.x / Java 8 老项目的通用数据脱敏 starter，目标是在尽量少改业务代码的前提下，对 Response、Log4j2 日志和主动调用场景做敏感信息脱敏，并输出不含敏感原文的聚合统计报告。
+Safe Output 是面向 Spring Boot 2.x / Java 8 老项目的通用数据脱敏 starter，目标是在尽量少改业务代码的前提下，对 Response、Log4j2 日志和主动调用场景做敏感信息脱敏，并输出不含敏感原文的聚合统计报告。参赛材料语境中的 `JUP` 指内部使用 Java 8 的统一平台，属于 Safe Output 面向的存量 Java 8 系统背景；正式文档首次出现时应解释为“内部 JUP 统一 Java 8 平台”。
 
 ## 第一、二轮完成范围
 
