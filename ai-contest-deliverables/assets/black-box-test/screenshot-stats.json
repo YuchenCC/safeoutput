@@ -1,0 +1,45 @@
+{
+  "stats": [
+    {
+      "file": "BB-P0-001-demo-home.png",
+      "size": 207532
+    },
+    {
+      "file": "BB-P0-007-business-customer-masked.png",
+      "size": 16420
+    },
+    {
+      "file": "BB-P0-013-raw-plaintext.png",
+      "size": 17093
+    },
+    {
+      "file": "BB-P0-014-risk-ignored-api.png",
+      "size": 304178
+    },
+    {
+      "file": "BB-P0-017-dashboard-home.png",
+      "size": 143504
+    },
+    {
+      "file": "BB-P1-002-lab-by-type.png",
+      "size": 109981
+    },
+    {
+      "file": "BB-P1-009-dashboard-risk.png",
+      "size": 304087
+    },
+    {
+      "file": "BB-P1-010-log-suggestions.png",
+      "size": 304087
+    },
+    {
+      "file": "BB-P1-012-reports.png",
+      "size": 310704
+    },
+    {
+      "file": "dashboard-full.png",
+      "size": 304178
+    }
+  ],
+  "reportsText": "Safe Output\n业务系统敏感数据治理工作台\n返回业务系统\n治理 DASHBOARD\n实时数据\n历史报告\n治理 Dashboard\n\n区分当前进程内存聚合的实时数据与已导出 JSON 报告快照，所有分析都基于真实聚合字段拆解。\n\n刷新当前视图\n打印历史报告\n历史报告\n报告文件快照\n\n选择已导出的 JSON 报告后，页面只基于该文件中的聚合字段拆解展示。\n\n报告文件\n\n从已导出的报告快照中选择一份查看聚合明细。\n\n10 份报告\ndemo-report-20260524122719469-3.json · 35599 bytes · 2026/5/24 12:27:19\ndemo-report-20260524122321697-2.json · 34431 bytes · 2026/5/24 12:23:21\ndemo-report-20260524122321606-1.json · 25459 bytes · 2026/5/24 12:23:21\ndemo-report-20260524121614184-1.json · 4641 bytes · 2026/5/24 12:16:14\ndemo-report-20260524121612156-1.json · 4175 bytes · 2026/5/24 12:16:12\ndemo-report-20260524121548175-1.json · 4639 bytes · 2026/5/24 12:15:48\ndemo-report-20260524121546126-1.json · 4176 bytes · 2026/5/24 12:15:46\ndemo-report-20260524114831194-1.json · 4643 bytes · 2026/5/24 11:48:31\ndemo-report-20260524114828570-1.json · 4176 bytes · 2026/5/24 11:48:28\ndemo-report-20260524114758615-1.json · 4641 bytes · 2026/5/24 11:47:58\n导出报告\n上传查看\n上传的 JSON 报告只在当前请求内解析展示，不写入报告目录，也不会进入历史报告列表。\n报告明细\n\ndemo-repo"
+}
