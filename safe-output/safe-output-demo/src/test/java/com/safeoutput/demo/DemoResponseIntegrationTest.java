@@ -211,6 +211,26 @@ class DemoResponseIntegrationTest {
     }
 
     @Test
+    void maskByTypeUnknownTypeFallsBackToDefaultAndRegisteredCustomTypeIsCaseInsensitive() {
+        Map<String, String> unknownReq = new LinkedHashMap<String, String>();
+        unknownReq.put("value", "abc123");
+        unknownReq.put("type", "MOBILE_UNKNOWN");
+        String unknown = restTemplate.postForObject("/demo/mask/by-type", unknownReq, String.class);
+
+        Map<String, String> customReq = new LinkedHashMap<String, String>();
+        customReq.put("value", "abc123");
+        customReq.put("type", "MOBILEM");
+        String custom = restTemplate.postForObject("/demo/mask/by-type", customReq, String.class);
+
+        String snapshot = restTemplate.getForObject("/demo/report/snapshot", String.class);
+
+        assertTrue(unknown.contains("\"result\":\"****\""));
+        assertFalse(unknown.contains("abc123"));
+        assertTrue(custom.contains("\"result\":\"abc123\""));
+        assertTrue(snapshot.contains("\"mobile_unknown\""));
+    }
+
+    @Test
     void maskObjectEndpointReturnsStructuredResult() {
         Map<String, String> req = new LinkedHashMap<String, String>();
         req.put("realName", "李四");

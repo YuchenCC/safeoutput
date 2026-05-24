@@ -436,7 +436,7 @@ public class EmployeeResponse {
 }
 ```
 
-未知 type 的当前策略为 `DEFAULT fallback`：记录 warning 和未知类型统计后，使用 `DEFAULT` 策略兜底脱敏。历史 PRD 中出现过 `unknown-type-policy` 设计项，但当前代码没有暴露该运行时策略开关。
+未知 type 的当前策略为 `DEFAULT fallback`：记录 warning 和未知类型统计后，使用 `DEFAULT` 策略兜底脱敏。type 标签在注册和查找时会先做 `trim`、`-` 转 `_`、小写化归一，因此 `MOBILEM` 会命中已注册的自定义 `mobileM` 策略，不会被视为未知 type；需要验证未知类型兜底时应使用未注册标签，例如 `MOBILE_UNKNOWN`。历史 PRD 中出现过 `unknown-type-policy` 设计项，但当前代码没有暴露该运行时策略开关。
 
 ## 7. 聚合报告
 

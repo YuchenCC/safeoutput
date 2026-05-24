@@ -29,6 +29,22 @@ class SafeOutputMaskServiceTest {
     }
 
     @Test
+    void registeredCustomTypeIsCaseInsensitiveAndDoesNotUseUnknownFallback() {
+        final AtomicInteger unknownCount = new AtomicInteger();
+        SafeOutputMaskService service = new DefaultSafeOutputMaskService(MaskStrategyRegistry.withBuiltIns(
+                Arrays.asList(new FixedStrategy("mobileM", "custom-masked"))),
+                null, null, null, new UnknownTypeRecorder() {
+                    @Override
+                    public void recordUnknownType(String type, MaskScene scene) {
+                        unknownCount.incrementAndGet();
+                    }
+                });
+
+        assertEquals("custom-masked", service.mask("abc123", "MOBILEM"));
+        assertEquals(0, unknownCount.get());
+    }
+
+    @Test
     void unknownTypeFallsBackToDefaultAndStrategyFailureReturnsOriginalValue() {
         AtomicInteger unknownCount = new AtomicInteger();
         SafeOutputMaskService unknown = new DefaultSafeOutputMaskService(MaskStrategyRegistry.withBuiltIns(),

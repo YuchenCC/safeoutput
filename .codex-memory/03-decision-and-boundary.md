@@ -16,6 +16,7 @@
 ## 额外边界
 
 - 未知脱敏类型默认 `warn + DEFAULT fallback`，并进入未知类型聚合统计；`DEFAULT` 对非空字符串统一输出 `****`。
+- type 标签注册和查找统一经过 `MaskTypes.normalize`，大小写不敏感，且 `-` 会归一为 `_`；已注册自定义策略的大小写变体不是未知 type，例如 Demo 中 `MOBILEM` 会命中 `mobileM`。
 - 默认字段规则只覆盖语义明确字段名，`name/id/code/no` 这类歧义字段需配置或注解；老系统担心默认 key 误伤时应关闭默认规则库并显式配置。
 - `rules[].paths` 和 `ignore.paths` 使用 Safe Output 递归路径，不是完整 JSONPath；`$` 是被脱敏对象根节点，`.` 是字段或 Map key 层级，`[*]` 仅匹配集合/数组数字下标段，不支持 `**`、条件表达式、字段通配或模糊匹配。
 - Log4j2 converter 由日志系统创建，starter 通过 `SafeOutputLog4j2Runtime` 做进程级桥接，把 Spring 规则、策略、log 选项、未知类型 recorder、日志脱敏计数 recorder 和日志规则建议 collector 提供给真实 `%safeOutputMsg`；无 Spring 注册时仍使用 `%safeOutputMsg{...}` options 和默认规则。
