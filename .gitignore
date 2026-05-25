@@ -2,3 +2,5 @@
 *.iml
 .DS_Store
 .codebuddy
+.agents/skills/video-spec-builder
+safe-output-video
