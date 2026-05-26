@@ -19,6 +19,7 @@
 - `safe-output-report`：风险画像、统计图表数据、Agent 摘要和配置建议都应从聚合模型扩展。
 - `safe-output-demo`：适合增强展示看板、交互式验证和接入指南。
 - `safe-output-spring-boot-starter`：适合补齐配置一致性和暴露更多可插拔 Bean。
+- `ppt-template-lab`：适合继续扩展竞赛 PPT 转化链路，包括更细的页面分类、更多组件、Markdown 大纲转 PPT、截图 QA 和 Presentations renderer 适配；该工程独立于 Java Maven reactor。
 
 ## 当前不建议大改的模块
 
@@ -65,3 +66,11 @@
 - 指定 starter：`cd safe-output && mvn -pl safe-output-spring-boot-starter -am test`
 - 指定 dashboard starter：`cd safe-output && mvn -pl safe-output-dashboard-spring-boot-starter -am test`
 - 发布前完整验证：`cd safe-output && mvn verify`
+
+## PPT 转化辅助工程命令
+
+- 安装依赖：`cd ppt-template-lab && npm install`
+- 生成设计审计和模板 JSON：`cd ppt-template-lab && npm run audit`
+- 从 Markdown 示例生成 PPTX：`cd ppt-template-lab && npm run generate:example`
+- 验证工程：`cd ppt-template-lab && npm run build && npm test && npm audit --audit-level=moderate`
+- PPT 内容页标题左侧默认标识已抽离为 `ai-contest-deliverables/assets/pptmob-title-marker.svg`：`x=0.70in, y=0.75in, w=0.10in, h=0.40in, fill=#4372C4`；后续按模板生成页面时必须直接使用该资产并保留该小蓝条，不能依赖回读 `pptmob.pptx`。

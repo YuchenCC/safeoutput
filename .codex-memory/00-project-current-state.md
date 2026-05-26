@@ -64,3 +64,10 @@ Safe Output 是面向 Spring Boot 2.x / Java 8 老项目的通用数据脱敏 st
 - 增强 Response 风险画像、接口治理建议和性能分析。
 - 增强 Log 规则建议的配置生成、人工确认流和采纳状态。
 - 预留 Agent 摘要接口，但继续保持报告不保存敏感原文。
+
+## 竞赛 PPT 转化辅助工程
+
+- 仓库根目录新增 `ppt-template-lab/`，是独立 Node/TypeScript 工程，不属于 Maven reactor，也不改变 Safe Output Java starter 模块职责。
+- 当前能力：解析 `ai-contest-deliverables/assets/pptmob.pptx` 的 PPTX XML，生成 `reports/pptmob-design-audit.md` 和 `data/template-profile.json`；并用 `samples/example.md` 生成可编辑 PPTX 样例 `outputs/example-from-md.pptx`。
+- 构件策略：截图只作为风格参考，正式组件以结构化 slots、布局和样式定义保存；默认用 `pptxgenjs` 输出 PowerPoint 原生文本和形状，保留后续接入 Presentations 插件的 Renderer 接口空间。
+- PPT 标题默认标识已抽离为 `ai-contest-deliverables/assets/pptmob-title-marker.svg`：标题左侧竖向圆角小蓝条，`x=0.70in, y=0.75in, w=0.10in, h=0.40in, fill=#4372C4`；后续内容页生成需直接使用该资产，不能依赖回读 `pptmob.pptx`，也不能用占位 logo 或其他装饰替代。

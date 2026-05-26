@@ -82,6 +82,12 @@ Triage uses the default canonical role names for category and state labels. See 
 
 This repo uses a single-context domain layout with root `CONTEXT.md`. See `docs/agents/domain.md`.
 
+## 演讲 PPT 工作流
+
+- 当前阶段需要制作竞赛演讲 PPT；每次修改 PPT、讲稿、截图说明、页面文案或其他参赛材料前，必须先通读 `ai-contest-deliverables/` 下相关 Markdown 文档，并以这些材料作为内容事实来源。
+- 每次确认 PPT 页面内容后，必须同步生成对应的 PPT 生图提示词；提示词应匹配已确认页面主题、画面主体、风格、比例和需要避开的敏感原文。
+- PPT 与生图提示词不得编造未在项目代码、`.codex-memory/` 或 `ai-contest-deliverables/` 中确认的能力、指标或结论。
+
 ## Definition of Done
 
 - 代码路径符合 `.codex-memory` 中的设计边界，或明确记录实现偏差。
