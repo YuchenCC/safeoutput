@@ -185,6 +185,20 @@ Demo 用于展示真实业务系统接入 Safe Output 后的行为。
 - Demo 可以引入可选 Dashboard starter；旧 `/demo/report/**` 和 `/demo/mask/**` 兼容接口可保留。
 - 前端采用白底业务后台风格，避免深色驾驶舱、粒子背景、玻璃拟态和营销页式 hero。
 
+### 4.11 竞赛 PPT 模板规范
+
+竞赛 PPT 页面生成必须以 `ai-contest-deliverables/assets/` 下已抽离的模板资产为视觉基准，避免把标题左侧标识误写为普通占位 logo，后续生成流程不得依赖回读 `pptmob.pptx`。
+
+需求包括：
+
+- 画布使用 16:9 宽屏，尺寸为 `13.333 x 7.5 in`，背景保持白色或接近白色。
+- 内容页采用左上标题 + 中部主体内容结构，标题文本位置参考 `x=0.84in, y=0.59in`，左对齐。
+- 标题左侧默认展示模板小蓝条，资产路径为 `ai-contest-deliverables/assets/pptmob-title-marker.svg`。
+- 小蓝条填充色为 `#4372C4`，无描边，不加阴影、渐变、图标或文字。
+- 小蓝条坐标为 `x=0.70in, y=0.75in`，尺寸为 `w=0.10in, h=0.40in`。
+- 后续通过该规范生成的 PPT 内容页标题左侧必须保留该小蓝条，并与模板标题位置保持一致；除封面、结束页或特殊大标题页另有明确设计外，不得用其他占位 logo、装饰线、图标或品牌标识替代。
+- 右下角页脚 logo 仍使用 `ai-contest-deliverables/assets/pptmob-default-logo.png` 或同目录 SVG，坐标和尺寸以 `ai-contest-deliverables/assets/pptmob-ppt-spec-prompt.md` 为准。
+
 ## 5. 非功能需求
 
 ### 5.1 兼容性
@@ -293,6 +307,7 @@ cd safe-output && mvn verify
 - `doc/prd/safe-output-r3-prd.md`
 - `doc/prd/safe-output-requirements-change-log.md`
 - `doc/prd/safe-output-requirements-clarifications.md`
+- `ai-contest-deliverables/assets/pptmob-ppt-spec-prompt.md`
 - `.codex-memory/00-project-current-state.md`
 - `.codex-memory/01-module-map.md`
 - `.codex-memory/02-core-flow-map.md`
