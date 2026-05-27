@@ -87,6 +87,12 @@ This repo uses a single-context domain layout with root `CONTEXT.md`. See `docs/
 - 当前阶段需要制作竞赛演讲 PPT；每次修改 PPT、讲稿、截图说明、页面文案或其他参赛材料前，必须先通读 `ai-contest-deliverables/` 下相关 Markdown 文档，并以这些材料作为内容事实来源。
 - 每次确认 PPT 页面内容后，必须同步生成对应的 PPT 生图提示词；提示词应匹配已确认页面主题、画面主体、风格、比例和需要避开的敏感原文。
 - PPT 与生图提示词不得编造未在项目代码、`.codex-memory/` 或 `ai-contest-deliverables/` 中确认的能力、指标或结论。
+- 当用户要求生成 PPT 页面图片时，必须使用 image 生图能力，不得只输出文字提示词或用占位图替代。
+- 生图前必须先确认用户需要生成的 PPT 页码；若用户未明确页码，先询问页码，不得直接生成。
+- 页码确认后，先读取并整合 `ai-contest-deliverables/08-presentation-working-notes.md` 中的整体风格基调、模板图片资产要求和对应页码的逐页说明，汇总成当前页专用生图提示词。
+- 执行生图前，必须先把汇总后的生图提示词发给用户二次确认；用户确认后才能调用 image 生图能力。
+- 生图完成后，必须将图片资产落在 `ai-contest-deliverables/ppt/` 目录下，并按页码正确重命名；文件名使用两位页码前缀，例如 `01-cover.png`、`08-output-side-integration.png`，避免覆盖无关页面资产。
+- 生图资产不得包含真实手机号、身份证、银行卡、邮箱、密码、完整日志、完整 response 或业务敏感原文；如页面涉及 raw 明文，只能表达 Demo/mock 风险统计概念，不生成具体明文字段值。
 
 ## Definition of Done
 
