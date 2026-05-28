@@ -13,7 +13,7 @@
 - 可选 Dashboard starter 已实现：`safe-output-dashboard-spring-boot-starter` 默认关闭，`safe-output.dashboard.enabled=true` 时在 Spring MVC Servlet Web 应用中提供 `/safe-output/dashboard/index.html` 和 POST API，覆盖实时概览、接口风险、Log 规则建议、历史报告、临时报告上传和通用脱敏实验室。
 - demo 端到端测试覆盖 Response、Log、Manual、Report，以及 R2.5 业务工作台、接入说明、日志场景、报告文件中心和安全读取边界。
 - 父工程已在 pluginManagement 管理 `spring-boot-maven-plugin`，非 demo 模块默认 skip，`safe-output-demo` 显式启用；可直接从父工程运行 `mvn -pl safe-output-demo -am spring-boot:run` 启动 demo。
-- Demo 部署文档已新增：`docs/project/deployment-login-record.md` 记录服务器 SSH 登录与免密 key 验证；`docs/project/demo-deployment-runbook.md` 是后续自动化部署的流程依据，当前约定本地 Maven 打包 `safe-output-demo`，上传可执行 jar 到 `122.51.95.83`，由远程 `systemd` 运行并通过 `http://122.51.95.83:8080/index.html` 展示。
+- Demo 部署文档已新增：`docs/project/deployment-login-record.md` 记录服务器 SSH 登录与免密 key 验证；`docs/project/demo-deployment-runbook.md` 是后续自动化部署的流程依据，当前约定本地 Maven 打包 `safe-output-demo`，上传可执行 jar 到 `122.51.95.83`，由远程 `systemd` 运行并通过 `http://122.51.95.83:8080/index.html` 展示。2026-05-28 已完成首次远程部署，服务端本机 `127.0.0.1:8080` 返回 200；云厂商控制台放行 `TCP 8080` 后，公网 `http://122.51.95.83:8080/index.html` 和 Dashboard 入口均返回 200。
 
 ## 当前最适合扩展的模块
 
