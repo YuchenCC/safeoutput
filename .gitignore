@@ -1,6 +1,9 @@
 .idea/
 *.iml
 .DS_Store
+.vscode/
+tmp/
+outputs/
 .codebuddy
 .agents/skills/video-spec-builder
 safe-output-video
