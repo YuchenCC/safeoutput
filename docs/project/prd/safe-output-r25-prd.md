@@ -5,7 +5,7 @@
 适用范围：Java 通用数据脱敏组件 R2 与 R3 之间的 Demo 增强迭代
 技术基线：JDK8 + Spring Boot 2.x + Log4j2 2.x
 交付形态：`safe-output-demo` 接入样板系统
-实现校准补充：`doc/prd/safe-output-r25-supplemental-prd.md`
+实现校准补充：`docs/project/prd/safe-output-r25-supplemental-prd.md`
 
 ---
 

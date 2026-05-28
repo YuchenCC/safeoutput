@@ -4,7 +4,7 @@
 
 - category: enhancement
 - state: done
-- source: doc/prd/safe-output-r25-prd.md
+- source: docs/project/prd/safe-output-r25-prd.md
 - wbs: R2.5-02
 - blocked_by: 0047-r25-business-workbench-and-mock-domain.md
 

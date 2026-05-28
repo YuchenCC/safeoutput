@@ -4,7 +4,7 @@
 
 - category: enhancement
 - state: wontfix
-- source: doc/prd/safe-output-r2-prd.md §11 R3-01
+- source: docs/project/prd/safe-output-r2-prd.md §11 R3-01
 - wbs: R3-01
 - blocked_by: 0040-r3-frontend-scaffold-and-dashboard.md
 

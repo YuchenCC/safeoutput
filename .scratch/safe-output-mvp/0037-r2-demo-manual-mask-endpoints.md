@@ -4,7 +4,7 @@
 
 - category: enhancement
 - state: done
-- source: doc/prd/safe-output-r2-prd.md
+- source: docs/project/prd/safe-output-r2-prd.md
 - wbs: R2-08
 - blocked_by: 0032-r2-manual-scene-metrics.md
 

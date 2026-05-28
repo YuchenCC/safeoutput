@@ -4,7 +4,7 @@
 
 - category: enhancement
 - state: done
-- source: doc/prd/safe-output-r2-prd.md §11 R3-01
+- source: docs/project/prd/safe-output-r2-prd.md §11 R3-01
 - wbs: R3-01
 - blocked_by: None
 

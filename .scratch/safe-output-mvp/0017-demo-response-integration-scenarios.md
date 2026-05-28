@@ -4,7 +4,7 @@
 
 - category: enhancement
 - state: done
-- source: doc/prd/safe-output-mvp-prd.md
+- source: docs/project/prd/safe-output-mvp-prd.md
 - wbs: WBS-10
 - blocked_by: 0010-response-body-advice-integration.md, 0011-api-ignore-and-response-risk-hook.md
 

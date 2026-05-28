@@ -4,7 +4,7 @@
 
 - category: enhancement
 - state: done
-- source: doc/prd/safe-output-r2-prd.md
+- source: docs/project/prd/safe-output-r2-prd.md
 - wbs: R2-07
 - blocked_by: 0023-r2-string-type-core-contract.md, 0025-r2-unknown-type-policy-and-stats.md
 

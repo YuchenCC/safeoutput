@@ -4,7 +4,7 @@
 
 - category: enhancement
 - state: done
-- source: doc/prd/safe-output-mvp-prd.md
+- source: docs/project/prd/safe-output-mvp-prd.md
 - wbs: WBS-13
 - blocked_by: 0017-demo-response-integration-scenarios.md, 0018-demo-log4j2-and-report-scenarios.md
 

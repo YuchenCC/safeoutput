@@ -4,7 +4,7 @@
 
 - category: enhancement
 - state: done
-- source: doc/prd/safe-output-r2-prd.md
+- source: docs/project/prd/safe-output-r2-prd.md
 - wbs: R2-06
 - blocked_by: 0026-r2-custom-strategy-end-to-end.md
 

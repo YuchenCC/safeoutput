@@ -4,7 +4,7 @@
 
 - category: enhancement
 - state: done
-- source: doc/prd/safe-output-r2-prd.md
+- source: docs/project/prd/safe-output-r2-prd.md
 - wbs: R2-05
 - blocked_by: 0024-r2-string-type-config-binding.md, 0026-r2-custom-strategy-end-to-end.md
 

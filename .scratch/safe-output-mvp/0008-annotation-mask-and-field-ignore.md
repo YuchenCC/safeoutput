@@ -4,7 +4,7 @@
 
 - category: enhancement
 - state: done
-- source: doc/prd/safe-output-mvp-prd.md
+- source: docs/project/prd/safe-output-mvp-prd.md
 - wbs: WBS-05
 - blocked_by: 0006-default-rule-library-and-key-path-matching.md, 0007-ambiguous-field-policy-and-rule-precedence.md
 

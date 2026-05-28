@@ -4,7 +4,7 @@
 
 - category: enhancement
 - state: done
-- source: doc/prd/safe-output-r2-prd.md
+- source: docs/project/prd/safe-output-r2-prd.md
 - wbs: R2-07
 - blocked_by: 0033-r2-response-risk-event-and-aggregation.md
 

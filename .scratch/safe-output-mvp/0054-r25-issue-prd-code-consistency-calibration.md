@@ -4,7 +4,7 @@
 
 - category: enhancement
 - state: done
-- source: doc/prd/safe-output-r25-prd.md; doc/prd/safe-output-r25-supplemental-prd.md; doc/design/safe-output-r25-frontend-design.md
+- source: docs/project/prd/safe-output-r25-prd.md; docs/project/prd/safe-output-r25-supplemental-prd.md; docs/project/design/safe-output-r25-frontend-design.md
 - wbs: R2.5-doc-consistency
 - blocked_by: None
 

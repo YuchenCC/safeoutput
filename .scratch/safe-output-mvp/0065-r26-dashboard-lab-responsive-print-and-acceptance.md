@@ -4,7 +4,7 @@
 
 - category: enhancement
 - state: done
-- source: doc/prd/safe-output-r26-dashboard-prd.md; doc/design/safe-output-r25-frontend-design.md
+- source: docs/project/prd/safe-output-r26-dashboard-prd.md; docs/project/design/safe-output-r25-frontend-design.md
 - wbs: R2.6-frontend-03
 - blocked_by: 0063-r26-dashboard-frontend-shell-and-overview.md; 0064-r26-dashboard-reports-and-log-suggestions-visualization.md
 

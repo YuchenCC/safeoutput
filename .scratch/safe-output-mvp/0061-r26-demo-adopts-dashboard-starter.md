@@ -4,7 +4,7 @@
 
 - category: enhancement
 - state: done
-- source: doc/prd/safe-output-r26-dashboard-prd.md
+- source: docs/project/prd/safe-output-r26-dashboard-prd.md
 - wbs: R2.6-07
 - blocked_by: 0056-r26-dashboard-runtime-overview-and-risk-profile.md, 0057-r26-dashboard-log-rule-suggestions.md, 0058-r26-dashboard-report-directory-and-single-report-view.md, 0059-r26-dashboard-uploaded-report-temporary-view.md, 0060-r26-dashboard-mask-lab.md
 

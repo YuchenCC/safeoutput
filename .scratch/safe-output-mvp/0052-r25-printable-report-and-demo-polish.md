@@ -4,7 +4,7 @@
 
 - category: enhancement
 - state: done
-- source: doc/prd/safe-output-r25-prd.md
+- source: docs/project/prd/safe-output-r25-prd.md
 - wbs: R2.5-06
 - blocked_by: 0051-r25-report-file-center-and-single-report-view.md
 

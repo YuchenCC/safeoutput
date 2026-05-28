@@ -1,6 +1,6 @@
 # Safe Output 项目代码概览
 
-本文档是 Safe Output 当前代码实现的总览，面向维护者和二次开发者。业务接入步骤以 `safe-output/doc/component-integration-guide.md` 为准；报告模块细节以 `doc/safe-output-report-module-guide.md` 为准。
+本文档是 Safe Output 当前代码实现的总览，面向维护者和二次开发者。业务接入步骤以 `safe-output/doc/component-integration-guide.md` 为准；报告模块细节以 `docs/project/safe-output-report-module-guide.md` 为准。
 
 ## 1. 项目定位
 
@@ -15,6 +15,35 @@ Safe Output 是面向 Java 8 / Spring Boot 2.x 遗留服务的输出侧脱敏 st
 ## 2. 工程结构
 
 ```text
+.
+├── README.md
+├── docs/
+│   ├── README.md
+│   ├── agents/
+│   └── project/
+├── .codex-memory/
+├── .scratch/safe-output-mvp/
+├── ai-contest-deliverables/
+└── safe-output/
+    ├── pom.xml
+    ├── README.md
+    ├── doc/
+    │   ├── README.md
+    │   ├── component-integration-guide.md
+    │   └── core.md
+    ├── safe-output-core/
+    ├── safe-output-log4j2/
+    ├── safe-output-report/
+    ├── safe-output-spring-boot-starter/
+    ├── safe-output-dashboard-spring-boot-starter/
+    └── safe-output-demo/
+```
+
+根目录 `docs/project/` 保存项目级说明、PRD 和报告模块深挖文档；`docs/agents/` 保存 Agent 协作说明；`safe-output/doc/` 保存随组件源码发布的接入和核心原理文档。
+
+Maven 产品工程结构：
+
+```text
 safe-output/
 ├── pom.xml
 ├── README.md
@@ -26,19 +55,20 @@ safe-output/
 ├── safe-output-log4j2/
 ├── safe-output-report/
 ├── safe-output-spring-boot-starter/
+├── safe-output-dashboard-spring-boot-starter/
 └── safe-output-demo/
 ```
-
-根目录 `doc/` 保存项目级说明、PRD 和报告模块深挖文档；`safe-output/doc/` 保存随组件源码发布的接入和核心原理文档。
 
 模块依赖关系：
 
 ```text
 safe-output-demo
-  └── safe-output-spring-boot-starter
-        ├── safe-output-core
-        ├── safe-output-log4j2 ──> safe-output-core
-        └── safe-output-report ──> safe-output-core
+  ├── safe-output-spring-boot-starter
+  │     ├── safe-output-core
+  │     ├── safe-output-log4j2 ──> safe-output-core
+  │     └── safe-output-report ──> safe-output-core
+  └── safe-output-dashboard-spring-boot-starter
+        └── safe-output-spring-boot-starter
 ```
 
 ## 3. 代码规模

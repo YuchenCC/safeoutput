@@ -4,7 +4,7 @@
 
 - category: enhancement
 - state: done
-- source: doc/prd/safe-output-mvp-prd.md
+- source: docs/project/prd/safe-output-mvp-prd.md
 - wbs: WBS-11, WBS-12
 - blocked_by: 0019-starter-jar-packaging-and-external-reference-validation.md
 

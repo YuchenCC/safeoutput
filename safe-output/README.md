@@ -15,7 +15,7 @@ Safe Output 是面向 Spring Boot 2.x 的 Java 8 starter，用于在不改 Contr
 
 ## 引用方式
 
-完整业务接入步骤见 [组件接入手册](doc/component-integration-guide.md)，项目代码总览见根目录 `doc/safe-output-project-overview.md`。
+完整业务接入步骤见 [组件接入手册](doc/component-integration-guide.md)，项目代码总览见根目录 `../docs/project/safe-output-project-overview.md`。
 
 Maven:
 

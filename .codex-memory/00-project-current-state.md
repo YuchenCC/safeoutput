@@ -71,3 +71,9 @@ Safe Output 是面向 Spring Boot 2.x / Java 8 老项目的通用数据脱敏 st
 - 当前能力：解析 `ai-contest-deliverables/assets/pptmob.pptx` 的 PPTX XML，生成 `reports/pptmob-design-audit.md` 和 `data/template-profile.json`；并用 `samples/example.md` 生成可编辑 PPTX 样例 `outputs/example-from-md.pptx`。
 - 构件策略：截图只作为风格参考，正式组件以结构化 slots、布局和样式定义保存；默认用 `pptxgenjs` 输出 PowerPoint 原生文本和形状，保留后续接入 Presentations 插件的 Renderer 接口空间。
 - PPT 标题默认标识已抽离为 `ai-contest-deliverables/assets/pptmob-title-marker.svg`：标题左侧竖向圆角小蓝条，`x=0.70in, y=0.75in, w=0.10in, h=0.40in, fill=#4372C4`；后续内容页生成需直接使用该资产，不能依赖回读 `pptmob.pptx`，也不能用占位 logo 或其他装饰替代。
+
+## 文档目录组织
+
+- 根目录 `docs/` 是统一文档入口：`docs/project/` 保存项目级说明、PRD、设计文档和模块深挖资料；`docs/agents/` 保存 Agent 协作约定。
+- `safe-output/doc/` 继续保存随组件源码发布给接入方的手册和 core 原理说明。
+- 根目录不再使用旧 `doc/`；历史 issue、记忆文档和 README 中的项目级文档引用应指向 `docs/project/`。

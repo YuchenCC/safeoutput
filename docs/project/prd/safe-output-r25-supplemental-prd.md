@@ -1,7 +1,7 @@
 # Safe Output R2.5 Demo 实现校准补充 PRD
 
 版本：v0.1 / R2.5 supplement
-关联文档：`doc/prd/safe-output-r25-prd.md`、`doc/design/safe-output-r25-frontend-design.md`
+关联文档：`docs/project/prd/safe-output-r25-prd.md`、`docs/project/design/safe-output-r25-frontend-design.md`
 适用范围：`safe-output-demo` 当前实际实现与 R2.5 文档口径校准
 
 ---

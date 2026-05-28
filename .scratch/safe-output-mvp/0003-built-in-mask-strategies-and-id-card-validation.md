@@ -4,7 +4,7 @@
 
 - category: enhancement
 - state: done
-- source: doc/prd/safe-output-mvp-prd.md
+- source: docs/project/prd/safe-output-mvp-prd.md
 - wbs: WBS-02
 - blocked_by: 0002-core-domain-model-and-strategy-spi.md
 

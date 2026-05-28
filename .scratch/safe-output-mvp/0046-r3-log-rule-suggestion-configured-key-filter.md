@@ -4,7 +4,7 @@
 
 - category: bug
 - state: done
-- source: doc/safe-output-report-module-guide.md
+- source: docs/project/safe-output-report-module-guide.md
 - wbs: R3-log-rule-suggestion-configured-key-filter
 - blocked_by: 0035-r2-log-rule-suggestion-collector.md, 0036-r2-log-rule-suggestion-report.md, 0045-r3-log4j2-runtime-report-bridge.md
 

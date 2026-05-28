@@ -2,8 +2,8 @@
 
 版本：v0.3
 适用范围：0047-0053 R2.5/R3 Demo 前端与展示体验；R2.6 Dashboard starter 前端布局基线
-关联 PRD：`doc/prd/safe-output-r25-prd.md`
-实现校准补充：`doc/prd/safe-output-r25-supplemental-prd.md`
+关联 PRD：`docs/project/prd/safe-output-r25-prd.md`
+实现校准补充：`docs/project/prd/safe-output-r25-supplemental-prd.md`
 目标入口：R2.5 Demo 为 `safe-output-demo/src/main/resources/static/index.html`；R2.6 通用 Dashboard 为 `/safe-output/dashboard/index.html`
 
 ## 1. 设计目标

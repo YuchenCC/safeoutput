@@ -4,7 +4,7 @@ This directory stores local Markdown issues for the Safe Output MVP.
 
 ## Workflow
 
-- Source PRD: `doc/prd/safe-output-mvp-prd.md`
+- Source PRD: `docs/project/prd/safe-output-mvp-prd.md`
 - Initial category: `enhancement`
 - Initial state: `ready-for-agent`
 - Triage labels: see `docs/agents/triage-labels.md`

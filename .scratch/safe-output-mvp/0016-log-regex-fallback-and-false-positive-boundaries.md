@@ -4,7 +4,7 @@
 
 - category: enhancement
 - state: done
-- source: doc/prd/safe-output-mvp-prd.md
+- source: docs/project/prd/safe-output-mvp-prd.md
 - wbs: WBS-08
 - blocked_by: 0015-json-like-log-key-value-masker.md, 0003-built-in-mask-strategies-and-id-card-validation.md
 

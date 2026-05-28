@@ -4,7 +4,7 @@
 
 - category: enhancement
 - state: done
-- source: doc/prd/safe-output-r26-dashboard-prd.md
+- source: docs/project/prd/safe-output-r26-dashboard-prd.md
 - wbs: R2.6-05
 - blocked_by: 0058-r26-dashboard-report-directory-and-single-report-view.md
 

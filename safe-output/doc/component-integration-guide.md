@@ -2,7 +2,7 @@
 
 本文面向需要在 Spring Boot 2.x 业务系统中接入 Safe Output 的开发者，覆盖核心脱敏组件、Spring Boot starter、Response 脱敏、Log4j2 日志脱敏、主动脱敏、自定义策略、聚合报告配置和可选治理 Dashboard。
 
-文档定位：本文是业务接入手册。代码结构和模块职责见根目录 `doc/safe-output-project-overview.md`；Report 模块内部数据流见根目录 `doc/safe-output-report-module-guide.md`；Response 拦截与 core 原理见 `safe-output/doc/core.md`。
+文档定位：本文是业务接入手册。代码结构和模块职责见根目录 `docs/project/safe-output-project-overview.md`；Report 模块内部数据流见根目录 `docs/project/safe-output-report-module-guide.md`；Response 拦截与 core 原理见 `safe-output/doc/core.md`。
 
 ## 1. 环境要求
 

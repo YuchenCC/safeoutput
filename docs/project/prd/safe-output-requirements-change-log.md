@@ -42,7 +42,7 @@
 ### CR-20260511-01 建立 v0.4 MVP 需求基线
 
 - 状态：Accepted
-- 来源：`doc/java_data_desensitization_mvp_scope_and_wbs_v0.3.md`
+- 来源：`docs/project/java_data_desensitization_mvp_scope_and_wbs_v0.3.md`
 - 关联文档：[Safe Output MVP 主需求文档](./safe-output-mvp-prd.md)
 - 关联 WBS：WBS-00 至 WBS-12
 - 变更摘要：将原始综合 PRD 拆分为主 PRD、需求变更记录、需求澄清说明三份文档。

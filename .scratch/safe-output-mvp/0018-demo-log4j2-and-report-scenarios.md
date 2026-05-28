@@ -4,7 +4,7 @@
 
 - category: enhancement
 - state: done
-- source: doc/prd/safe-output-mvp-prd.md
+- source: docs/project/prd/safe-output-mvp-prd.md
 - wbs: WBS-10
 - blocked_by: 0013-scheduled-json-report-snapshot-export.md, 0016-log-regex-fallback-and-false-positive-boundaries.md
 

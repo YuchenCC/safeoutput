@@ -299,14 +299,14 @@ cd safe-output && mvn verify
 
 ## 10. 来源索引
 
-- `doc/prd/safe-output-mvp-prd.md`
-- `doc/prd/safe-output-r2-prd.md`
-- `doc/prd/safe-output-r25-prd.md`
-- `doc/prd/safe-output-r25-supplemental-prd.md`
-- `doc/prd/safe-output-r26-dashboard-prd.md`
-- `doc/prd/safe-output-r3-prd.md`
-- `doc/prd/safe-output-requirements-change-log.md`
-- `doc/prd/safe-output-requirements-clarifications.md`
+- `docs/project/prd/safe-output-mvp-prd.md`
+- `docs/project/prd/safe-output-r2-prd.md`
+- `docs/project/prd/safe-output-r25-prd.md`
+- `docs/project/prd/safe-output-r25-supplemental-prd.md`
+- `docs/project/prd/safe-output-r26-dashboard-prd.md`
+- `docs/project/prd/safe-output-r3-prd.md`
+- `docs/project/prd/safe-output-requirements-change-log.md`
+- `docs/project/prd/safe-output-requirements-clarifications.md`
 - `ai-contest-deliverables/assets/pptmob-ppt-spec-prompt.md`
 - `.codex-memory/00-project-current-state.md`
 - `.codex-memory/01-module-map.md`

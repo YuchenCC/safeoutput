@@ -4,7 +4,7 @@
 
 - category: enhancement
 - state: done
-- source: doc/prd/safe-output-mvp-prd.md
+- source: docs/project/prd/safe-output-mvp-prd.md
 - wbs: WBS-03
 - blocked_by: 0002-core-domain-model-and-strategy-spi.md, 0003-built-in-mask-strategies-and-id-card-validation.md
 

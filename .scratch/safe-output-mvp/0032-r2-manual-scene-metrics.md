@@ -4,7 +4,7 @@
 
 - category: enhancement
 - state: done
-- source: doc/prd/safe-output-r2-prd.md
+- source: docs/project/prd/safe-output-r2-prd.md
 - wbs: R2-06, R2-07
 - blocked_by: 0029-r2-manual-mask-by-type-service.md, 0030-r2-manual-object-mask-service.md, 0031-r2-manual-strong-scan-service.md
 

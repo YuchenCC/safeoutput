@@ -1,6 +1,6 @@
 # Safe Output MVP 主需求文档
 
-本文档由 `doc/java_data_desensitization_mvp_scope_and_wbs_v0.3.md` 拆分而来，作为后续 issue 拆分的主入口。版本沿革和关键澄清分别维护在：
+本文档由 `docs/project/java_data_desensitization_mvp_scope_and_wbs_v0.3.md` 拆分而来，作为后续 issue 拆分的主入口。版本沿革和关键澄清分别维护在：
 
 - [需求变更记录](./safe-output-requirements-change-log.md)
 - [需求澄清说明](./safe-output-requirements-clarifications.md)

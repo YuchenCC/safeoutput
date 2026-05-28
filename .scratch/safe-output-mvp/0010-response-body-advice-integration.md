@@ -4,7 +4,7 @@
 
 - category: enhancement
 - state: done
-- source: doc/prd/safe-output-mvp-prd.md
+- source: docs/project/prd/safe-output-mvp-prd.md
 - wbs: WBS-07
 - blocked_by: 0005-starter-configuration-properties.md, 0009-object-recursive-masker.md
 

@@ -4,7 +4,7 @@
 
 - category: enhancement
 - state: done
-- source: doc/prd/safe-output-r2-prd.md
+- source: docs/project/prd/safe-output-r2-prd.md
 - wbs: R2-07
 - blocked_by: 0027-r2-log-key-value-rule-masking.md, 0028-r2-log-key-value-performance-guardrails.md
 

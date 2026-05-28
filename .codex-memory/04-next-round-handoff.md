@@ -13,6 +13,7 @@
 - 可选 Dashboard starter 已实现：`safe-output-dashboard-spring-boot-starter` 默认关闭，`safe-output.dashboard.enabled=true` 时在 Spring MVC Servlet Web 应用中提供 `/safe-output/dashboard/index.html` 和 POST API，覆盖实时概览、接口风险、Log 规则建议、历史报告、临时报告上传和通用脱敏实验室。
 - demo 端到端测试覆盖 Response、Log、Manual、Report，以及 R2.5 业务工作台、接入说明、日志场景、报告文件中心和安全读取边界。
 - 父工程已在 pluginManagement 管理 `spring-boot-maven-plugin`，非 demo 模块默认 skip，`safe-output-demo` 显式启用；可直接从父工程运行 `mvn -pl safe-output-demo -am spring-boot:run` 启动 demo。
+- Demo 部署文档已新增：`docs/project/deployment-login-record.md` 记录服务器 SSH 登录与免密 key 验证；`docs/project/demo-deployment-runbook.md` 是后续自动化部署的流程依据，当前约定本地 Maven 打包 `safe-output-demo`，上传可执行 jar 到 `122.51.95.83`，由远程 `systemd` 运行并通过 `http://122.51.95.83:8080/index.html` 展示。
 
 ## 当前最适合扩展的模块
 
@@ -30,7 +31,7 @@
 ## 第三轮切入建议
 
 - R2.6 Dashboard 模块边界收敛已完成：`safe-output-dashboard-spring-boot-starter` 是可选附加包。Dashboard 默认关闭，通过 `safe-output.dashboard.enabled=true` 启用，默认路径前缀 `/safe-output/dashboard`，仅支持 Spring MVC Servlet Web 应用；后端 API 全部使用 POST，静态页面/资源仍使用 GET。第一期包含实时概览、接口风险、日志规则建议、历史报告、报告上传临时查看、通用脱敏实验室；不包含 Demo 业务工作台、小眼睛明文查看、权限系统、数据库、多报告趋势或规则自动采纳。Demo 仍保留 `/demo/report/**` 和 `/demo/mask/**` 兼容接口。
-- 日志长度策略增强：新增 R3 PRD `doc/prd/safe-output-r3-prd.md`，要求支持 `maxMessageLength` 整条超限跳过模式与 `max-scan-length` 前缀扫描窗口模式切换；默认应兼容 R2，不截断最终日志输出，不保存原始日志。
+- 日志长度策略增强：新增 R3 PRD `docs/project/prd/safe-output-r3-prd.md`，要求支持 `maxMessageLength` 整条超限跳过模式与 `max-scan-length` 前缀扫描窗口模式切换；默认应兼容 R2，不截断最终日志输出，不保存原始日志。
 - 增强 Demo：R2.5/R3 后从 `safe-output-demo/src/main/resources/static/js/views/*`、`static/css/app.css`、`business/DemoBusinessController`、`guide/DemoIntegrationGuideController`、`report/DemoReportController`、`lab/DemoManualMaskController` 切入；`index.html` 只是静态壳层，`DemoApplication` 只作为根包扫描入口。
 - 增强风险画像：从 `ResponseRiskAnalyzer`、`ApiMaskMetrics`、`ResponseRiskApiProfile`、`MaskReportExporter.toJson` 切入。
 - 增强统计图表：优先扩展 `report/DemoReportDashboardAssembler` 和 `DemoReportController.dashboard` 返回结构，再更新 `static/index.html`。
@@ -74,3 +75,10 @@
 - 从 Markdown 示例生成 PPTX：`cd ppt-template-lab && npm run generate:example`
 - 验证工程：`cd ppt-template-lab && npm run build && npm test && npm audit --audit-level=moderate`
 - PPT 内容页标题左侧默认标识已抽离为 `ai-contest-deliverables/assets/pptmob-title-marker.svg`：`x=0.70in, y=0.75in, w=0.10in, h=0.40in, fill=#4372C4`；后续按模板生成页面时必须直接使用该资产并保留该小蓝条，不能依赖回读 `pptmob.pptx`。
+
+## 文档路径交接
+
+- 项目级文档入口已从旧根目录 `doc/` 迁移到 `docs/project/`；后续新增 PRD、设计说明和模块深挖文档应放入 `docs/project/`。
+- Demo 部署相关文档位于 `docs/project/deployment-login-record.md` 和 `docs/project/demo-deployment-runbook.md`；后续编写自动化部署脚本时必须以 runbook 中变量、发布目录、systemd 服务和健康检查步骤为准。
+- Agent 协作说明继续放在 `docs/agents/`；组件接入方文档继续放在 `safe-output/doc/`。
+- 本地产物目录 `tmp/`、`outputs/` 和 `.vscode/` 已在根 `.gitignore` 中忽略；不要把临时截图或本地 IDE 配置提交进版本库。

@@ -25,6 +25,6 @@ Each issue should include:
 
 ## Source Documents
 
-- Main PRD: `doc/prd/safe-output-mvp-prd.md`
-- Requirements change log: `doc/prd/safe-output-requirements-change-log.md`
-- Requirements clarifications: `doc/prd/safe-output-requirements-clarifications.md`
+- Main PRD: `docs/project/prd/safe-output-mvp-prd.md`
+- Requirements change log: `docs/project/prd/safe-output-requirements-change-log.md`
+- Requirements clarifications: `docs/project/prd/safe-output-requirements-clarifications.md`

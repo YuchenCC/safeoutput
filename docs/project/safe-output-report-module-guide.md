@@ -2,7 +2,7 @@
 
 本文档基于当前代码整理 `safe-output-report` 报告模块的能力边界、数据流、输出字段和接入方式。报告模块只处理聚合指标和脱敏后的 evidence，不保存敏感原文、完整 response 或完整日志。
 
-文档定位：本文是 Report 模块深挖文档。业务接入配置以 `safe-output/doc/component-integration-guide.md` 为准；项目模块总览以 `doc/safe-output-project-overview.md` 为准。
+文档定位：本文是 Report 模块深挖文档。业务接入配置以 `safe-output/doc/component-integration-guide.md` 为准；项目模块总览以 `docs/project/safe-output-project-overview.md` 为准。
 
 ## 模块定位
 

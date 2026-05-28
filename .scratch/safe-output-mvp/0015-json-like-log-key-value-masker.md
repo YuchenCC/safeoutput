@@ -4,7 +4,7 @@
 
 - category: enhancement
 - state: done
-- source: doc/prd/safe-output-mvp-prd.md
+- source: docs/project/prd/safe-output-mvp-prd.md
 - wbs: WBS-08
 - blocked_by: 0014-log4j2-pattern-converter-integration.md, 0006-default-rule-library-and-key-path-matching.md
 

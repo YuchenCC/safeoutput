@@ -4,7 +4,7 @@
 
 - category: enhancement
 - state: done
-- source: doc/prd/safe-output-r25-prd.md
+- source: docs/project/prd/safe-output-r25-prd.md
 - wbs: R2.5-07
 - blocked_by: 0048-r25-integration-scenarios-guide.md, 0049-r25-manual-mask-lab-and-performance.md, 0050-r25-log-scenarios-and-rule-suggestions.md, 0051-r25-report-file-center-and-single-report-view.md, 0052-r25-printable-report-and-demo-polish.md
 

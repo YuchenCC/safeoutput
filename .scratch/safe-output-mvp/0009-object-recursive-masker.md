@@ -4,7 +4,7 @@
 
 - category: enhancement
 - state: done
-- source: doc/prd/safe-output-mvp-prd.md
+- source: docs/project/prd/safe-output-mvp-prd.md
 - wbs: WBS-06
 - blocked_by: 0004-strategy-registry-and-custom-strategy-discovery.md, 0008-annotation-mask-and-field-ignore.md
 
